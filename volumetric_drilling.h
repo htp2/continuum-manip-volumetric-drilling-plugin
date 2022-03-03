@@ -50,6 +50,8 @@ protected:
 
 private:
     cTransform T_d; // Drills target pose
+    cTransform T_burr; // Burr pose
+
     cTransform T_i; // Input device transform
     cVector3d V_i; // Input device linear velocity
 
@@ -87,6 +89,8 @@ private:
 
     afRigidBodyPtr m_drillRigidBody;
 
+    afRigidBodyPtr m_lastSegmentRigidBody;
+
     afVolumePtr m_volumeObject;
 
     cShapeSphere* m_burrMesh;
@@ -105,11 +109,13 @@ private:
 
     bool m_showDrill = true;
 
-    bool m_showGoalProxySpheres = false;
+    bool m_showGoalProxySpheres = true;
 
     // list of tool cursors
     vector<cToolCursor*> m_toolCursorList;
 
+    vector<afRigidBodyPtr> m_toolBodyList;
+    
     // radius of tool cursors
     vector<double> m_toolCursorRadius{0.02, 0.013, 0.015, 0.017, 0.019, 0.021, 0.023, 0.025};
 
