@@ -1237,7 +1237,7 @@ BODY snake_stick:
   scale: 1.0
   location:
     position:
-      x: -11.0
+      x: -9.0
       y: 0.5
       z: 0.0
     orientation:
@@ -1292,12 +1292,12 @@ JOINT joint1:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint10:
   name: joint10
@@ -1324,12 +1324,12 @@ JOINT joint10:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint11:
   name: joint11
@@ -1356,12 +1356,12 @@ JOINT joint11:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint12:
   name: joint12
@@ -1388,12 +1388,12 @@ JOINT joint12:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint13:
   name: joint13
@@ -1420,12 +1420,12 @@ JOINT joint13:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint14:
   name: joint14
@@ -1452,12 +1452,12 @@ JOINT joint14:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint15:
   name: joint15
@@ -1484,12 +1484,12 @@ JOINT joint15:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint16:
   name: joint16
@@ -1516,12 +1516,12 @@ JOINT joint16:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint17:
   name: joint17
@@ -1548,12 +1548,12 @@ JOINT joint17:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint18:
   name: joint18
@@ -1580,12 +1580,12 @@ JOINT joint18:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint19:
   name: joint19
@@ -1612,12 +1612,12 @@ JOINT joint19:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint2:
   name: joint2
@@ -1644,12 +1644,12 @@ JOINT joint2:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint20:
   name: joint20
@@ -1676,12 +1676,12 @@ JOINT joint20:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint21:
   name: joint21
@@ -1708,12 +1708,12 @@ JOINT joint21:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint22:
   name: joint22
@@ -1740,12 +1740,12 @@ JOINT joint22:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint23:
   name: joint23
@@ -1772,12 +1772,12 @@ JOINT joint23:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint24:
   name: joint24
@@ -1804,12 +1804,12 @@ JOINT joint24:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint25:
   name: joint25
@@ -1836,12 +1836,12 @@ JOINT joint25:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint26:
   name: joint26
@@ -1868,12 +1868,12 @@ JOINT joint26:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint27:
   name: joint27
@@ -1900,12 +1900,12 @@ JOINT joint27:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint3:
   name: joint3
@@ -1932,12 +1932,12 @@ JOINT joint3:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint4:
   name: joint4
@@ -1964,12 +1964,12 @@ JOINT joint4:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint5:
   name: joint5
@@ -1996,12 +1996,12 @@ JOINT joint5:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint6:
   name: joint6
@@ -2028,12 +2028,12 @@ JOINT joint6:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint7:
   name: joint7
@@ -2060,12 +2060,12 @@ JOINT joint7:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint8:
   name: joint8
@@ -2092,12 +2092,12 @@ JOINT joint8:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 
 JOINT joint9:
   name: joint9
@@ -2124,10 +2124,10 @@ JOINT joint9:
     low: -0.2618000037
   enable feedback: false
   passive: true
-  controller output type: VELOCITY
+  controller output type: POSITION
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 100000000.0
+  stiffness: 10.0
   equilibrium point: 0.0
-  damping: 100000000.0
+  damping: 1000.0
 

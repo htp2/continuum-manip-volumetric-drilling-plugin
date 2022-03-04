@@ -304,15 +304,14 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     // check for shaft collision
     checkShaftCollision();
 
-    // if (getOverrideDrillControl() == false){
-    //     // updates position of drill mesh
-    //     drillPoseUpdateFromCursors();
-    // }
+    if (getOverrideDrillControl() == false){
+        // updates position of drill mesh
+        drillPoseUpdateFromCursors();
+    }
 
     cToolCursor* burr_cursor = m_burrToolCursorList.back();
     if (burr_cursor->isInContact(m_voxelObj) )//&& m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
     {
-        std::cout << "contact" << std::endl;
         for (int ci = 0 ; ci < 3 ; ci++){
             // retrieve contact event
             cCollisionEvent* contact = burr_cursor->m_hapticPoint->getCollisionEvent(ci);
@@ -383,7 +382,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     //     m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
     //     // std::cout << m_toolCursorList[i+1]->getDeviceLocalForce() << std::endl;
     // }
-
+    applyCablePull();
 
     if (m_flagStart)
     {
@@ -795,6 +794,16 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
              }
         }
 
+        else if (a_key == GLFW_KEY_SEMICOLON) {
+            m_cable_pull_mag -= 0.001;
+            std::cout << "Cable pull mag: " << m_cable_pull_mag << std::endl;
+        }
+        else if (a_key == GLFW_KEY_APOSTROPHE) {
+            m_cable_pull_mag += 0.001;
+            std::cout << "Cable pull mag: " << m_cable_pull_mag << std::endl;
+        }
+
+
         // option - polygonize model and save to file
         else if (a_key == GLFW_KEY_F9) {
             cMultiMesh *surface = new cMultiMesh;
@@ -1065,10 +1074,21 @@ bool afVolmetricDrillingPlugin::close()
 }
 
 
-// bool afVolmetricDrillingPlugin::applyCablePull(){
-//     for (seg : m_segmentBodyList){
-//         s
+bool afVolmetricDrillingPlugin::applyCablePull(){
+    // for (seg : m_segmentBodyList){
+    auto z = cVector3d(0.0, 0.0, 1.0);
+    // m_segmentBodyList.back()->applyTorque(m_cable_pull_mag*z);
+    // for (auto& seg : m_segmentBodyList){
+    //     seg->applyTorque(m_cable_pull_mag*z);
+    // }
 
-//     }
+    for( int i=0; i<m_segmentBodyList.size(); i++){
 
-// }
+        m_segmentBodyList[i]->applyTorque(pow(0.7,m_segmentBodyList.size()-i)*m_cable_pull_mag*z);
+        // std::cout << m_segmentBodyList[i]->getName() << ": " << pow(0.7,m_segmentBodyList.size()-i) << std::endl;
+    }
+
+
+    // }
+
+}

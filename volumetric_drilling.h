@@ -48,7 +48,7 @@ protected:
 
     void setOverrideDrillControl(bool val){m_overrideDrillControl = val;}
 
-    // bool applyCablePull();
+    bool applyCablePull();
 
 private:
     cTransform T_d; // Drills target pose
@@ -158,6 +158,8 @@ private:
     cColorb m_storedColor;
 
     HapticStates m_controlMode = HAPTIC_IDLE;
+
+    double m_cable_pull_mag = 0.0;
 };
 
 
