@@ -1237,13 +1237,13 @@ BODY snake_stick:
   scale: 1.0
   location:
     position:
-      x: -13.0
+      x: -11.0
       y: 0.5
       z: 0.0
     orientation:
       r: 0.0
       p: -0.0
-      y: 0.0
+      y: 1.57
   inertial offset:
     position:
       x: 0.0003085081
@@ -1298,6 +1298,7 @@ JOINT joint1:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint10:
   name: joint10
   parent: BODY seg9
@@ -1329,6 +1330,7 @@ JOINT joint10:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint11:
   name: joint11
   parent: BODY seg10
@@ -1360,6 +1362,7 @@ JOINT joint11:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint12:
   name: joint12
   parent: BODY seg11
@@ -1391,6 +1394,7 @@ JOINT joint12:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint13:
   name: joint13
   parent: BODY seg12
@@ -1422,6 +1426,7 @@ JOINT joint13:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint14:
   name: joint14
   parent: BODY seg13
@@ -1453,6 +1458,7 @@ JOINT joint14:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint15:
   name: joint15
   parent: BODY seg14
@@ -1484,6 +1490,7 @@ JOINT joint15:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint16:
   name: joint16
   parent: BODY seg15
@@ -1515,6 +1522,7 @@ JOINT joint16:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint17:
   name: joint17
   parent: BODY seg16
@@ -1546,6 +1554,7 @@ JOINT joint17:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint18:
   name: joint18
   parent: BODY seg17
@@ -1577,6 +1586,7 @@ JOINT joint18:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint19:
   name: joint19
   parent: BODY seg18
@@ -1608,6 +1618,7 @@ JOINT joint19:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint2:
   name: joint2
   parent: BODY seg1
@@ -1639,6 +1650,7 @@ JOINT joint2:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint20:
   name: joint20
   parent: BODY seg19
@@ -1670,6 +1682,7 @@ JOINT joint20:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint21:
   name: joint21
   parent: BODY seg20
@@ -1701,6 +1714,7 @@ JOINT joint21:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint22:
   name: joint22
   parent: BODY seg21
@@ -1732,6 +1746,7 @@ JOINT joint22:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint23:
   name: joint23
   parent: BODY seg22
@@ -1763,6 +1778,7 @@ JOINT joint23:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint24:
   name: joint24
   parent: BODY seg23
@@ -1794,6 +1810,7 @@ JOINT joint24:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint25:
   name: joint25
   parent: BODY seg24
@@ -1825,6 +1842,7 @@ JOINT joint25:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint26:
   name: joint26
   parent: BODY seg25
@@ -1856,6 +1874,7 @@ JOINT joint26:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint27:
   name: joint27
   parent: BODY seg26
@@ -1887,6 +1906,7 @@ JOINT joint27:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint3:
   name: joint3
   parent: BODY seg2
@@ -1918,6 +1938,7 @@ JOINT joint3:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint4:
   name: joint4
   parent: BODY seg3
@@ -1949,6 +1970,7 @@ JOINT joint4:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint5:
   name: joint5
   parent: BODY seg4
@@ -1980,6 +2002,7 @@ JOINT joint5:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint6:
   name: joint6
   parent: BODY seg5
@@ -2011,6 +2034,7 @@ JOINT joint6:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint7:
   name: joint7
   parent: BODY seg6
@@ -2042,6 +2066,7 @@ JOINT joint7:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint8:
   name: joint8
   parent: BODY seg7
@@ -2073,6 +2098,7 @@ JOINT joint8:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+
 JOINT joint9:
   name: joint9
   parent: BODY seg8
@@ -2104,3 +2130,4 @@ JOINT joint9:
   stiffness: 100000000.0
   equilibrium point: 0.0
   damping: 100000000.0
+

@@ -48,6 +48,8 @@ protected:
 
     void setOverrideDrillControl(bool val){m_overrideDrillControl = val;}
 
+    // bool applyCablePull();
+
 private:
     cTransform T_d; // Drills target pose
     cTransform T_burr; // Burr pose
@@ -114,7 +116,11 @@ private:
     // list of tool cursors
     vector<cToolCursor*> m_toolCursorList;
 
-    vector<afRigidBodyPtr> m_toolBodyList;
+    vector<cToolCursor*> m_segmentToolCursorList;
+    vector<cToolCursor*> m_shaftToolCursorList;
+    vector<cToolCursor*> m_burrToolCursorList;
+
+    vector<afRigidBodyPtr> m_segmentBodyList;
     
     // radius of tool cursors
     vector<double> m_toolCursorRadius{0.02, 0.013, 0.015, 0.017, 0.019, 0.021, 0.023, 0.025};

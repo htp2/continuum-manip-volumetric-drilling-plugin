@@ -124,12 +124,33 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         m_worldPtr->addSceneObjectToWorld(m_burrMesh);
     }
 
-    // m_toolBodyList.push_back(m_drillRigidBody);
+    // m_segmentBodyList.push_back(m_drillRigidBody);
+    cWorld* chai_world = a_afWorld->getChaiWorld();
     int num_segs = 27;
+    int num_shaft_cursor = 1;
+    int num_burr_cursor = 1;
+
     for(int i = 1; i<=num_segs; i++){
-        m_toolBodyList.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY seg" + to_string(i)));
+        m_segmentBodyList.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY seg" + to_string(i)));
+        auto seg_cursor = new cToolCursor(chai_world);
+        m_segmentToolCursorList.push_back(seg_cursor);
+        m_worldPtr->addSceneObjectToWorld(seg_cursor);
     }
-    m_toolCursorList.resize(m_toolBodyList.size()+1);
+    for(int i = 0; i<num_shaft_cursor; i++){
+        auto shaft_cursor = new cToolCursor(chai_world);
+        m_shaftToolCursorList.push_back(shaft_cursor);
+        m_worldPtr->addSceneObjectToWorld(shaft_cursor);
+    }
+        for(int i = 0; i<num_shaft_cursor; i++){
+        auto burr_cursor = new cToolCursor(chai_world);
+        m_burrToolCursorList.push_back(burr_cursor);
+        m_worldPtr->addSceneObjectToWorld(burr_cursor);
+    }
+
+    // m_toolCursorList.resize(m_segmentBodyList.size()+2);
+    // m_segmentToolCursorList.resize(num_segs);
+    // m_shaftToolCursorList.resize(1); // eventually will be several to represent full shaft length
+    // m_burrToolCursorList.resize(1);
 
     //     auto seg_i = m_worldPtr->getRigidBody("/ambf/env/BODY seg"+str(i));
     //     double r = 0.03;
@@ -166,10 +187,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     // Initializing tool cursors
     toolCursorInit(a_afWorld);
-
     // read the scale factor between the physical workspace of the haptic
     // device and the virtual workspace defined for the tool
-    double workspaceScaleFactor = m_toolCursorList[0]->getWorkspaceScaleFactor();
+    double workspaceScaleFactor = m_shaftToolCursorList[0]->getWorkspaceScaleFactor();
 
     // stiffness properties
     double maxStiffness = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
@@ -274,7 +294,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         m_hapticDevice->getTransform(T_i);
         m_hapticDevice->getLinearVelocity(V_i);
         m_hapticDevice->getUserSwitch(0, clutch);
-        V_i =  m_mainCamera->getLocalRot() * (V_i * !clutch / m_toolCursorList[0]->getWorkspaceScaleFactor());
+        V_i =  m_mainCamera->getLocalRot() * (V_i * !clutch / m_shaftToolCursorList[0]->getWorkspaceScaleFactor());
         T_d.setLocalPos(T_d.getLocalPos() + V_i);
         T_d.setLocalRot(m_mainCamera->getLocalRot() * T_i.getLocalRot());
     }
@@ -289,12 +309,13 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     //     drillPoseUpdateFromCursors();
     // }
 
-    if (m_toolCursorList[0]->isInContact(m_voxelObj) && m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
+    cToolCursor* burr_cursor = m_burrToolCursorList.back();
+    if (burr_cursor->isInContact(m_voxelObj) )//&& m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
     {
-
+        std::cout << "contact" << std::endl;
         for (int ci = 0 ; ci < 3 ; ci++){
             // retrieve contact event
-            cCollisionEvent* contact = m_toolCursorList[0]->m_hapticPoint->getCollisionEvent(ci);
+            cCollisionEvent* contact = burr_cursor->m_hapticPoint->getCollisionEvent(ci);
 
             cVector3d orig(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
 
@@ -342,21 +363,34 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         m_warningText->setShowEnabled(false);
     }
     // compute interaction forces
-    for(int i = 0 ; i < m_toolCursorList.size() ; i++){
-        m_toolCursorList[i]->computeInteractionForces();
+    for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
+        for( auto& cursor : cursor_list){
+            cursor->computeInteractionForces();
+        }
     }
+
+    //apply forces to segments
+    for ( int i=0; i<m_segmentBodyList.size(); i++){
+        m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
+    }
+
 
     // check if device remains stuck inside voxel object
     // Also orient the force to match the camera rotation
     cVector3d force = cTranspose(m_mainCamera->getLocalRot()) * m_targetToolCursor->getDeviceLocalForce();
-    m_toolCursorList[0]->setDeviceLocalForce(force);
+    // m_toolCursorList[0]->setDeviceLocalForce(force);
+    // for ( int i=0; i<m_segmentBodyList.size(); i++){
+    //     m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
+    //     // std::cout << m_toolCursorList[i+1]->getDeviceLocalForce() << std::endl;
+    // }
+
 
     if (m_flagStart)
     {
         if (force.length() != 0.0)
         {
 
-            m_toolCursorList[0]->initialize();
+            m_shaftToolCursorList[0]->initialize();
             m_counter = 0;
         }
         else
@@ -380,10 +414,12 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     /////////////////////////////////////////////////////////////////////////
 
     // compute transformation from world to tool (haptic device)
-    cTransform world_T_tool = m_toolCursorList[0]->getDeviceLocalTransform();
+    cToolCursor* shaft_cursor = m_shaftToolCursorList.front();
+
+    cTransform world_T_tool = shaft_cursor->getDeviceLocalTransform();
 
     // get status of user switch
-    bool button = m_toolCursorList[0]->getUserSwitch(1);
+    bool button = shaft_cursor->getUserSwitch(1);
     //
     // STATE 1:
     // Idle mode - user presses the user switch
@@ -391,10 +427,10 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     if ((m_controlMode == HAPTIC_IDLE) && (button == true))
     {
         // check if at least one contact has occurred
-        if (m_toolCursorList[0]->m_hapticPoint->getNumCollisionEvents() > 0)
+        if (shaft_cursor->m_hapticPoint->getNumCollisionEvents() > 0)
         {
             // get contact event
-            cCollisionEvent* collisionEvent = m_toolCursorList[0]->m_hapticPoint->getCollisionEvent(0);
+            cCollisionEvent* collisionEvent = shaft_cursor->m_hapticPoint->getCollisionEvent(0);
 
             // get object from contact event
             m_selectedObject = collisionEvent->m_object;
@@ -439,9 +475,9 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         }
 
         // set zero forces when manipulating objects
-        m_toolCursorList[0]->setDeviceLocalForce(0.0, 0.0, 0.0);
+        shaft_cursor->setDeviceLocalForce(0.0, 0.0, 0.0);
 
-        m_toolCursorList[0]->initialize();
+        shaft_cursor->initialize();
     }
 
     //
@@ -459,7 +495,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
 
     // send forces to haptic device
     if (getOverrideDrillControl() == false){
-        m_toolCursorList[0]->applyToDevice();
+        shaft_cursor->applyToDevice();
     }
 
 }
@@ -471,49 +507,48 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
 ///
 void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
 
-    for(int i=0; i<m_toolCursorList.size(); i++)
-    {
-        m_toolCursorList[i] = new cToolCursor(a_afWorld->getChaiWorld());
+    for( auto& shaft_cursor : m_shaftToolCursorList){
+        std::cout << shaft_cursor << std::endl;
+        shaft_cursor->setHapticDevice(m_hapticDevice);
 
-        a_afWorld->addSceneObjectToWorld(m_toolCursorList[i]);
+        // map the physical workspace of the haptic device to a larger virtual workspace.
+        shaft_cursor->setWorkspaceRadius(10.0);
+        shaft_cursor->setWaitForSmallForce(true);
+        shaft_cursor->start();
+        shaft_cursor->m_hapticPoint->m_sphereProxy->setShowFrame(false);
 
-        if(i == 0)
-        {
-            m_toolCursorList[i]->setHapticDevice(m_hapticDevice);
+        shaft_cursor->m_name = "snake_shaft";
+        shaft_cursor->m_hapticPoint->setShow(m_showGoalProxySpheres, m_showGoalProxySpheres);
+        shaft_cursor->m_hapticPoint->m_sphereProxy->m_material->setRedCrimson();
+        shaft_cursor->m_hapticPoint->m_sphereGoal->m_material->setBlueAquamarine();
 
-            // map the physical workspace of the haptic device to a larger virtual workspace.
+        // if the haptic device has a gripper, enable it as a user switch
+        m_hapticDevice->setEnableGripperUserSwitch(true);
+        shaft_cursor->setRadius(0.043); 
+    }
 
-            m_toolCursorList[i]->setWorkspaceRadius(10.0);
-            m_toolCursorList[i]->setWaitForSmallForce(true);
-            m_toolCursorList[i]->start();
-            m_toolCursorList[i]->m_hapticPoint->m_sphereProxy->setShowFrame(false);
+    for( auto& burr_cursor : m_burrToolCursorList){
+        burr_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
+        burr_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
+        burr_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
+        burr_cursor->setRadius(0.065/2);
+    }
 
-            m_toolCursorList[i]->m_name = "snake_shaft";
-            m_toolCursorList[i]->m_hapticPoint->setShow(m_showGoalProxySpheres, m_showGoalProxySpheres);
-            m_toolCursorList[i]->m_hapticPoint->m_sphereProxy->m_material->setRedCrimson();
-            m_toolCursorList[i]->m_hapticPoint->m_sphereGoal->m_material->setBlueAquamarine();
-
-            // if the haptic device has a gripper, enable it as a user switch
-            m_hapticDevice->setEnableGripperUserSwitch(true);
-            m_toolCursorList[i]->setRadius(0.043); // Set the correct radius for the tip which is not from the list of cursor radii
-        }
-        else
-        {
-            m_toolCursorList[i]->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
-            m_toolCursorList[i]->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
-            m_toolCursorList[i]->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
-            // m_toolCursorList[i]->setRadius(m_toolCursorRadius[i]);
-            m_toolCursorList[i]->setRadius(0.03);
-
-        }
-     }
+    for( auto& seg_cursor : m_segmentToolCursorList){
+        seg_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
+        seg_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
+        seg_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
+        seg_cursor->setRadius(0.03);
+    }
 
     // Initialize the start pose of the tool cursors
     toolCursorsPosUpdate(T_d);
-    for (int i = 0 ;  i < m_toolCursorList.size() ; i++){
-        m_toolCursorList[i]->initialize();
+    for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
+            for( auto& cursor : cursor_list){
+                cursor->initialize();
+        }
     }
-}
+    }
 
 
 ///
@@ -547,20 +582,19 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose){
     //     m_toolCursorList[i]->setDeviceLocalPos(P);
     //     m_toolCursorList[i]->setDeviceLocalRot(a_targetPose.getLocalRot());
     // }
-    for (int i = 0 ; i < m_toolCursorList.size() ; i++){
-        if (i==0){
-            m_toolCursorList[i]->setDeviceLocalPos(a_targetPose.getLocalPos());
-            m_toolCursorList[i]->setDeviceLocalRot(a_targetPose.getLocalRot());
-            // std::cout << m_toolBodyList[i]->getL ocalTransform().getLocalPos() << std::endl;
-                        // std::cout << a_targetPose.getLocalRot() << std::endl;
-
-        }
-        else{
-            m_toolCursorList[i]->setDeviceLocalTransform(m_toolBodyList[i-1]->getLocalTransform());
-            // std::cout << m_toolBodyList[i-1]->getLocalTransform().getLocalPos() << std::endl;
-
-        }
+    for( auto& shaft_cursor : m_shaftToolCursorList){
+        shaft_cursor->setDeviceLocalPos(a_targetPose.getLocalPos());
+        shaft_cursor->setDeviceLocalRot(a_targetPose.getLocalRot());
     }
+
+    for( auto& burr_cursor : m_burrToolCursorList){
+        burr_cursor->setDeviceLocalTransform(m_burrMesh->getLocalTransform());
+    }
+    for (int i=0; i<m_segmentToolCursorList.size(); i++){
+    // for( auto& seg_cursor : m_segmentToolCursorList){
+        m_segmentToolCursorList[i]->setDeviceLocalTransform(m_segmentBodyList[i]->getLocalTransform());
+    }
+
 }
 
 ///
@@ -574,17 +608,17 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose){
 void afVolmetricDrillingPlugin::checkShaftCollision(){
 
     m_maxError = 0;
-    m_targetToolCursor = m_toolCursorList[0];
+    m_targetToolCursor = m_shaftToolCursorList[0];
     m_targetToolCursorIdx = 0;
-    for(int i=0; i<m_toolCursorList.size(); i++)
+    for(int i=0; i<m_shaftToolCursorList.size(); i++)
     {
 
-        m_currError = cDistance(m_toolCursorList[i]->m_hapticPoint->getLocalPosProxy(), m_toolCursorList[i]->m_hapticPoint->getLocalPosGoal());
+        m_currError = cDistance(m_shaftToolCursorList[i]->m_hapticPoint->getLocalPosProxy(), m_shaftToolCursorList[i]->m_hapticPoint->getLocalPosGoal());
 
         if(abs(m_currError) > abs(m_maxError + 0.00001))
         {
             m_maxError = m_currError;
-            m_targetToolCursor = m_toolCursorList[i];
+            m_targetToolCursor = m_shaftToolCursorList[i];
             m_targetToolCursorIdx = i;
         }
     }
@@ -598,12 +632,12 @@ void afVolmetricDrillingPlugin::checkShaftCollision(){
 ///
 void afVolmetricDrillingPlugin::drillPoseUpdateFromCursors(){
     cMatrix3d newDrillRot;
-    newDrillRot = m_toolCursorList[0]->getDeviceLocalRot();
+    newDrillRot = m_shaftToolCursorList[0]->getDeviceLocalRot();
 //    cerr << newDrillRot.str(2) << endl;
 
     if(m_targetToolCursorIdx == 0){
         cTransform T_tip;
-        T_tip.setLocalPos(m_toolCursorList[0]->m_hapticPoint->getLocalPosProxy());
+        T_tip.setLocalPos(m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy());
         T_tip.setLocalRot(newDrillRot);
         m_drillRigidBody->setLocalTransform(T_tip);
     }
@@ -754,9 +788,11 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
 
         else if (a_key == GLFW_KEY_C) {
             m_showGoalProxySpheres = !m_showGoalProxySpheres;
-            for (int i = 0 ; i < m_toolCursorList.size() ; i++){
-                m_toolCursorList[i]->m_hapticPoint->setShow(m_showGoalProxySpheres, m_showGoalProxySpheres);
-            }
+            for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
+                for( auto& cursor : cursor_list){
+                    cursor->m_hapticPoint->setShow(m_showGoalProxySpheres, m_showGoalProxySpheres);
+                }
+             }
         }
 
         // option - polygonize model and save to file
@@ -1027,3 +1063,12 @@ bool afVolmetricDrillingPlugin::close()
 
     return true;
 }
+
+
+// bool afVolmetricDrillingPlugin::applyCablePull(){
+//     for (seg : m_segmentBodyList){
+//         s
+
+//     }
+
+// }
