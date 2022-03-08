@@ -94,17 +94,22 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     m_worldPtr = a_afWorld;
 
+    m_worldPtr->m_bulletWorld->getSolverInfo().m_erp=1.0; // improve out of plane error of joints
+    m_worldPtr->m_bulletWorld->getSolverInfo().m_erp2=1.0; // improve out of plane error of joints
+    m_worldPtr->m_bulletWorld->setGravity(btVector3(0.0,0.0,0.0));
+// m_worldPtr->m_bulletWorld->getSolverInfo().m_splitImpulseTurnErp = 1.0f;
     // Get first camera
     m_mainCamera = m_worldPtr->getCameras()[0];
 
     // Initializing tool's rotation matrix as an identity matrix
-    m_toolRotMat.identity();
-    // m_toolRotMat.setAxisAngleRotationDeg(cVector3d(1,0,0),90);
-    m_toolRotMat = m_mainCamera->getLocalRot() * m_toolRotMat;
+    // m_toolRotMat.identity();
+    // // m_toolRotMat.setAxisAngleRotationDeg(cVector3d(1,0,0),90);
+    // m_toolRotMat = m_mainCamera->getLocalRot() * m_toolRotMat;
 
     // importing drill model
     m_drillRigidBody = m_worldPtr->getRigidBody("snake_stick");
-
+    T_d = m_drillRigidBody->getLocalTransform();
+    std::cout << "T_D: " << T_d.getLocalPos() << std::endl;
     m_lastSegmentRigidBody = m_worldPtr->getRigidBody("/ambf/env/BODY seg27");
 
     if (!m_drillRigidBody){
@@ -190,7 +195,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // read the scale factor between the physical workspace of the haptic
     // device and the virtual workspace defined for the tool
     double workspaceScaleFactor = m_shaftToolCursorList[0]->getWorkspaceScaleFactor();
-
     // stiffness properties
     double maxStiffness = hapticDeviceInfo.m_maxLinearStiffness / workspaceScaleFactor;
 
@@ -229,11 +233,11 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_mainCamera->getFrontLayer()->addChild(m_drillSizePanel);
 
     m_drillSizeText = new cLabel(font);
-    m_drillSizeText->setLocalPos(20,70);
-    m_drillSizeText->m_fontColor.setBlack();
-    m_drillSizeText->setFontScale(.75);
-    m_drillSizeText->setText("Drill Size: " + cStr(m_currDrillSize) + " mm");
-    m_mainCamera->getFrontLayer()->addChild(m_drillSizeText);
+    // m_drillSizeText->setLocalPos(20,70);
+    // m_drillSizeText->m_fontColor.setBlack();
+    // m_drillSizeText->setFontScale(.75);
+    // m_drillSizeText->setText("Drill Size: " + cStr(m_currDrillSize) + " mm");
+    // m_mainCamera->getFrontLayer()->addChild(m_drillSizeText);
 
     m_drillControlModeText = new cLabel(font);
     m_drillControlModeText->setLocalPos(20,30);
@@ -297,6 +301,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         V_i =  m_mainCamera->getLocalRot() * (V_i * !clutch / m_shaftToolCursorList[0]->getWorkspaceScaleFactor());
         T_d.setLocalPos(T_d.getLocalPos() + V_i);
         T_d.setLocalRot(m_mainCamera->getLocalRot() * T_i.getLocalRot());
+
     }
     T_burr = m_burrMesh->getLocalTransform();
     toolCursorsPosUpdate(T_d);
@@ -416,7 +421,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     cToolCursor* shaft_cursor = m_shaftToolCursorList.front();
 
     cTransform world_T_tool = shaft_cursor->getDeviceLocalTransform();
-
+    // std::cout << "WORLD_T_TOOL: " << world_T_tool.getLocalPos() << std::endl;
     // get status of user switch
     bool button = shaft_cursor->getUserSwitch(1);
     //
@@ -507,7 +512,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
 void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
 
     for( auto& shaft_cursor : m_shaftToolCursorList){
-        std::cout << shaft_cursor << std::endl;
+        // std::cout << shaft_cursor << std::endl;
         shaft_cursor->setHapticDevice(m_hapticDevice);
 
         // map the physical workspace of the haptic device to a larger virtual workspace.
@@ -582,8 +587,9 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose){
     //     m_toolCursorList[i]->setDeviceLocalRot(a_targetPose.getLocalRot());
     // }
     for( auto& shaft_cursor : m_shaftToolCursorList){
-        shaft_cursor->setDeviceLocalPos(a_targetPose.getLocalPos());
-        shaft_cursor->setDeviceLocalRot(a_targetPose.getLocalRot());
+        shaft_cursor->setDeviceLocalTransform(a_targetPose);
+        // shaft_cursor->setDeviceLocalPos(a_targetPose.getLocalPos());
+        // shaft_cursor->setDeviceLocalRot(a_targetPose.getLocalRot());
     }
 
     for( auto& burr_cursor : m_burrToolCursorList){
@@ -633,49 +639,74 @@ void afVolmetricDrillingPlugin::drillPoseUpdateFromCursors(){
     cMatrix3d newDrillRot;
     newDrillRot = m_shaftToolCursorList[0]->getDeviceLocalRot();
 //    cerr << newDrillRot.str(2) << endl;
+    
+    cTransform T_tip;
+    T_tip.setLocalPos(m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy());
 
-    if(m_targetToolCursorIdx == 0){
-        cTransform T_tip;
-        T_tip.setLocalPos(m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy());
-        T_tip.setLocalRot(newDrillRot);
-        m_drillRigidBody->setLocalTransform(T_tip);
-    }
-    else if(cDistance(m_targetToolCursor->m_hapticPoint->getLocalPosProxy(), m_targetToolCursor->m_hapticPoint->getLocalPosGoal()) <= 0.001)
-    {
-        // direction of positive x-axis of drill mesh
-        cVector3d xDir = m_drillRigidBody->getLocalRot().getCol0();
+    // m_drillRigidBody->getLocalTransform().getLocalPos()
 
-        cVector3d newDrillPos;
+    // std::cout << "LOCALPOS: " << m_drillRigidBody->getLocalTransform().getLocalPos() << std::endl;
+    // std::cout << "WORLDPOS: " << m_drillRigidBody->getGlobalTransform().getLocalPos() << std::endl;
 
-        // drill mesh will make a sudden jump towards the followSpheregetCol0
-        if(!m_suddenJump)
-        {
-            newDrillPos = (m_targetToolCursor->m_hapticPoint->getLocalPosProxy() - xDir * m_dX * m_targetToolCursorIdx);
-        }
+    // std::cout << "LOCALPOSPROXY: " << m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy()<< std::endl;
+    // std::cout << "LOCALPOSGOAL: " << m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosGoal()<< std::endl;
+    
+    // std::cout << "Error: " << (m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy() - m_drillRigidBody->getLocalTransform().getLocalPos()) << std::endl;
+    // T_tip.setLocalPos(m_drillRigidBody->getLocalPos() + (m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy() - m_drillRigidBody->getLocalPos()) * 0.004);
 
-        // drill mesh slowly moves towards the followSphere
-        else
-        {
-            newDrillPos = m_drillRigidBody->getLocalPos() + ((m_targetToolCursor->m_hapticPoint->getLocalPosProxy() - xDir * m_dX * m_targetToolCursorIdx) - m_drillRigidBody->getLocalPos()) * 0.04;
-        }
+    T_tip.setLocalRot(newDrillRot);
+    // std::cout << "A: " << m_drillRigidBody->getLocalTransform().getLocalPos() << std::endl;
+    m_drillRigidBody->setLocalTransform(T_tip);
+    // m_drillRigidBody->applyForce(cVector3d())
+    // std::cout << "LOCALPOS: " << m_drillRigidBody->getLocalTransform().getLocalPos() << std::endl;
+    // std::cout << "WORLDPOS: " << m_drillRigidBody->getGlobalTransform().getLocalPos() << std::endl;
 
-//        cVector3d L = g_targetToolCursor->m_hapticPoint->getLocalPosProxy() - g_toolCursorList[0]->getDeviceLocalPos();
+    // std::cout << "LOCALPOSPROXY: " << m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy()<< std::endl;
+    // std::cout << "LOCALPOSGOAL: " << m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosGoal()<< std::endl;
 
-//        cerr << "Colliding Cursor " << g_targetToolCursorIdx << " Error " << L.str(2) << endl;
-//        if ( L.length() < 0.01){
-//            newDrillRot = g_toolCursorList[0]->getDeviceLocalRot();
-//        }
-//        else{
-//            newDrillRot = afUtils::getRotBetweenVectors<cMatrix3d>(L, cVector3d(1, 0, 0));
-//        }
 
-        cTransform trans;
-        trans.setLocalPos(newDrillPos);
-        trans.setLocalRot(newDrillRot);
+//     if(m_targetToolCursorIdx == 0){
+//         cTransform T_tip;
+//         T_tip.setLocalPos(m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy());
+//         T_tip.setLocalRot(newDrillRot);
+//         m_drillRigidBody->setLocalTransform(T_tip);
+//     }
+//     else if(cDistance(m_targetToolCursor->m_hapticPoint->getLocalPosProxy(), m_targetToolCursor->m_hapticPoint->getLocalPosGoal()) <= 0.001)
+//     {
+//         // direction of positive x-axis of drill mesh
+//         cVector3d xDir = m_drillRigidBody->getLocalRot().getCol0();
 
-//        g_drillRigidBody->setLocalPos(g_drillRigidBody->getLocalPos() + newDrillPos);
-        m_drillRigidBody->setLocalTransform(trans);
-    }
+//         cVector3d newDrillPos;
+
+//         // drill mesh will make a sudden jump towards the followSpheregetCol0
+//         if(!m_suddenJump)
+//         {
+//             newDrillPos = (m_targetToolCursor->m_hapticPoint->getLocalPosProxy() - xDir * m_dX * m_targetToolCursorIdx);
+//         }
+
+//         // drill mesh slowly moves towards the followSphere
+//         else
+//         {
+//             newDrillPos = m_drillRigidBody->getLocalPos() + ((m_targetToolCursor->m_hapticPoint->getLocalPosProxy() - xDir * m_dX * m_targetToolCursorIdx) - m_drillRigidBody->getLocalPos()) * 0.04;
+//         }
+
+// //        cVector3d L = g_targetToolCursor->m_hapticPoint->getLocalPosProxy() - g_toolCursorList[0]->getDeviceLocalPos();
+
+// //        cerr << "Colliding Cursor " << g_targetToolCursorIdx << " Error " << L.str(2) << endl;
+// //        if ( L.length() < 0.01){
+// //            newDrillRot = g_toolCursorList[0]->getDeviceLocalRot();
+// //        }
+// //        else{
+// //            newDrillRot = afUtils::getRotBetweenVectors<cMatrix3d>(L, cVector3d(1, 0, 0));
+// //        }
+
+//         cTransform trans;
+//         trans.setLocalPos(newDrillPos);
+//         trans.setLocalRot(newDrillRot);
+
+// //        g_drillRigidBody->setLocalPos(g_drillRigidBody->getLocalPos() + newDrillPos);
+//         m_drillRigidBody->setLocalTransform(trans);
+//     }
 }
 
 
@@ -795,12 +826,12 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         }
 
         else if (a_key == GLFW_KEY_SEMICOLON) {
-            m_cable_pull_mag -= 0.001;
-            std::cout << "Cable pull mag: " << m_cable_pull_mag << std::endl;
+            m_cable_pull_mag_goal -= 0.001;
+            std::cout << "Cable pull mag: " << m_cable_pull_mag_goal << std::endl;
         }
         else if (a_key == GLFW_KEY_APOSTROPHE) {
-            m_cable_pull_mag += 0.001;
-            std::cout << "Cable pull mag: " << m_cable_pull_mag << std::endl;
+            m_cable_pull_mag_goal += 0.001;
+            std::cout << "Cable pull mag: " << m_cable_pull_mag_goal << std::endl;
         }
 
 
@@ -1076,17 +1107,25 @@ bool afVolmetricDrillingPlugin::close()
 
 bool afVolmetricDrillingPlugin::applyCablePull(){
     // for (seg : m_segmentBodyList){
+    
+    
+    double cable_pull_mag_err = (m_cable_pull_mag_goal - m_cable_pull_mag);
+    double cable_pull_mag_change = 0.01*cable_pull_mag_err;
+    if (abs(cable_pull_mag_change) > 0.00001){
+        cable_pull_mag_change =  cable_pull_mag_change/abs(cable_pull_mag_change) * 0.00001;
+    }
+
+    m_cable_pull_mag += cable_pull_mag_change;
+    // std::cout << "cable: " << m_cable_pull_mag << std::endl;
     auto z = cVector3d(0.0, 0.0, 1.0);
-    // m_segmentBodyList.back()->applyTorque(m_cable_pull_mag*z);
+    m_segmentBodyList.back()->applyTorque(m_cable_pull_mag*z);
     // for (auto& seg : m_segmentBodyList){
-    //     seg->applyTorque(m_cable_pull_mag*z);
+    //     seg->applyTorque(m_cable_pull_mag_goal*z);
     // }
 
-    for( int i=0; i<m_segmentBodyList.size(); i++){
-
-        m_segmentBodyList[i]->applyTorque(pow(0.7,m_segmentBodyList.size()-i)*m_cable_pull_mag*z);
-        // std::cout << m_segmentBodyList[i]->getName() << ": " << pow(0.7,m_segmentBodyList.size()-i) << std::endl;
-    }
+    // for( int i=0; i<m_segmentBodyList.size(); i++){
+    //     m_segmentBodyList[i]->applyTorque(pow(0.7,m_segmentBodyList.size()-i)*m_cable_pull_mag_goal*z);
+    // }
 
 
     // }

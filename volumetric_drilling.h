@@ -101,7 +101,7 @@ private:
     cMatrix3d m_toolRotMat;
 
     // rate of drill movement
-    double m_drillRate = 0.020f;
+    double m_drillRate = 0.0020f;
 
     // Local offset between shaft tool cursors
     double m_dX = 0.03;
@@ -159,7 +159,9 @@ private:
 
     HapticStates m_controlMode = HAPTIC_IDLE;
 
+    double m_cable_pull_mag_goal = 0.0;
     double m_cable_pull_mag = 0.0;
+
 };
 
 
