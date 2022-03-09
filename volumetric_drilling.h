@@ -132,6 +132,8 @@ private:
     // panel to display current drill size
     cPanel* m_drillSizePanel;
     cLabel* m_drillSizeText;
+    cLabel* m_cablePullMagText;
+
     cLabel* m_drillControlModeText;
 
     // current and maximum distance between proxy and goal spheres

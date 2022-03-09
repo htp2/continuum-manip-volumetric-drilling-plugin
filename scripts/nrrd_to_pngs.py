@@ -48,7 +48,19 @@ from argparse import ArgumentParser
 
 def save_image(array, im_name):
 	im = PIL.Image.fromarray(array.astype(np.uint8))
-	im.save(im_name)
+
+	img = im.convert("RGBA")
+	datas = img.getdata()
+
+	newData = []
+	for item in datas:
+		if item[0] == 0 and item[1] == 0 and item[2] == 0:
+			newData.append((0, 0, 0, 0))
+		else:
+			newData.append(item)
+
+	img.putdata(newData)
+	img.save(im_name)
 
 
 def normalize_data(data):
@@ -83,7 +95,9 @@ def main():
 	data, header = nrrd.read(parsed_args.nrrd_file)
 
 	normalized_data = normalize_data(data)
-	scaled_data = scale_data(normalized_data, 255.9)
+	# scaled_data = scale_data(normalized_data, 255.9)
+	scaled_data = scale_data(normalized_data, 127.9)
+
 	save_volume_as_images(scaled_data, parsed_args.image_prefix)
 
 if __name__ == '__main__':

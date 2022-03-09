@@ -174,7 +174,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     m_volumeObject = m_worldPtr->getVolume("mastoidectomy_volume");
     if (!m_volumeObject){
-        cerr << "ERROR! FAILED TO FIND DRILL VOLUME NAMED " << "mastoidectomy_volume" << endl;
+        cerr << "ERROR! FAILED TO FIND DRILL VOLUME NAMED " << "spine_volume_test" << endl;
         return -1;
     }
     else{
@@ -233,11 +233,19 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_mainCamera->getFrontLayer()->addChild(m_drillSizePanel);
 
     m_drillSizeText = new cLabel(font);
+
     // m_drillSizeText->setLocalPos(20,70);
     // m_drillSizeText->m_fontColor.setBlack();
     // m_drillSizeText->setFontScale(.75);
     // m_drillSizeText->setText("Drill Size: " + cStr(m_currDrillSize) + " mm");
     // m_mainCamera->getFrontLayer()->addChild(m_drillSizeText);
+
+    m_cablePullMagText = new cLabel(font);
+    m_cablePullMagText->setLocalPos(20,70);
+    m_cablePullMagText->m_fontColor.setBlack();
+    m_cablePullMagText->setFontScale(.75);
+    m_cablePullMagText->setText("Cable Pull Magnitude: " + cStr(m_cable_pull_mag_goal, 5));
+    m_mainCamera->getFrontLayer()->addChild(m_cablePullMagText);
 
     m_drillControlModeText = new cLabel(font);
     m_drillControlModeText->setLocalPos(20,30);
@@ -377,7 +385,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     for ( int i=0; i<m_segmentBodyList.size(); i++){
         m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
     }
-
+    
 
     // check if device remains stuck inside voxel object
     // Also orient the force to match the camera rotation
@@ -651,7 +659,7 @@ void afVolmetricDrillingPlugin::drillPoseUpdateFromCursors(){
     // std::cout << "LOCALPOSPROXY: " << m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy()<< std::endl;
     // std::cout << "LOCALPOSGOAL: " << m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosGoal()<< std::endl;
     
-    // std::cout << "Error: " << (m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy() - m_drillRigidBody->getLocalTransform().getLocalPos()) << std::endl;
+    std::cout << "Error: " << (m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy() - m_drillRigidBody->getLocalTransform().getLocalPos()) << std::endl;
     // T_tip.setLocalPos(m_drillRigidBody->getLocalPos() + (m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy() - m_drillRigidBody->getLocalPos()) * 0.004);
 
     T_tip.setLocalRot(newDrillRot);
@@ -826,12 +834,16 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         }
 
         else if (a_key == GLFW_KEY_SEMICOLON) {
-            m_cable_pull_mag_goal -= 0.001;
-            std::cout << "Cable pull mag: " << m_cable_pull_mag_goal << std::endl;
+            m_cable_pull_mag_goal += 0.001;
+            // std::cout << "Cable pull mag: " << m_cable_pull_mag_goal << std::endl;
+            m_cablePullMagText->setText("Cable Pull Magnitude: " + cStr(m_cable_pull_mag_goal, 5));
+
         }
         else if (a_key == GLFW_KEY_APOSTROPHE) {
-            m_cable_pull_mag_goal += 0.001;
-            std::cout << "Cable pull mag: " << m_cable_pull_mag_goal << std::endl;
+            m_cable_pull_mag_goal -= 0.001;
+            // std::cout << "Cable pull mag: " << m_cable_pull_mag_goal << std::endl;
+            m_cablePullMagText->setText("Cable Pull Magnitude: " + cStr(m_cable_pull_mag_goal, 5));
+
         }
 
 
