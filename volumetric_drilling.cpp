@@ -172,7 +172,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     
 
 
-    m_volumeObject = m_worldPtr->getVolume("mastoidectomy_volume");
+    m_volumeObject = m_worldPtr->getVolume("spine_volume_test");
     if (!m_volumeObject){
         cerr << "ERROR! FAILED TO FIND DRILL VOLUME NAMED " << "spine_volume_test" << endl;
         return -1;
@@ -334,11 +334,11 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
             m_voxelObj->m_texture->m_image->getVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_storedColor);
 
             //if the tool comes in contact with the critical region, instantiate the warning message
-            if(m_storedColor != m_boneColor && m_storedColor != m_zeroColor)
-            {
-                m_warningPopup->setShowPanel(true);
-                m_warningText->setShowEnabled(true);
-            }
+            // if(m_storedColor != m_boneColor && m_storedColor != m_zeroColor)
+            // {
+            //     m_warningPopup->setShowPanel(true);
+            //     m_warningText->setShowEnabled(true);
+            // }
 
             m_voxelObj->m_texture->m_image->setVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_zeroColor);
 
@@ -385,7 +385,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     for ( int i=0; i<m_segmentBodyList.size(); i++){
         m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
     }
-    
+
 
     // check if device remains stuck inside voxel object
     // Also orient the force to match the camera rotation

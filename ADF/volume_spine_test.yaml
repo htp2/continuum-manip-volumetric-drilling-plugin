@@ -10,12 +10,12 @@ namespace: /ambf/env/
 VOLUME spine_volume_test:
   name: spine_volume_test
   location:
-    position: {x: -15.000805412371134, y: 0.0, z: 0.0} # placed 745mm away from camera given 1AU = 0.049664m
-    orientation: {r: 1.57079, p: 1.4, y: 0}
+    position: {x: -14.00805412371134, y: 0.3, z: 0.0} # placed 745mm away from camera given 1AU = 0.049664m
+    orientation: {r: 0.0, p: 0.0, y: 3.14159}
   scale: 1.0
-  dimensions: {x: 1.0, y: 1.0, z: 1.0}
+  dimensions: {x: 0.56030543, y: 0.57151154, z: 0.59952681}
   images:
-    path: ../resources/volumes/spine_seg_128/
+    path: ../resources/volumes/spine_cropped/
     prefix: plane00
     format: png
     count: 800

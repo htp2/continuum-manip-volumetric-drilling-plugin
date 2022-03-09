@@ -40,26 +40,25 @@
 #     \version   1.0
 # */
 # //==============================================================================
+from numpy import imag
 import nrrd
 import PIL.Image
 import numpy as np
 from argparse import ArgumentParser
 
-
+def convert_png_transparent(image, bg_color=(255,255,255)):
+	# https://stackoverflow.com/questions/765736/how-to-use-pil-to-make-all-white-pixels-transparent
+	# Jonathan Dauwe
+	array = np.array(image, dtype=np.ubyte)
+	mask = (array[:,:,:3] == bg_color).all(axis=2)
+	alpha = np.where(mask, 0, 255)
+	array[:,:,-1] = alpha
+	return PIL.Image.fromarray(np.ubyte(array))
+	
 def save_image(array, im_name):
-	im = PIL.Image.fromarray(array.astype(np.uint8))
-
-	img = im.convert("RGBA")
-	datas = img.getdata()
-
-	newData = []
-	for item in datas:
-		if item[0] == 0 and item[1] == 0 and item[2] == 0:
-			newData.append((0, 0, 0, 0))
-		else:
-			newData.append(item)
-
-	img.putdata(newData)
+	img = PIL.Image.fromarray(array.astype(np.uint8))
+	img = img.convert("RGBA")
+	img = convert_png_transparent(img, bg_color=(0,0,0))
 	img.save(im_name)
 
 
@@ -93,10 +92,10 @@ def main():
 	print(parsed_args)
 
 	data, header = nrrd.read(parsed_args.nrrd_file)
-
+	print("Data size: " +  str(data.shape))
+	print("Scaling: " + str(data.shape/np.linalg.norm(data.shape)))
 	normalized_data = normalize_data(data)
-	# scaled_data = scale_data(normalized_data, 255.9)
-	scaled_data = scale_data(normalized_data, 127.9)
+	scaled_data = scale_data(normalized_data, 255.9)
 
 	save_volume_as_images(scaled_data, parsed_args.image_prefix)
 
