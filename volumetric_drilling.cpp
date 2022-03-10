@@ -659,7 +659,7 @@ void afVolmetricDrillingPlugin::drillPoseUpdateFromCursors(){
     // std::cout << "LOCALPOSPROXY: " << m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy()<< std::endl;
     // std::cout << "LOCALPOSGOAL: " << m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosGoal()<< std::endl;
     
-    std::cout << "Error: " << (m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy() - m_drillRigidBody->getLocalTransform().getLocalPos()) << std::endl;
+    // std::cout << "Error: " << (m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy() - m_drillRigidBody->getLocalTransform().getLocalPos()) << std::endl;
     // T_tip.setLocalPos(m_drillRigidBody->getLocalPos() + (m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy() - m_drillRigidBody->getLocalPos()) * 0.004);
 
     T_tip.setLocalRot(newDrillRot);
@@ -772,42 +772,42 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
 
         // controls linear motion of tool
         if (a_key == GLFW_KEY_W) {
-
-            cVector3d dir = m_mainCamera->getUpVector() * m_drillRate;
+            cVector3d dir = m_drillRigidBody->getLocalRot().getCol2() * m_drillRate; //z-direction
+            // cVector3d dir = m_mainCamera->getUpVector() * m_drillRate;
             incrementDevicePos(dir);
         }
 
         else if (a_key == GLFW_KEY_D) {
-
-            cVector3d dir = m_mainCamera->getRightVector() * m_drillRate;
+            cVector3d dir = m_drillRigidBody->getLocalRot().getCol0() * m_drillRate; //x-direction
+            // cVector3d dir = m_mainCamera->getRightVector() * m_drillRate;
             incrementDevicePos(dir);
 
         }
 
         else if (a_key == GLFW_KEY_S) {
 
-            cVector3d dir = m_mainCamera->getUpVector() * m_drillRate;
+            cVector3d dir = m_drillRigidBody->getLocalRot().getCol2() * m_drillRate; //z-direction
             incrementDevicePos(-dir);
 
         }
 
         else if (a_key == GLFW_KEY_A) {
 
-            cVector3d dir = m_mainCamera->getRightVector() * m_drillRate;
+            cVector3d dir = m_drillRigidBody->getLocalRot().getCol0() * m_drillRate; //x-direction
             incrementDevicePos(-dir);
 
         }
 
         else if (a_key == GLFW_KEY_K) {
 
-            cVector3d dir = m_mainCamera->getLookVector() * m_drillRate;
+            cVector3d dir = m_drillRigidBody->getLocalRot().getCol1() * m_drillRate; //y-direction
             incrementDevicePos(-dir);
 
         }
 
         else if (a_key == GLFW_KEY_I) {
 
-            cVector3d dir = m_mainCamera->getLookVector() * m_drillRate;
+            cVector3d dir = m_drillRigidBody->getLocalRot().getCol1() * m_drillRate; //y-direction
             incrementDevicePos(dir);
         }
 

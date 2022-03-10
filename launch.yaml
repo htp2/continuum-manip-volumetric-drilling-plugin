@@ -20,3 +20,5 @@ multibody configs:
   - "ADF/single_stereo_camera.yaml" #6
   - "ADF/bigss_snake_centered.yaml" #7
   - "ADF/volume_spine_test.yaml" #8
+  - "ADF/volume_spine_full.yaml" #9
+  - "ADF/spine_cropped_highres.yaml" #10

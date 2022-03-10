@@ -1,0 +1,25 @@
+# AMBF Version: (0.1)
+bodies: []
+joints: []
+volumes: [VOLUME spine_volume_test]
+high resolution path: ./meshes/high_res/
+low resolution path: ./meshes/low_res/
+ignore inter-collision: true
+namespace: /ambf/env/
+
+VOLUME spine_volume_test:
+  name: spine_volume_test
+  location:
+    position: {x: -14.00805412371134, y: 0.3, z: 3.0} # placed 745mm away from camera given 1AU = 0.049664m
+    orientation: {r: 0.0, p: 0.0, y: 3.14159}
+  scale: 1.0
+  dimensions: {x: 0.50736832, y: 0.40232722, z: 0.76204343}
+  images:
+    path: ../resources/volumes/spine_full/
+    prefix: plane00
+    format: png
+    count: 800
+  shaders:
+    path: ./shaders/volume/
+    vertex: shader.vs
+    fragment: shader.fs
