@@ -152,6 +152,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         m_worldPtr->addSceneObjectToWorld(burr_cursor);
     }
 
+
     // m_toolCursorList.resize(m_segmentBodyList.size()+2);
     // m_segmentToolCursorList.resize(num_segs);
     // m_shaftToolCursorList.resize(1); // eventually will be several to represent full shaft length
@@ -172,7 +173,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     
 
 
-    m_volumeObject = m_worldPtr->getVolume("spine_volume_test");
+    // m_volumeObject = m_worldPtr->getVolume("spine_volume_test");
+    m_volumeObject = m_worldPtr->getVolume("mastoidectomy_volume");
+
     if (!m_volumeObject){
         cerr << "ERROR! FAILED TO FIND DRILL VOLUME NAMED " << "spine_volume_test" << endl;
         return -1;
@@ -1087,7 +1090,6 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
             changeDrillSize();
         }
     }
-
 }
 
 

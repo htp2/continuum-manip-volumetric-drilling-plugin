@@ -94,9 +94,9 @@ BODY snake_stick:
       y: 0
   passive: false
   color: random
-  publish children names: false
-  publish joint names: false
-  publish joint positions: false
+  publish children names: true
+  publish joint names: true
+  publish joint positions: true
   friction:
     rolling: 0.0
     static: 0.5
@@ -1291,7 +1291,7 @@ JOINT joint1:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1322,7 +1322,7 @@ JOINT joint2:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1353,7 +1353,7 @@ JOINT joint3:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1384,7 +1384,7 @@ JOINT joint4:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1415,7 +1415,7 @@ JOINT joint5:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1446,7 +1446,7 @@ JOINT joint6:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1477,7 +1477,7 @@ JOINT joint7:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1508,7 +1508,7 @@ JOINT joint8:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1539,7 +1539,7 @@ JOINT joint9:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1570,7 +1570,7 @@ JOINT joint10:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1601,7 +1601,7 @@ JOINT joint11:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1632,7 +1632,7 @@ JOINT joint12:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1663,7 +1663,7 @@ JOINT joint13:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1694,7 +1694,7 @@ JOINT joint14:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1725,7 +1725,7 @@ JOINT joint15:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1756,7 +1756,7 @@ JOINT joint16:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1787,7 +1787,7 @@ JOINT joint17:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1818,7 +1818,7 @@ JOINT joint18:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1849,7 +1849,7 @@ JOINT joint19:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1880,7 +1880,7 @@ JOINT joint20:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1911,7 +1911,7 @@ JOINT joint21:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1942,7 +1942,7 @@ JOINT joint22:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -1973,7 +1973,7 @@ JOINT joint23:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -2004,7 +2004,7 @@ JOINT joint24:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -2035,7 +2035,7 @@ JOINT joint25:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -2066,7 +2066,7 @@ JOINT joint26:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
@@ -2097,7 +2097,7 @@ JOINT joint27:
     high: 0.0872665
     low: -0.0872665
   enable feedback: false
-  passive: true
+  passive: false
   controller output type: POSITION
   type: angular spring
   max motor impulse: 10.0
