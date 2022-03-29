@@ -1,6 +1,7 @@
 enclosure size: {length: 10.0, width: 10.0, height: 3.0}
 lights: [light1, light2]
 cameras: [main_camera]
+#cameras: [main_camera, camera_carm]
 environment: ./checkered_floor.yaml
 namespace: /ambf/env/
 max iterations: 50
@@ -66,3 +67,16 @@ main_camera:
   #    fragment: shader.fs
 
   # multipass: true
+
+#camera_carm:
+#  namespace: cameras/
+#  name: camera_carm
+#  location: {x: 10.0, y: 10.0, z: 0.0}
+#  look at: {x: -15.000805412371134, y: 0.0, z: 0.0}
+
+#  up: {x: 0.0, y: 0.0, z: 1.0}
+#  clipping plane: {near: 6.040592783505154, far: 1006.7654639175257}
+#  field view angle: 0.0959263737541534 # so that focal length is approximately 1000px and phantom is 250 mm away
+#  monitor: 0
+#  publish image interval: 5   # Publish every nth scene update
+#  publish image resolution: {width: 640, height: 480}
