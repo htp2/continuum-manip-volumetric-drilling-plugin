@@ -138,27 +138,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     std::cout << "T_carm: " << T_carm.getLocalPos() << std::endl;
 
     // m_segmentBodyList.push_back(m_drillRigidBody);
-    cWorld* chai_world = a_afWorld->getChaiWorld();
-    int num_segs = 27;
-    int num_shaft_cursor = 1;
-    int num_burr_cursor = 1;
 
-    for(int i = 1; i<=num_segs; i++){
-        m_segmentBodyList.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY seg" + to_string(i)));
-        auto seg_cursor = new cToolCursor(chai_world);
-        m_segmentToolCursorList.push_back(seg_cursor);
-        m_worldPtr->addSceneObjectToWorld(seg_cursor);
-    }
-    for(int i = 0; i<num_shaft_cursor; i++){
-        auto shaft_cursor = new cToolCursor(chai_world);
-        m_shaftToolCursorList.push_back(shaft_cursor);
-        m_worldPtr->addSceneObjectToWorld(shaft_cursor);
-    }
-        for(int i = 0; i<num_shaft_cursor; i++){
-        auto burr_cursor = new cToolCursor(chai_world);
-        m_burrToolCursorList.push_back(burr_cursor);
-        m_worldPtr->addSceneObjectToWorld(burr_cursor);
-    }
 
 
     // m_toolCursorList.resize(m_segmentBodyList.size()+2);
@@ -529,6 +509,27 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
 /// \return
 ///
 void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
+    cWorld* chai_world = a_afWorld->getChaiWorld();
+    int num_segs = 27;
+    int num_shaft_cursor = 1;
+    int num_burr_cursor = 1;
+
+    for(int i = 1; i<=num_segs; i++){
+        m_segmentBodyList.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY seg" + to_string(i)));
+        auto seg_cursor = new cToolCursor(chai_world);
+        m_segmentToolCursorList.push_back(seg_cursor);
+        // m_worldPtr->addSceneObjectToWorld(seg_cursor);
+    }
+    for(int i = 0; i<num_shaft_cursor; i++){
+        auto shaft_cursor = new cToolCursor(chai_world);
+        m_shaftToolCursorList.push_back(shaft_cursor);
+        // m_worldPtr->addSceneObjectToWorld(shaft_cursor);
+    }
+        for(int i = 0; i<num_shaft_cursor; i++){
+        auto burr_cursor = new cToolCursor(chai_world);
+        m_burrToolCursorList.push_back(burr_cursor);
+        // m_worldPtr->addSceneObjectToWorld(burr_cursor);
+    }
 
     for( auto& shaft_cursor : m_shaftToolCursorList){
         // std::cout << shaft_cursor << std::endl;
@@ -569,6 +570,8 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
     for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
             for( auto& cursor : cursor_list){
                 cursor->initialize();
+                m_worldPtr->addSceneObjectToWorld(cursor);
+
         }
     }
     }
