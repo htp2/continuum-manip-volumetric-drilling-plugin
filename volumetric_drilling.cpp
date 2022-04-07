@@ -40,6 +40,9 @@
 
     \author    <pkunjam1@jhu.edu>
     \author    Punit Kunjam
+
+    \author    <henry.phalen@jhu.edu>
+    \author    Henry Phalen
 */
 //==============================================================================
 
@@ -128,6 +131,11 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         m_lastSegmentRigidBody->addChildSceneObject(m_burrMesh, offset);
         m_worldPtr->addSceneObjectToWorld(m_burrMesh);
     }
+
+    // import carm model
+    m_carmRigidBody = m_worldPtr->getRigidBody("carm");
+    T_carm = m_carmRigidBody->getLocalTransform();
+    std::cout << "T_carm: " << T_carm.getLocalPos() << std::endl;
 
     // m_segmentBodyList.push_back(m_drillRigidBody);
     cWorld* chai_world = a_afWorld->getChaiWorld();
@@ -1132,7 +1140,8 @@ bool afVolmetricDrillingPlugin::applyCablePull(){
     m_cable_pull_mag += cable_pull_mag_change;
     // std::cout << "cable: " << m_cable_pull_mag << std::endl;
     auto z = cVector3d(0.0, 0.0, 1.0);
-    m_segmentBodyList.back()->applyTorque(m_cable_pull_mag*z);
+    auto last_seg_ptr = m_segmentBodyList.back();
+    last_seg_ptr->applyTorque(m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol2());
     // for (auto& seg : m_segmentBodyList){
     //     seg->applyTorque(m_cable_pull_mag_goal*z);
     // }

@@ -52,6 +52,8 @@ protected:
 
 private:
     cTransform T_d; // Drills target pose
+    cTransform T_carm; // Carm pose
+
     cTransform T_burr; // Burr pose
 
     cTransform T_i; // Input device transform
@@ -90,6 +92,7 @@ private:
     bool m_flagMarkVolumeForUpdate = false;
 
     afRigidBodyPtr m_drillRigidBody;
+    afRigidBodyPtr m_carmRigidBody;
 
     afRigidBodyPtr m_lastSegmentRigidBody;
 

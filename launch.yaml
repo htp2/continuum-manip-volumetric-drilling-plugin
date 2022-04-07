@@ -1,3 +1,4 @@
+# AMBF Version: (0.1)
 # This is the base file for Coordination Application
 # world config: ADF/world/world.yaml
 world config: ADF/world/world.yaml
@@ -22,3 +23,4 @@ multibody configs:
   - "ADF/volume_spine_test.yaml" #8
   - "ADF/volume_spine_full.yaml" #9
   - "ADF/spine_cropped_highres.yaml" #10
+  - "ADF/carm.yaml" #11

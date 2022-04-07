@@ -3,5 +3,6 @@
 ~.old
 build/
 .idea/
+*.vscode/**
 
 *.pyc

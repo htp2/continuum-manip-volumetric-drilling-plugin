@@ -76,9 +76,9 @@ BODY snake_stick:
   scale: 1.0
   location:
     position:
-      x: -13.0
-      y: 0.5
-      z: 0.0
+      x: 0.181649871585
+      y: 0.0
+      z: -0.11230000482
     orientation:
       r: 0.0
       p: -0.0
