@@ -574,7 +574,7 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
 
         }
     }
-    }
+}
 
 
 ///
