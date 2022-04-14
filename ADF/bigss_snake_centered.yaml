@@ -78,14 +78,14 @@ BODY snake_stick:
     position:
       x: 0.181649871585
       y: 0.0
-      z: -0.11230000482
+      z: -10.0
       # x: -1.695240
       # y: -0.586491
       # z:  -9.82
     orientation:
       r: 0.0
       p: -0.0
-      y: 1.57
+      y: 3.14159
   inertial offset:
     position:
       x: 0.0003085081

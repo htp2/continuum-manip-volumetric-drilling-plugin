@@ -51,7 +51,7 @@ protected:
     bool applyCablePull();
 
 private:
-    cTransform T_d; // Drills target pose
+    cTransform T_contmanip_base; // Drills target pose
     cTransform T_carm; // Carm pose
 
     cTransform T_burr; // Burr pose
@@ -91,7 +91,7 @@ private:
 
     bool m_flagMarkVolumeForUpdate = false;
 
-    afRigidBodyPtr m_drillRigidBody;
+    afRigidBodyPtr m_contManipBaseRigidBody;
     afRigidBodyPtr m_carmRigidBody;
 
     afRigidBodyPtr m_lastSegmentRigidBody;
