@@ -25,4 +25,9 @@ multibody configs:
   - "ADF/spine_cropped_highres.yaml" #10
   - "ADF/carm.yaml" #11
   - "ADF/femur_hip_cong.yaml" #12
+  - "ADF/spine_volume.yaml" #13
+  - "ADF/built_model.yaml" #14
+  - "ADF/spine_seg.yaml" #15
+  - "ADF/bigss_snake_centered_onetenth.yaml" #16
+  - "ADF/bigss_snake_centered_m.yaml" #17
 

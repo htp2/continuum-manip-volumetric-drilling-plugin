@@ -50,6 +50,8 @@ protected:
 
     bool applyCablePull();
 
+    cTransform btTransformTocTransform(const btTransform& in);
+
 private:
     cTransform T_contmanip_base; // Drills target pose
     cTransform T_carm; // Carm pose
@@ -58,6 +60,8 @@ private:
 
     cTransform T_i; // Input device transform
     cVector3d V_i; // Input device linear velocity
+
+    double m_ambf_scale_to_mm;
 
     bool m_overrideDrillControl = false;
 

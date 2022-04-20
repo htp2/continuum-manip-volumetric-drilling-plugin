@@ -75,7 +75,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         return -1;
     }
     std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
-
+    anatomy_volume_name = "spine_seg";
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
 
     m_boneColor = cColorb(255, 249, 219, 255);
@@ -95,22 +95,24 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_contManipBaseRigidBody = m_worldPtr->getRigidBody("snake_stick");
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
     std::cout << "T_D: " << T_contmanip_base.getLocalPos() << std::endl;
+    std::cout << "T_D2: " << m_contManipBaseRigidBody->getGlobalTransform().getLocalPos() << std::endl;
+
     m_lastSegmentRigidBody = m_worldPtr->getRigidBody("/ambf/env/BODY seg27");
 
     if (!m_contManipBaseRigidBody){
         cerr << "ERROR! FAILED TO FIND DRILL RIGID BODY NAMED " << "snake_stick" << endl;
         return -1;
     }
-
+    m_ambf_scale_to_mm = 0.01;
     // Add drill burr
-    double burr_r = 0.01 * 6.5/2;
+    double burr_r = m_ambf_scale_to_mm * 6.5/2;
     m_burrMesh = new cShapeSphere(burr_r); // 2mm by default with 1 AMBF unit = 0.049664 m
     m_burrMesh->setRadius(burr_r);
     m_burrMesh->m_material->setBlack();
     m_burrMesh->m_material->setShininess(0);
     m_burrMesh->m_material->m_specular.set(0, 0, 0);
     m_burrMesh->setShowEnabled(true);
-    cTransform offset(cVector3d(0.0,0.01*3,0.0));
+    cTransform offset(cVector3d(0.0,m_ambf_scale_to_mm*3,0.0));
     m_lastSegmentRigidBody->addChildSceneObject(m_burrMesh, offset);
     m_worldPtr->addSceneObjectToWorld(m_burrMesh);
     
@@ -456,21 +458,21 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
 
         // if the haptic device has a gripper, enable it as a user switch
         m_hapticDevice->setEnableGripperUserSwitch(true);
-        shaft_cursor->setRadius(0.043); 
+        shaft_cursor->setRadius(m_ambf_scale_to_mm*6/2); 
     }
 
     for( auto& burr_cursor : m_burrToolCursorList){
         burr_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
         burr_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
         burr_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
-        burr_cursor->setRadius(0.065/2);
+        burr_cursor->setRadius(m_ambf_scale_to_mm*6.5/2);
     }
 
     for( auto& seg_cursor : m_segmentToolCursorList){
         seg_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
         seg_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
         seg_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
-        seg_cursor->setRadius(0.03);
+        seg_cursor->setRadius(m_ambf_scale_to_mm*6/2);
     }
 
     // Initialize the start pose of the tool cursors
@@ -516,8 +518,15 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose){
     //     m_toolCursorList[i]->setDeviceLocalPos(P);
     //     m_toolCursorList[i]->setDeviceLocalRot(a_targetPose.getLocalRot());
     // }
+    
     for( auto& shaft_cursor : m_shaftToolCursorList){
+        // shaft_cursor->setDeviceLocalTransform(a_targetPose*btTransformTocTransform(m_contManipBaseRigidBody->getInverseInertialOffsetTransform()));
         shaft_cursor->setDeviceLocalTransform(a_targetPose);
+   // const auto& temp = m_contManipBaseRigidBody->getInverseInertialOffsetTransform().getOrigin();
+        // std::cout << temp.getX() << "," << temp.getY() << "," << temp.getZ() << "," << std::endl;
+        
+        
+        
         // shaft_cursor->setDeviceLocalPos(a_targetPose.getLocalPos());
         // shaft_cursor->setDeviceLocalRot(a_targetPose.getLocalRot());
     }
@@ -571,6 +580,7 @@ void afVolmetricDrillingPlugin::drillPoseUpdateFromCursors(){
     cTransform T_newContManipBase;
     T_newContManipBase.setLocalPos(m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy());
     T_newContManipBase.setLocalRot(newContManipBaseRot);
+    T_newContManipBase = T_newContManipBase * btTransformTocTransform(m_contManipBaseRigidBody->getInertialOffsetTransform()); // handle offset due to fact that origin is not at center of body
     m_contManipBaseRigidBody->setLocalTransform(T_newContManipBase);
 }
 
@@ -913,3 +923,16 @@ bool afVolmetricDrillingPlugin::applyCablePull(){
     last_seg_ptr->applyTorque(m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol2());
 
 }
+
+cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform& in){    
+    const auto& in_pos = in.getOrigin();
+    const auto& in_rot = in.getRotation();
+
+    cVector3d pos( in_pos.x(), in_pos.y(), in_pos.z() );
+    const auto& axis = in_rot.getAxis();
+    cVector3d c_axis( axis.getX(), axis.getY(), axis.getZ() );
+    cMatrix3d rot(c_axis, in_rot.getAngle()); 
+    cTransform out(pos, rot);
+    return out;
+}
+

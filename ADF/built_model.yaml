@@ -1,0 +1,25 @@
+# AMBF Version: (0.1)
+bodies: []
+joints: []
+volumes: [VOLUME built_model]
+high resolution path: ./meshes/high_res/
+low resolution path: ./meshes/low_res/
+ignore inter-collision: true
+namespace: /ambf/env/
+
+VOLUME built_model:
+  name: built_model
+  location:
+    position: {x: 0.005, y: 0.3852972, z: 0.005}
+    orientation: {r: 0.0, p: 0.0, y: 1.5707963267948966}
+  scale: 10.0
+  dimensions: {x: 0.07107100232690573, y: 0.05680000185966492, z: 0.007100000232458115}
+  images:
+    path: ../resources/volumes/built_model/
+    prefix: plane00
+    format: png
+    count: 1001
+  shaders:
+    path: ./shaders/volume/
+    vertex: shader.vs
+    fragment: shader.fs
