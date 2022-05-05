@@ -6,5 +6,6 @@ build/
 *.vscode/**
 
 */volumes/**
+**/output/**
 
 *.pyc
