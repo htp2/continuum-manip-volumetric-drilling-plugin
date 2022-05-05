@@ -30,4 +30,7 @@ multibody configs:
   - "ADF/spine_seg.yaml" #15
   - "ADF/bigss_snake_centered_onetenth.yaml" #16
   - "ADF/bigss_snake_centered_m.yaml" #17
+  - "ADF/anatomy_tracker.yaml" #18
+  - "ADF/debug_xform.yaml" #19
+  - "ADF/debug2_xform.yaml" #20
 

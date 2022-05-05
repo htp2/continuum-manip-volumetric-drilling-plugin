@@ -2,6 +2,7 @@
 #define GL_SILENCE_DEPRECATION
 #include <afFramework.h>
 #include "collision_publisher.h"
+#include "cable_pull_subscriber.h"
 
 using namespace std;
 using namespace ambf;
@@ -24,6 +25,7 @@ class afVolmetricDrillingPlugin: public afSimulatorPlugin{
     virtual bool close() override;
 
     DrillingPublisher* m_drillingPub;
+    CablePullSubscriber* m_cablePullSub;
 protected:
     // Initialize tool cursors
     void toolCursorInit(const afWorldPtr);
@@ -49,6 +51,7 @@ protected:
     void setOverrideDrillControl(bool val){m_overrideDrillControl = val;}
 
     bool applyCablePull();
+    void UpdateCablePullText();
 
     cTransform btTransformTocTransform(const btTransform& in);
 
@@ -117,7 +120,7 @@ private:
     afCameraPtr m_mainCamera;
 
     bool m_showDrill = true;
-
+    bool m_cableKeyboardControl = true;
     bool m_showGoalProxySpheres = true;
 
     // list of tool cursors
@@ -142,6 +145,7 @@ private:
     cLabel* m_cablePullMagText;
 
     cLabel* m_drillControlModeText;
+    cLabel* m_cableControlModeText;
 
     // current and maximum distance between proxy and goal spheres
     double m_currError = 0;
@@ -172,6 +176,7 @@ private:
     double m_cable_pull_mag = 0.0;
 
 };
+
 
 
 AF_REGISTER_SIMULATOR_PLUGIN(afVolmetricDrillingPlugin)

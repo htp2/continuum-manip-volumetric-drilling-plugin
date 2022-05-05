@@ -90,7 +90,7 @@ def save_volume_as_images(data, im_prefix):
 		im_name = im_prefix + '0' + str(i) + '.png'
 		save_image(data[:, :, i], im_name)
 
-def save_yaml_file(data_size, dimensions, volume_name, yaml_save_location, origin):
+def save_yaml_file(data_size, dimensions, volume_name, yaml_save_location, origin, scale):
 	# Note a swap in the 'x' and 'y' coordinates as a result of nrrd being HxW vs WxH for AMBF
 	lines = []
 	lines.append("# AMBF Version: (0.1)")
@@ -107,7 +107,7 @@ def save_yaml_file(data_size, dimensions, volume_name, yaml_save_location, origi
 	lines.append("  location:")
 	lines.append("    position: {x: " + str(origin[1])+", y: "+str(origin[0])+", z: "+str(origin[2])+"}")
 	lines.append("    orientation: {r: 0.0, p: 0.0, y: " + str(np.pi/2)+"}")
-	lines.append("  scale: 1.0")
+	lines.append("  scale: "+str(scale))
 	lines.append("  dimensions: {x: "+str(dimensions[1])+", y: "+str(dimensions[0])+", z: " + str(dimensions[2]) +"}")
 	lines.append("  images:")
 	lines.append("    path: ../resources/volumes/"+volume_name+"/")
@@ -154,12 +154,14 @@ def main():
 		print("creating :" + png_img_dir)
 		mkdir(png_img_dir)	
 
+	scale = 10.0
+
 	data, header = nrrd.read(parsed_args.nrrd_file)
 	if header['space'] != 'left-posterior-superior':
 		print("WARNING: Coord system is not LPS, but: "+ header['space'])
 	dimensions_mm = np.matmul(header['space directions'],header['sizes'])
 	dimensions_m = 0.001*(dimensions_mm)
-	origin_mm = 1.0*header['space origin'] + dimensions_mm/2
+	origin_mm = scale*(header['space origin'] + (dimensions_mm/2))
 	origin_m = 0.001 * origin_mm
 	print(header)
 	data_size = data.shape
@@ -172,7 +174,7 @@ def main():
 	scaled_data = scale_data(normalized_data, 255.9)
 	
 	save_volume_as_images(scaled_data, png_img_dir+parsed_args.image_prefix)
-	save_yaml_file(data_size, dimensions_m, parsed_args.volume_name, parsed_args.yaml_save_location, origin_m)
+	save_yaml_file(data_size, dimensions_m, parsed_args.volume_name, parsed_args.yaml_save_location, origin_m, scale)
 
 
 

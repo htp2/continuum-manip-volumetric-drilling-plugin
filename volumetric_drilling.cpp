@@ -127,6 +127,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         cerr << "ERROR! FAILED TO FIND DRILL VOLUME NAMED " << anatomy_volume_name << endl;
         return -1;
     }
+    std::cout << "TEST" << m_volumeObject->getLocalPos() <<std::endl;
     m_voxelObj = m_volumeObject->getInternalVolume();
 
     // create a haptic device handler
@@ -157,8 +158,8 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_cablePullMagText = new cLabel(font);
     m_cablePullMagText->setLocalPos(20,70);
     m_cablePullMagText->m_fontColor.setBlack();
-    m_cablePullMagText->setFontScale(.75);
-    m_cablePullMagText->setText("Cable Pull Magnitude: " + cStr(m_cable_pull_mag_goal, 5));
+    m_cablePullMagText->setFontScale(.5);
+    UpdateCablePullText();
     m_mainCamera->getFrontLayer()->addChild(m_cablePullMagText);
 
     m_drillControlModeText = new cLabel(font);
@@ -168,13 +169,29 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_drillControlModeText->setText("Drill Control Mode = Haptic Device / Keyboard");
     m_mainCamera->getFrontLayer()->addChild(m_drillControlModeText);
 
+    m_cableControlModeText = new cLabel(font);
+    m_cableControlModeText->setLocalPos(20,10);
+    m_cableControlModeText->m_fontColor.setGreen();
+    m_cableControlModeText->setFontScale(.5);
+    m_cableControlModeText->setText("Cable Control Mode = Keyboard");
+    m_mainCamera->getFrontLayer()->addChild(m_cableControlModeText);
+
+    // TODO?: load xray image into AMBF directly
+    // auto xray_image = std::make_shared<cImage>(100,100);
+    // xray_image->setPixelColor(10,10,1);
+    // // create bitmap object
+    // cBitmap* bitmap = new cBitmap();
+    // // add bitmap to front layer of camera
+    // m_mainCamera->getFrontLayer()->addChild(bitmap);
+    // // load image file
+    // bitmap->loadFromImage(xray_image);
+
     // Get drills initial pose
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
     T_burr = m_burrMesh->getLocalTransform();
 
     // Set up voxels_removed publisher
     m_drillingPub = new DrillingPublisher("ambf", "volumetric_drilling");
-
     // Volume Properties
     float dim[3];
     dim[0] = m_volumeObject->getDimensions().get(0);
@@ -188,11 +205,13 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     m_drillingPub -> volumeProp(dim, voxelCount);
 
+    // Set up cable pull subscriber
+    m_cablePullSub = new CablePullSubscriber("ambf", "volumetric_drilling");
     return 1;
 }
 
 void afVolmetricDrillingPlugin::graphicsUpdate(){
-
+    UpdateCablePullText();
     // update region of voxels to be updated
     if (m_flagMarkVolumeForUpdate)
     {
@@ -640,18 +659,20 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         }
 
         else if (a_key == GLFW_KEY_SEMICOLON) {
-            m_cable_pull_mag_goal += 0.001;
-            // std::cout << "Cable pull mag: " << m_cable_pull_mag_goal << std::endl;
-            m_cablePullMagText->setText("Cable Pull Magnitude: " + cStr(m_cable_pull_mag_goal, 5));
-
+            if(m_cableKeyboardControl){
+                m_cable_pull_mag_goal += 0.001;
+            }
         }
         else if (a_key == GLFW_KEY_APOSTROPHE) {
-            m_cable_pull_mag_goal -= 0.001;
-            // std::cout << "Cable pull mag: " << m_cable_pull_mag_goal << std::endl;
-            m_cablePullMagText->setText("Cable Pull Magnitude: " + cStr(m_cable_pull_mag_goal, 5));
-
+            if(m_cableKeyboardControl){
+                m_cable_pull_mag_goal -= 0.001;
+            }
         }
-
+        else if (a_key == GLFW_KEY_SLASH) {
+            m_cableKeyboardControl = !m_cableKeyboardControl;
+            std::string cable_control_mode = m_cableKeyboardControl?"Keyboard":"Subscriber";
+            m_cableControlModeText->setText("Cable Control Mode = " + cable_control_mode);
+        }
         // option - polygonize model and save to file
         else if (a_key == GLFW_KEY_F9) {
             cMultiMesh *surface = new cMultiMesh;
@@ -912,12 +933,16 @@ bool afVolmetricDrillingPlugin::close()
 }
 
 bool afVolmetricDrillingPlugin::applyCablePull(){
+    if(!m_cableKeyboardControl){
+        m_cable_pull_mag_goal = m_cablePullSub->cable_pull_target;
+    }
     double cable_pull_mag_err = (m_cable_pull_mag_goal - m_cable_pull_mag);
     double cable_pull_mag_change = 0.01*cable_pull_mag_err;
     if (abs(cable_pull_mag_change) > 0.00001){
         cable_pull_mag_change =  cable_pull_mag_change/abs(cable_pull_mag_change) * 0.00001;
     }
     m_cable_pull_mag += cable_pull_mag_change;
+    m_cablePullSub->publishCablePullMeasured(m_cable_pull_mag);
     auto z = cVector3d(0.0, 0.0, 1.0);
     auto last_seg_ptr = m_segmentBodyList.back();
     last_seg_ptr->applyTorque(m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol2());
@@ -936,3 +961,6 @@ cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform&
     return out;
 }
 
+void afVolmetricDrillingPlugin::UpdateCablePullText(){
+    m_cablePullMagText->setText("Cable Pull Actual(Goal): " + cStr(m_cable_pull_mag,5) + "(" + cStr(m_cable_pull_mag_goal, 5) + ")");
+}
