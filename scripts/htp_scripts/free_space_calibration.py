@@ -22,8 +22,8 @@ class free_space_calibration:
         base_marker_sub = rospy.Subscriber('ambf/env/snake_stick/State', RigidBodyState, self.ambf_base_marker_sub_callback)
         tip_marker_sub  = rospy.Subscriber('ambf/env/seg27/State', RigidBodyState, self.ambf_tip_marker_sub_callback)
         
-        bend_sub = rospy.Subscriber('/ambf/volumetric_drilling/cable_pull_measured', Float32, self.bend_sub_callback)
-        self.bend_pub = rospy.Publisher('/ambf/volumetric_drilling/cable_pull_goal', Float32)
+        bend_sub = rospy.Subscriber('/ambf/volumetric_drilling/bend_motor/measured_js/', Float32, self.bend_sub_callback)
+        self.bend_pub = rospy.Publisher('/ambf/volumetric_drilling/bend_motor/move_jp/', Float32)
 
 
         self.collect = False
@@ -56,9 +56,10 @@ class free_space_calibration:
                 continue
 
             if user_in == "A":
-                reps = 2
-                motor_max = 0.025
-                motor_pos = np.linspace(0,motor_max,100)
+                reps = 1
+                motor_min = 0.005
+                motor_max = 0.02
+                motor_pos = np.linspace(motor_min,motor_max,20)
 
                 motor_pos_rev = np.flipud(motor_pos)
                 pos = np.append(motor_pos,motor_pos_rev)
