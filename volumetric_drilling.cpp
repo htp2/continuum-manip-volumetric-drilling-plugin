@@ -94,9 +94,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // importing continuum manipulator model
     m_contManipBaseRigidBody = m_worldPtr->getRigidBody("snake_stick");
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
-    std::cout << "T_D: " << T_contmanip_base.getLocalPos() << std::endl;
-    std::cout << "T_D2: " << m_contManipBaseRigidBody->getGlobalTransform().getLocalPos() << std::endl;
-
     m_lastSegmentRigidBody = m_worldPtr->getRigidBody("/ambf/env/BODY seg27");
 
     if (!m_contManipBaseRigidBody){
@@ -119,7 +116,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // import C-arm (x-ray image source) model
     m_carmRigidBody = m_worldPtr->getRigidBody("carm");
     T_carm = m_carmRigidBody->getLocalTransform();
-    std::cout << "T_carm: " << T_carm.getLocalPos() << std::endl;
 
     // Import anatomy volume
     m_volumeObject = m_worldPtr->getVolume(anatomy_volume_name);
@@ -127,7 +123,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         cerr << "ERROR! FAILED TO FIND DRILL VOLUME NAMED " << anatomy_volume_name << endl;
         return -1;
     }
-    std::cout << "TEST" << m_volumeObject->getLocalPos() <<std::endl;
     m_voxelObj = m_volumeObject->getInternalVolume();
 
     // create a haptic device handler
@@ -175,6 +170,15 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_cableControlModeText->setFontScale(.5);
     m_cableControlModeText->setText("Cable Control Mode = Keyboard");
     m_mainCamera->getFrontLayer()->addChild(m_cableControlModeText);
+
+    // TODO: Add enable volumetric collision indicator
+    // m_cableControlModeText = new cLabel(font);
+    // m_cableControlModeText->setLocalPos(20,10);
+    // m_cableControlModeText->m_fontColor.setGreen();
+    // m_cableControlModeText->setFontScale(.5);
+    // m_cableControlModeText->setText("Cable Control Mode = Keyboard");
+    // m_mainCamera->getFrontLayer()->addChild(m_cableControlModeText);
+
 
     // TODO?: load xray image into AMBF directly
     // auto xray_image = std::make_shared<cImage>(100,100);
@@ -247,98 +251,81 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
     T_burr = m_burrMesh->getLocalTransform();
     toolCursorsPosUpdate(T_contmanip_base);
 
-    // check for shaft collision
-    checkShaftCollision();
+    if (!m_volume_collisions_enabled){
 
-    if (getOverrideDrillControl() == false){
-        // updates position of drill mesh
-        drillPoseUpdateFromCursors();
     }
+    else {
+        // check for shaft collision
+        checkShaftCollision();
 
-    cToolCursor* burr_cursor = m_burrToolCursorList.back();
-    if (burr_cursor->isInContact(m_voxelObj) )//&& m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
-    {
-        for (int ci = 0 ; ci < 3 ; ci++){
-            // retrieve contact event
-            cCollisionEvent* contact = burr_cursor->m_hapticPoint->getCollisionEvent(ci);
+        if (getOverrideDrillControl() == false){
+            // updates position of drill mesh
+            drillPoseUpdateFromCursors();
+        }
 
-            cVector3d orig(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
+        cToolCursor* burr_cursor = m_burrToolCursorList.back();
+        if (burr_cursor->isInContact(m_voxelObj) )//&& m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
+        {
+            for (int ci = 0 ; ci < 3 ; ci++){
+                // retrieve contact event
+                cCollisionEvent* contact = burr_cursor->m_hapticPoint->getCollisionEvent(ci);
 
-            m_voxelObj->m_texture->m_image->getVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_storedColor);
+                cVector3d orig(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
 
-            m_voxelObj->m_texture->m_image->setVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_zeroColor);
+                m_voxelObj->m_texture->m_image->getVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_storedColor);
 
-            //Publisher for voxels removed
-            if(m_storedColor != m_zeroColor)
-            {
-                double sim_time = m_contManipBaseRigidBody->getCurrentTimeStamp();
+                m_voxelObj->m_texture->m_image->setVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_zeroColor);
 
-                double voxel_array[3] = {orig.get(0), orig.get(1), orig.get(2)};
+                //Publisher for voxels removed
+                if(m_storedColor != m_zeroColor)
+                {
+                    double sim_time = m_contManipBaseRigidBody->getCurrentTimeStamp();
 
-                cColorf color_glFloat = m_storedColor.getColorf();
-                float color_array[4];
-                color_array[0] = color_glFloat.getR();
-                color_array[1] = color_glFloat.getG();
-                color_array[2] = color_glFloat.getB();
-                color_array[3] = color_glFloat.getA();
+                    double voxel_array[3] = {orig.get(0), orig.get(1), orig.get(2)};
+
+                    cColorf color_glFloat = m_storedColor.getColorf();
+                    float color_array[4];
+                    color_array[0] = color_glFloat.getR();
+                    color_array[1] = color_glFloat.getG();
+                    color_array[2] = color_glFloat.getB();
+                    color_array[3] = color_glFloat.getA();
 
 
-                m_drillingPub -> voxelsRemoved(voxel_array,color_array,sim_time);
+                    m_drillingPub -> voxelsRemoved(voxel_array,color_array,sim_time);
+                }
+
+                m_mutexVoxel.acquire();
+                m_volumeUpdate.enclose(cVector3d(uint(orig.x()), uint(orig.y()), uint(orig.z())));
+                m_mutexVoxel.release();
+                // mark voxel for update
             }
 
-            m_mutexVoxel.acquire();
-            m_volumeUpdate.enclose(cVector3d(uint(orig.x()), uint(orig.y()), uint(orig.z())));
-            m_mutexVoxel.release();
-            // mark voxel for update
+            m_flagMarkVolumeForUpdate = true;
+        }
+        // compute interaction forces
+        for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
+            for( auto& cursor : cursor_list){
+                cursor->computeInteractionForces();
+            }
         }
 
-        m_flagMarkVolumeForUpdate = true;
-    }
-    // compute interaction forces
-    for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
-        for( auto& cursor : cursor_list){
-            cursor->computeInteractionForces();
+        //apply forces to segments
+        for ( int i=0; i<m_segmentBodyList.size(); i++){
+            m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
         }
+
+
+        // check if device remains stuck inside voxel object
+        // Also orient the force to match the camera rotation
+        cVector3d force = cTranspose(m_mainCamera->getLocalRot()) * m_targetToolCursor->getDeviceLocalForce();
+        // m_toolCursorList[0]->setDeviceLocalForce(force);
+        // for ( int i=0; i<m_segmentBodyList.size(); i++){
+        //     m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
+        //     // std::cout << m_toolCursorList[i+1]->getDeviceLocalForce() << std::endl;
+        // }
     }
-
-    //apply forces to segments
-    for ( int i=0; i<m_segmentBodyList.size(); i++){
-        m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
-    }
-
-
-    // check if device remains stuck inside voxel object
-    // Also orient the force to match the camera rotation
-    cVector3d force = cTranspose(m_mainCamera->getLocalRot()) * m_targetToolCursor->getDeviceLocalForce();
-    // m_toolCursorList[0]->setDeviceLocalForce(force);
-    // for ( int i=0; i<m_segmentBodyList.size(); i++){
-    //     m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
-    //     // std::cout << m_toolCursorList[i+1]->getDeviceLocalForce() << std::endl;
-    // }
     applyCablePull();
 
-    if (m_flagStart)
-    {
-        if (force.length() != 0.0)
-        {
-
-            m_shaftToolCursorList[0]->initialize();
-            m_counter = 0;
-        }
-        else
-        {
-            m_counter++;
-            if (m_counter > 10)
-                m_flagStart = false;
-        }
-    }
-    else
-    {
-        if (force.length() > 10.0)
-        {
-            m_flagStart = true;
-        }
-    }
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -531,33 +518,17 @@ void afVolmetricDrillingPlugin::incrementDeviceRot(cVector3d a_rot){
 /// which eventually updates the position of the whole tool.
 ///
 void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose){
-    // cVector3d n_x = a_targetPose.getLocalRot().getCol0() * m_dX;
-    // for (int i = 0 ; i < m_toolCursorList.size() ; i++){
-    //     cVector3d P = a_targetPose.getLocalPos() + n_x * i;
-    //     m_toolCursorList[i]->setDeviceLocalPos(P);
-    //     m_toolCursorList[i]->setDeviceLocalRot(a_targetPose.getLocalRot());
-    // }
-    
     for( auto& shaft_cursor : m_shaftToolCursorList){
-        // shaft_cursor->setDeviceLocalTransform(a_targetPose*btTransformTocTransform(m_contManipBaseRigidBody->getInverseInertialOffsetTransform()));
         shaft_cursor->setDeviceLocalTransform(a_targetPose);
-   // const auto& temp = m_contManipBaseRigidBody->getInverseInertialOffsetTransform().getOrigin();
-        // std::cout << temp.getX() << "," << temp.getY() << "," << temp.getZ() << "," << std::endl;
-        
-        
-        
-        // shaft_cursor->setDeviceLocalPos(a_targetPose.getLocalPos());
-        // shaft_cursor->setDeviceLocalRot(a_targetPose.getLocalRot());
     }
 
     for( auto& burr_cursor : m_burrToolCursorList){
         burr_cursor->setDeviceLocalTransform(m_burrMesh->getLocalTransform());
     }
+
     for (int i=0; i<m_segmentToolCursorList.size(); i++){
-    // for( auto& seg_cursor : m_segmentToolCursorList){
         m_segmentToolCursorList[i]->setDeviceLocalTransform(m_segmentBodyList[i]->getLocalTransform());
     }
-
 }
 
 ///
@@ -668,6 +639,18 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
                 m_cable_pull_mag_goal -= 0.001;
             }
         }
+        else if (a_key == GLFW_KEY_LEFT_BRACKET) {
+            m_volume_collisions_enabled = !m_volume_collisions_enabled;
+        }
+        else if (a_key == GLFW_KEY_RIGHT_BRACKET) {
+            // for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
+            //     cursor_list.clear();
+            // }
+            toolCursorInit(m_worldPtr);
+
+        }
+
+
         else if (a_key == GLFW_KEY_SLASH) {
             m_cableKeyboardControl = !m_cableKeyboardControl;
             std::string cable_control_mode = m_cableKeyboardControl?"Keyboard":"Subscriber";

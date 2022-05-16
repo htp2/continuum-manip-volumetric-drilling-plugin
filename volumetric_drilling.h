@@ -83,6 +83,8 @@ private:
     cColorb m_zeroColor;
 
     bool m_flagStart = true;
+    
+    bool m_volume_collisions_enabled = false;
 
     int m_counter = 0;
 

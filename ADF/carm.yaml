@@ -22,14 +22,14 @@ BODY carm:
   scale: 0.1
   location:
     position:
-      x: 0.0
-      y: 0.0
-      z: 0.2
-    #   x: -1.695240
-    #   y: -0.586491
-    #   z:  -9.92
+      # x: 0.0
+      # y: 0.0
+      # z: 0.2
+      x: -6.94
+      y: -1.12
+      z: -1.008    
     orientation:
-      r: 0.0
+      r: -1.57
       p: -0.0
       y: 1.57
   inertial offset:

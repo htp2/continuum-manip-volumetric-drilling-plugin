@@ -46,7 +46,7 @@ find_package(AMBF)
 find_package(Boost COMPONENTS program_options filesystem)
 
 add_subdirectory(vdrilling_msgs)
-find_package(catkin COMPONENTS vdrilling_msgs)
+find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs)
 
 include_directories(${AMBF_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
