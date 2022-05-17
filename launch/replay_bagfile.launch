@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="bagfile" default="/home/henry/snake_registration/simulation/rosbags/testing1_2022-05-13-16-49-32.bag"/>
+
+    <node pkg="continuum_manip_volumetric_drilling_plugin" name="replay_bagfile" type="ambf_run_image_cal_offline.py"
+        args="$(arg bagfile)" output="screen"/>
+    
+
+</launch>

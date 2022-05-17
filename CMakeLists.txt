@@ -38,14 +38,14 @@
 #  $Rev:  $
 
 cmake_minimum_required (VERSION 3.1)
-project (volumetric_plugin)
+project (continuum_manip_volumetric_drilling_plugin)
 
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(AMBF)
 find_package(Boost COMPONENTS program_options filesystem)
 
-add_subdirectory(vdrilling_msgs)
+# add_subdirectory(vdrilling_msgs)
 find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs)
 
 include_directories(${AMBF_INCLUDE_DIRS})
@@ -60,8 +60,16 @@ add_definitions(${AMBF_DEFINITIONS})
 message("---> LIBS " ${catkin_INCLUDE_DIRS})
 message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
 
-add_library(volumetric_drilling SHARED volumetric_drilling.cpp volumetric_drilling.h collision_publisher.h collision_publisher.cpp cable_pull_subscriber.h cable_pull_subscriber.cpp)
-add_dependencies(volumetric_drilling ${catkin_EXPORTED_TARGETS})
-target_link_libraries (volumetric_drilling ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
+add_library(continuum_manip_volumetric_drilling_plugin SHARED continuum_manip_volumetric_drilling_plugin.cpp continuum_manip_volumetric_drilling_plugin.h collision_publisher.h collision_publisher.cpp cable_pull_subscriber.h cable_pull_subscriber.cpp)
+add_dependencies(continuum_manip_volumetric_drilling_plugin ${catkin_EXPORTED_TARGETS})
+target_link_libraries (continuum_manip_volumetric_drilling_plugin ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
 
-set_property(TARGET volumetric_drilling PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+set_property(TARGET continuum_manip_volumetric_drilling_plugin PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
+
+catkin_package(
+ INCLUDE_DIRS .
+ LIBRARIES continuum_manip_volumetric_drilling_plugin
+ CATKIN_DEPENDS vdrilling_msgs ambf_msgs
+#  DEPENDS system_lib
+)

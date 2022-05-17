@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+    <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_with_CM_plugin" type="run_cm_debug.sh"
+        output="screen"/>
+    
+
+</launch>

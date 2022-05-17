@@ -46,7 +46,7 @@
 */
 //==============================================================================
 
-#include "volumetric_drilling.h"
+#include "continuum_manip_volumetric_drilling_plugin.h"
 #include <boost/program_options.hpp>
 
 using namespace std;
