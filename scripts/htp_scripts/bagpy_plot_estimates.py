@@ -18,6 +18,14 @@ def scratch():
     b = bagreader("/home/henry/snake_registration/simulation/rosbags/testing1_2022-05-17-11-12-24.bag")
     print(b.topic_table)
 
+    topics = [
+        "/ambf/volumetric_drilling/tip_pos_estimate_calmodelonly",
+        "/ambf/volumetric_drilling/tip_pos_estimate_calmodelonly_relative",
+        "/ambf/volumetric_drilling/tip_pos_estimate_imgonly",
+        "/snake_imager/tip_pos_estimate_imgonly_relative",
+        "/ambf/volumetric_drilling/voxels_removed"
+    ]
+
     bend_cable = b.message_by_topic('/ambf/volumetric_drilling/bend_motor/measured_js')
     snake_base = b.message_by_topic('/ambf/env/snake_stick/State')
     snake_tip = b.message_by_topic('/ambf/env/seg27/State')
