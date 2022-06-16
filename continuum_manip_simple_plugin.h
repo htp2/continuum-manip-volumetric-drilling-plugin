@@ -12,6 +12,9 @@ class ContinuumManip{
     ContinuumManip(const std::string& cont_manip_rigid_body_name, const afWorldPtr a_afWorld )
     : m_cont_manip_rigid_body_name(cont_manip_rigid_body_name){
         m_contManipBaseRigidBody = a_afWorld->getRigidBody(m_cont_manip_rigid_body_name);
+        if (!m_contManipBaseRigidBody){
+           std::cout << "ERROR! FAILED TO FIND RIGID BODY NAMED " << cont_manip_rigid_body_name << endl;
+    }
         m_segmentBodyList.resize(m_num_segs);
         m_segmentJointList.resize(m_num_segs);
         for(auto& a : m_contManipBaseRigidBody->m_CJ_PairsAll){
@@ -34,7 +37,7 @@ class ContinuumManip{
                 // m_segmentJointList.push_back(a_afWorld->getJoint("/ambf/env/JOINT joint" + to_string(i)));
     
     }
-    ~ContinuumManip();
+    ~ContinuumManip(){};
     std::vector<afRigidBodyPtr> m_segmentBodyList;
     std::vector<afJointPtr> m_segmentJointList;
     afRigidBodyPtr m_contManipBaseRigidBody;

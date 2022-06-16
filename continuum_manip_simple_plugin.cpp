@@ -73,13 +73,24 @@ int afContinuumManipSimplePlugin::init(int argc, char **argv, const afWorldPtr a
     // m_contManipBaseRigidBody = m_worldPtr->getRigidBody(cont_manip_rigid_body_name);
     // T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
 
-    manip = std::make_shared<ContinuumManip>("/ambf/env/BODY snake_stick", m_worldPtr);
-    auto manip1 = std::make_shared<ContinuumManip>("/ambf/env/BODY snake_stick1", m_worldPtr);
+    int num_manip = 3;
+    std::string base_name = "/ambf/env/BODY snake_stick";
+    std::string sphere_name = "/ambf/env/BODY Sphere";
+    manip = std::make_shared<ContinuumManip>(base_name, m_worldPtr);
     manip_list.push_back(manip);
-    manip_list.push_back(manip1);
+    test_objects_list.push_back(m_worldPtr->getRigidBody(sphere_name));
+    for(size_t i=1; i<num_manip; i++){
+        std::string new_base_name = base_name+std::to_string(i);
+        auto ptr = std::make_shared<ContinuumManip>(new_base_name, m_worldPtr);
+        manip_list.push_back(ptr);
+        std::string new_sphere_name = sphere_name+std::to_string(i);
+        test_objects_list.push_back(m_worldPtr->getRigidBody(new_sphere_name));
+        
+        auto T = ptr->m_contManipBaseRigidBody->getLocalTransform();
+        T.setLocalPos(T.getLocalPos()+cVector3d(double(i),0.0,0.0));
+        ptr->m_contManipBaseRigidBody->setLocalTransform(T);
+    }
 
-    test_objects_list.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY Sphere"));
-    test_objects_list.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY Sphere1"));
 
     
     
