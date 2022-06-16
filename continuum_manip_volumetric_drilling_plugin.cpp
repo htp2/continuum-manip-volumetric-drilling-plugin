@@ -115,9 +115,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_lastSegmentRigidBody->addChildSceneObject(m_burrMesh, offset);
     m_worldPtr->addSceneObjectToWorld(m_burrMesh);
     
-    // import C-arm (x-ray image source) model
-    m_carmRigidBody = m_worldPtr->getRigidBody("carm");
-    T_carm = m_carmRigidBody->getLocalTransform();
+    // // import C-arm (x-ray image source) model
+    // m_carmRigidBody = m_worldPtr->getRigidBody("carm");
+    // T_carm = m_carmRigidBody->getLocalTransform();
 
     // Import anatomy volume
     m_volumeObject = m_worldPtr->getVolume(anatomy_volume_name);
