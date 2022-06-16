@@ -137,7 +137,7 @@ def main():
     bag = rosbag.Bag(bagfile)
 
     new_bag = rosbag.Bag(bagfile+"_a"+timestamp+".bag", 'w')
-    imaging_rate_hz = 1
+    imaging_rate_hz = 1/10
     est_rate_hz = 20
     epoch_time = rospy.Time()
 
@@ -157,7 +157,7 @@ def main():
     psca_writebag_list = [WriterFromTopicToBag(rate, epoch_time, new_bag, topic, type) for topic, type, rate in new_write_bag_topic_type_rate]
     for psca in psca_writebag_list: psca_list.append(psca)
 
-    stop_freq_hz = 1.0 
+    stop_freq_hz = 1.0/10.0; 
     run_duration = rospy.Duration(secs=1.0/stop_freq_hz)
     topic_seen = np.array(len(topics),dtype=bool)
     all_topics_seen = False

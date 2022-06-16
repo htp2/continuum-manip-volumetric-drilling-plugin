@@ -6,26 +6,20 @@ import pandas as pd
 from matplotlib.widgets import SpanSelector
 import rosbag
 
-class IndexRangeList:
-    def __init__(self, figure):
-        self.range_list = []
-        self.fig = figure
-
-    def onselect(self, xmin, xmax):
-        self.range_list.append((xmin,xmax))
-        self.fig.fill_betweenx( self.fig.axes.get_ylim(), xmin, xmax)
 def scratch():
     b = bagreader("/home/henry/snake_registration/simulation/rosbags/testing1_2022-05-17-11-12-24.bag")
     print(b.topic_table)
 
     topics = [
+        "/ambf/volumetric_drilling/base_to_tip",
         "/ambf/volumetric_drilling/tip_pos_estimate_calmodelonly",
         "/ambf/volumetric_drilling/tip_pos_estimate_calmodelonly_relative",
-        "/ambf/volumetric_drilling/tip_pos_estimate_imgonly",
-        "/snake_imager/tip_pos_estimate_imgonly_relative",
-        "/ambf/volumetric_drilling/voxels_removed"
+        "/snake_imager/image", 
+        "/snake_imager/tip_pos_estimate_imgonly_relative", 
+        "/ambf/volumetric_drilling/tip_pos_estimate_imgonly"
     ]
 
+    
     bend_cable = b.message_by_topic('/ambf/volumetric_drilling/bend_motor/measured_js')
     snake_base = b.message_by_topic('/ambf/env/snake_stick/State')
     snake_tip = b.message_by_topic('/ambf/env/seg27/State')
@@ -74,7 +68,7 @@ import rosbag
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Reorder a bagfile based on header timestamps.')
+    parser = argparse.ArgumentParser(description='Plot some relevant topics from a bagfile')
     parser.add_argument('bagfile', nargs=1, help='input bag file')
     args = parser.parse_args()
     bagfile = args.bagfile[0]

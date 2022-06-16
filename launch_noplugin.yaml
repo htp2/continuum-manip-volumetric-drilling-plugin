@@ -6,10 +6,6 @@ color config: ADF/color/colors.yaml
 input devices config: ADF/input_devices/input_devices.yaml
 plugins: [
   {
-    name: DRILLING_SIMULATOR,
-    filename: libcontinuum_manip_volumetric_drilling_plugin.so,
-    path: ../../build/continuum_manip_volumetric_drilling_plugin/ # This is to use if catkin-built
-    #  path: ../../build/continuum-manip-volumetric-drilling-plugin/  # This is to use if built directly using cmake
   }
 ]
 multibody configs:
@@ -37,4 +33,3 @@ multibody configs:
   - "ADF/pixel.yaml"  #21
   - "ADF/R1_sphere.yaml"  #22
   - "ADF/bigss_snake_centered_collision_meshes.yaml" #23
-  

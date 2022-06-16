@@ -50,7 +50,7 @@ protected:
 
     void setOverrideDrillControl(bool val){m_overrideDrillControl = val;}
 
-    bool applyCablePull();
+    void applyCablePull(double dt);
     void UpdateCablePullText();
 
     cTransform btTransformTocTransform(const btTransform& in);
@@ -124,6 +124,9 @@ private:
     bool m_showDrill = true;
     bool m_cableKeyboardControl = true;
     bool m_showGoalProxySpheres = true;
+    bool m_burrOn = true;
+    bool m_obstacle_estimate_enabled = false;
+    int m_obstacle_estimate_idx = 0;
 
     // list of tool cursors
     vector<cToolCursor*> m_toolCursorList;
@@ -131,9 +134,12 @@ private:
     vector<cToolCursor*> m_segmentToolCursorList;
     vector<cToolCursor*> m_shaftToolCursorList;
     vector<cToolCursor*> m_burrToolCursorList;
-
+    cToolCursor* m_test_cursor;
     vector<afRigidBodyPtr> m_segmentBodyList;
-    
+    vector<afJointPtr> m_segmentJointList;
+    vector<double> m_mag_cmd = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+    vector<double> m_old_jp = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+
     // radius of tool cursors
     vector<double> m_toolCursorRadius{0.02, 0.013, 0.015, 0.017, 0.019, 0.021, 0.023, 0.025};
 
@@ -176,6 +182,8 @@ private:
 
     double m_cable_pull_mag_goal = 0.0;
     double m_cable_pull_mag = 0.0;
+
+    void obstacleEstimate();
 
 };
 

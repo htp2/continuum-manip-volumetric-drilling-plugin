@@ -1,0 +1,27 @@
+# AMBF Version: (0.1)
+bodies: []
+joints: []
+volumes: [VOLUME pixel]
+high resolution path: ./meshes/high_res/
+low resolution path: ./meshes/low_res/
+ignore inter-collision: true
+namespace: /ambf/env/
+
+VOLUME pixel:
+  name: pixel
+  location:
+    # position: {x: 0.4085090637207031, y: 0.20975997924804687, z: -10.755}
+    # orientation: {r: 0.0, p: 0.0, y: 1.5707963267948966}
+    position: {x: 0.3804154501947906, y: 2.0648779400207764, z: -1.5095654839747594}
+    orientation: {r: 0.0, p: 0.0, y: 0.0}
+  scale: 0.1
+  dimensions: {x: 0.9, y: 0.9, z: 0.9}
+  images:
+    path: ../resources/volumes/pixel/
+    prefix: plane00
+    format: png
+    count: 9
+  shaders:
+    path: ./shaders/volume/
+    vertex: shader.vs
+    fragment: shader.fs

@@ -75,7 +75,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         return -1;
     }
     std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
-    anatomy_volume_name = "spine_seg";
+    // anatomy_volume_name = "spine_seg";
+    anatomy_volume_name = "pixel";
+
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
 
     m_boneColor = cColorb(255, 249, 219, 255);
@@ -232,7 +234,6 @@ void afVolmetricDrillingPlugin::graphicsUpdate(){
 void afVolmetricDrillingPlugin::physicsUpdate(double dt){
 
     m_worldPtr->getChaiWorld()->computeGlobalPositions(true);
-
     bool clutch;
 
     // If a valid haptic device is found, then it should be available
@@ -264,7 +265,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         }
 
         cToolCursor* burr_cursor = m_burrToolCursorList.back();
-        if (burr_cursor->isInContact(m_voxelObj) )//&& m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
+        if (m_burrOn && burr_cursor->isInContact(m_voxelObj) )//&& m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
         {
             for (int ci = 0 ; ci < 3 ; ci++){
                 // retrieve contact event
@@ -308,12 +309,10 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
                 cursor->computeInteractionForces();
             }
         }
-
         //apply forces to segments
         for ( int i=0; i<m_segmentBodyList.size(); i++){
             m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
         }
-
 
         // check if device remains stuck inside voxel object
         // Also orient the force to match the camera rotation
@@ -324,7 +323,11 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         //     // std::cout << m_toolCursorList[i+1]->getDeviceLocalForce() << std::endl;
         // }
     }
-    applyCablePull();
+    applyCablePull(dt);
+    if (m_obstacle_estimate_enabled){
+        obstacleEstimate();
+    }
+
 
 
 
@@ -432,6 +435,7 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
 
     for(int i = 1; i<=num_segs; i++){
         m_segmentBodyList.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY seg" + to_string(i)));
+        m_segmentJointList.push_back(m_worldPtr->getJoint("/ambf/env/JOINT joint" + to_string(i)));
         auto seg_cursor = new cToolCursor(chai_world);
         m_segmentToolCursorList.push_back(seg_cursor);
         // m_worldPtr->addSceneObjectToWorld(seg_cursor);
@@ -480,7 +484,13 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
         seg_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
         seg_cursor->setRadius(m_ambf_scale_to_mm*6/2);
     }
-
+    m_test_cursor = new cToolCursor(chai_world);
+    m_test_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
+    m_test_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
+    m_test_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
+    m_test_cursor->setRadius(m_ambf_scale_to_mm * 1.0);
+    m_test_cursor->initialize();
+    m_worldPtr->addSceneObjectToWorld(m_test_cursor);
     // Initialize the start pose of the tool cursors
     toolCursorsPosUpdate(T_contmanip_base);
     for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
@@ -529,6 +539,9 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose){
     for (int i=0; i<m_segmentToolCursorList.size(); i++){
         m_segmentToolCursorList[i]->setDeviceLocalTransform(m_segmentBodyList[i]->getLocalTransform());
     }
+    // auto mesh_vox_viz = m_worldPtr->getRigidBody("/ambf/env/BODY Sphere");
+    // m_test_cursor->setDeviceLocalTransform(m_volumeObject->getLocalTransform());
+
 }
 
 ///
@@ -643,19 +656,54 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
             m_volume_collisions_enabled = !m_volume_collisions_enabled;
         }
         else if (a_key == GLFW_KEY_RIGHT_BRACKET) {
-            // for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
-            //     cursor_list.clear();
-            // }
             toolCursorInit(m_worldPtr);
 
         }
-
+        else if (a_key == GLFW_KEY_EQUAL) {
+            m_burrOn = !m_burrOn;
+            std::cout << "Burr On State: " << m_burrOn << std::endl;
+        }
 
         else if (a_key == GLFW_KEY_SLASH) {
             m_cableKeyboardControl = !m_cableKeyboardControl;
             std::string cable_control_mode = m_cableKeyboardControl?"Keyboard":"Subscriber";
             m_cableControlModeText->setText("Cable Control Mode = " + cable_control_mode);
         }
+
+        else if (a_key == GLFW_KEY_G) {
+            m_obstacle_estimate_enabled = ! m_obstacle_estimate_enabled;
+            if(m_obstacle_estimate_enabled){
+                auto test_voxel = m_worldPtr->getRigidBody("Sphere");
+                auto Tseg = m_segmentBodyList[m_obstacle_estimate_idx]->getLocalTransform();
+                double cm_rad = 0.03;
+                double test_voxel_rad = 0.005;
+                double offset = 0.001;
+                double dir_sign = (m_obstacle_estimate_idx%2)?1.0:-1.0;
+                Tseg.setLocalPos(Tseg.getLocalPos()+cVector3d( dir_sign*(cm_rad+test_voxel_rad+offset),0.0,0.0));
+                test_voxel->setLocalTransform(Tseg);
+            }        
+        }
+        else if (a_key == GLFW_KEY_H) {
+            m_obstacle_estimate_idx += 1;
+            if (m_obstacle_estimate_idx >= 27){ //TODO: don't hardcode num segs
+                m_obstacle_estimate_idx = 0;
+            }
+            std::cout << "m_obstacle_estimate_idx: " << m_obstacle_estimate_idx << std::endl;
+        }
+        else if (a_key == GLFW_KEY_E) {
+            bool paused = m_worldPtr->isPhysicsPaused();
+            if(paused){
+                m_worldPtr->pausePhysics(false);
+            }    
+            else{
+                auto last_seg_ptr = m_segmentBodyList.back();
+                last_seg_ptr->applyTorque(cVector3d(0.0,0.0,0.0));
+                m_worldPtr->pausePhysics(true);
+            }
+            std::cout << "Toggled plugin physics paused to: " << m_worldPtr->isPhysicsPaused() << std::endl;
+        }
+
+
         // option - polygonize model and save to file
         else if (a_key == GLFW_KEY_F9) {
             cMultiMesh *surface = new cMultiMesh;
@@ -915,7 +963,7 @@ bool afVolmetricDrillingPlugin::close()
     return true;
 }
 
-bool afVolmetricDrillingPlugin::applyCablePull(){
+void afVolmetricDrillingPlugin::applyCablePull(double dt){
     if(!m_cableKeyboardControl){
         m_cable_pull_mag_goal = m_cablePullSub->cable_pull_target;
     }
@@ -928,8 +976,7 @@ bool afVolmetricDrillingPlugin::applyCablePull(){
     m_cablePullSub->publishCablePullMeasured(m_cable_pull_mag);
     auto z = cVector3d(0.0, 0.0, 1.0);
     auto last_seg_ptr = m_segmentBodyList.back();
-    last_seg_ptr->applyTorque(m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol2());
-
+    last_seg_ptr->applyTorque((1.0/dt)*0.001*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol2());
 }
 
 cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform& in){    
@@ -946,4 +993,196 @@ cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform&
 
 void afVolmetricDrillingPlugin::UpdateCablePullText(){
     m_cablePullMagText->setText("Cable Pull Actual(Goal): " + cStr(m_cable_pull_mag,5) + "(" + cStr(m_cable_pull_mag_goal, 5) + ")");
+}
+
+void afVolmetricDrillingPlugin::obstacleEstimate(){  //TODO: Implementation not finished
+    // std::vector<double> goal_jp = {0.05,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+    bool try_other = true;
+    if (try_other){
+        // std::vector<double> goal_jp = {0.04598064720630646, 0.07355032116174698, 0.06571654230356216, 0.05298386141657829, 0.044411156326532364, 0.02748243883252144, 0.022117244079709053, 0.0032777676824480295, 0.004773199092596769, -0.004514013882726431, -0.001684710499830544, -0.01998526230454445, -0.03429340571165085, -0.04465359076857567, 0.0010657543316483498, -0.0030041607096791267, 0.004267149139195681, -0.0047470321878790855, 0.004536849446594715, -0.004658693913370371, 0.004520443268120289, -0.004670663736760616, 0.004522195551544428, -0.004617181606590748, 0.0045381877571344376, -0.0038580403197556734, 0.0022528348490595818};
+        // // std::vector<double> goal_jp = {0.05,0.05,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+
+        // std::vector<double> jp;
+        // for(auto& joint: m_segmentJointList){
+        //     jp.push_back(joint->getPosition());
+        // }
+
+        // // std::vector<double> obstacle_est_force = {0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+        // std::vector<double> p = {0.1,0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+        // std::vector<double> d = {0.00,0.00,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+
+        // for (size_t i=0; i<m_mag_cmd.size(); i++){
+        //     p[i] = 0.1;
+        //     d[i] = 0.1*0.1*3/0.001;
+        //     // double dir_sign = ((i+1)%2)?1.0:-1.0;
+        //     double dir_sign = -1.0;
+        //     m_mag_cmd[i] += p[i]*(jp[i]-goal_jp[i]) + d[i]*(jp[i]-m_old_jp[i]);
+            
+        //     double cmd = dir_sign*m_mag_cmd[i];
+        //     // cmd = obstacle_est_force[i];
+            
+        //     m_segmentBodyList[i]->applyForce(cVector3d(cmd,0.0,0.0));
+        //     std::cout << cmd << ", ";
+        // }
+        // m_old_jp = jp;
+        // std::cout << std::endl;
+/*       std::vector<double> goal_jp = {0.04783817380666733, 0.07944251596927643, 0.0695638656616211, 0.06234162673354149, 0.04686809331178665, 0.040152788162231445, 0.022980578243732452, 0.018691405653953552, 0.0005839845980517566, 0.004291052930057049, -0.004663290921598673, 0.00444193696603179, -0.004662439227104187, 0.004441532306373119, -0.004904694389551878, 0.004418355878442526, -0.004646665416657925, 0.004354341886937618, -0.004670975264161825, 0.004543555434793234, -0.004634646698832512, 0.004549236968159676, -0.004633617587387562, 0.0045800586231052876, -0.004622905049473047, 0.003911590203642845, -0.002235197462141514};
+        
+        std::vector<double> jp;
+        for(auto& joint: m_segmentJointList){
+            jp.push_back(joint->getPosition());
+        }
+
+        // std::vector<double> obstacle_est_force = {0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+        std::vector<double> p = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+        std::vector<double> d = {0.00,0.00,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+
+        auto total_err = 0.0;
+        for (size_t i=0; i<m_mag_cmd.size(); i++){
+            total_err += abs(jp[i]-goal_jp[i]);
+        }
+
+        for (size_t i=0; i<m_mag_cmd.size(); i++){
+            if(i == m_obstacle_estimate_idx){
+                p[i] = 0.8*0.001;
+                d[i] = 0.1*0.001*3/0.001;
+                // double dir_sign = (i%2)?1.0:-1.0;
+                double dir_sign = 1.0;
+                m_mag_cmd[i] += p[i]*(total_err) + d[i]*(jp[i]-m_old_jp[i]);
+                double cmd = dir_sign*m_mag_cmd[i];
+                m_segmentBodyList[i]->applyForce(cVector3d(cmd,0.0,0.0));
+            }
+        
+            else
+            {
+                p[i] = 0.0;
+                d[i] = 0.0;
+                m_mag_cmd[i] = 0.0;               
+            }
+        }
+        m_old_jp = jp;
+        std::cout << std::endl;
+
+            // if(abs(cmd) > 0.0){
+                
+            //     std::cout << cmd << ", ";
+            // }
+        
+        
+
+        std::cout << "Error: " << total_err << std::endl;
+        // for (size_t i=0; i<m_mag_cmd.size(); i++){
+        //     std::cout << jp[i]-goal_jp[i] << " ,";
+        // }
+        // std::cout << std::endl;
+ */
+
+
+        std::vector<double> goal_jp = {0.04719538614153862, 0.07040780782699585, 0.0539616122841835, 0.04232475906610489, 0.01811256818473339, 0.010549008846282959, -0.00471153948456049, -0.0024778724182397127, -0.021339787170290947, -0.02025371417403221, -0.02914055995643139, -0.022847743704915047, -0.0291144922375679, -0.023115238174796104, -0.02983745187520981, -0.0232921801507473, -0.02943757176399231, -0.023809820413589478, -0.02989761345088482, -0.02374465949833393, -0.0301345381885767, -0.024002499878406525, -0.030253717675805092, -0.023892860859632492, -0.030802471563220024, -0.02734425663948059, -0.049160074442625046};
+        std::vector<double> jp;
+        for(auto& joint: m_segmentJointList){
+            jp.push_back(joint->getPosition());
+        }
+
+        auto total_err = 0.0;
+        auto real_err = 0.0;
+        for (size_t i=0; i<m_mag_cmd.size(); i++){
+            total_err += jp[i]-goal_jp[i];
+            real_err += abs(jp[i]-goal_jp[i]);
+            std::cout << jp[i]-goal_jp[i] << ", ";
+
+        }
+        std::cout << std::endl;
+
+        auto test_voxel = m_worldPtr->getRigidBody("Sphere");
+        auto Tvox = test_voxel->getLocalTransform();
+
+
+        for (size_t i=0; i<m_mag_cmd.size(); i++){
+            if(i == m_obstacle_estimate_idx){
+                auto p = 0.8*0.001;
+                // auto p =0.0;
+                // d[i] = 0.1*0.001*3/0.001;
+                double dir_sign = (i%2)?1.0:-1.0;
+                // double dir_sign = 1.0;
+                auto unsigned_cmd = p*(total_err);// + d[i]*(jp[i]-m_old_jp[i]);
+                double cmd = dir_sign*unsigned_cmd;
+                double offset = 0.001;
+                auto Tseg = m_segmentBodyList[m_obstacle_estimate_idx]->getLocalTransform();
+                double cm_rad = 0.03;
+                double test_voxel_rad = 0.005;
+                auto x_pos = cVector3d( dir_sign*(cm_rad+test_voxel_rad+offset),0.0,0.0);
+                auto ideal_orig_loc = Tseg*x_pos;
+
+                // Tseg.setLocalPos(Tseg.getLocalPos()+cVector3d( dir_sign*(cm_rad+test_voxel_rad),0.0,0.0));
+                // test_voxel->setLocalTransform(Tseg);
+                
+                auto y_loc = Tvox.getLocalPos();
+ 
+                // Tvox.setLocalPos(Tvox.getLocalPos()+cVector3d(cmd,-p*(y_loc(1)-ideal_orig_loc(1)),0.0));
+                Tvox.setLocalPos(Tvox.getLocalPos()+cmd*x_pos);
+                test_voxel->setLocalTransform(Tvox);
+                std::cout << "cmd*x_pos: " << cmd*ideal_orig_loc << std::endl;
+
+            }
+        
+            // else
+            // {
+            //     p[i] = 0.0;
+            //     d[i] = 0.0;
+            //     m_mag_cmd[i] = 0.0;               
+            // }
+        }
+        m_old_jp = jp;
+        std::cout << std::endl;
+
+            // if(abs(cmd) > 0.0){
+                
+            //     std::cout << cmd << ", ";
+            // }
+        
+        
+
+        std::cout << "Error: " << total_err << std::endl;
+        std::cout << "Mag Error: " << real_err << std::endl;
+
+        // for (size_t i=0; i<m_mag_cmd.size(); i++){
+        //     std::cout << jp[i]-goal_jp[i] << " ,";
+        // }
+        // std::cout << std::endl;
+  
+
+    }
+
+
+
+    else{
+    // std::vector<double> goal_jp = {0.04598064720630646, 0.07355032116174698, 0.06571654230356216, 0.05298386141657829, 0.044411156326532364, 0.02748243883252144, 0.022117244079709053, 0.0032777676824480295, 0.004773199092596769, -0.004514013882726431, -0.001684710499830544, -0.01998526230454445, -0.03429340571165085, -0.04465359076857567, 0.0010657543316483498, -0.0030041607096791267, 0.004267149139195681, -0.0047470321878790855, 0.004536849446594715, -0.004658693913370371, 0.004520443268120289, -0.004670663736760616, 0.004522195551544428, -0.004617181606590748, 0.0045381877571344376, -0.0038580403197556734, 0.0022528348490595818};
+    std::vector<double> goal_jp = {0.04719538614153862, 0.07040780782699585, 0.0539616122841835, 0.04232475906610489, 0.01811256818473339, 0.010549008846282959, -0.00471153948456049, -0.0024778724182397127, -0.021339787170290947, -0.02025371417403221, -0.02914055995643139, -0.022847743704915047, -0.0291144922375679, -0.023115238174796104, -0.02983745187520981, -0.0232921801507473, -0.02943757176399231, -0.023809820413589478, -0.02989761345088482, -0.02374465949833393, -0.0301345381885767, -0.024002499878406525, -0.030253717675805092, -0.023892860859632492, -0.030802471563220024, -0.02734425663948059, -0.049160074442625046};
+    
+    std::vector<double> jp;
+    for(auto& joint: m_segmentJointList){
+        jp.push_back(joint->getPosition());
+    }
+
+    // std::vector<double> obstacle_est_force = {0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+    std::vector<double> p = {0.008,0.008,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+    std::vector<double> d = {0.00,0.00,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+
+    for (size_t i=0; i<m_mag_cmd.size(); i++){
+        p[i] = 0.8*0.001;
+        d[i] = 0.1*0.001*3/0.001;
+        // double dir_sign = (i%2)?1.0:-1.0;
+        double dir_sign = -1.0;
+        m_mag_cmd[i] += p[i]*(jp[i]-goal_jp[i]) + d[i]*(jp[i]-m_old_jp[i]);
+        
+        double cmd = dir_sign*m_mag_cmd[i];
+        // cmd = obstacle_est_force[i];
+        m_segmentJointList[i]->commandEffort(cmd);
+        std::cout << cmd << ", ";
+    }
+    m_old_jp = jp;
+    std::cout << std::endl;
+
+    }
 }
