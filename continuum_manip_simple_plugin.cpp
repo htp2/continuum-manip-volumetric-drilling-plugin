@@ -50,7 +50,47 @@
 #include <boost/program_options.hpp>
 
 using namespace std;
+#include <random>
+#include "psocpp.h"
 
+// Implement an objective functor.
+struct Ackley
+{
+    static double pi()
+    { return 3.141592653589; }
+
+    Ackley()
+    { }
+
+    template<typename Derived>
+    double operator()(const Eigen::MatrixBase<Derived> &xval, int i) const
+    {
+        std::cout << i << std::endl;
+        assert(xval.size() == 2);
+        double x = xval(0);
+        double y = xval(1);
+        return -20.0 * std::exp(-0.2 * std::sqrt(0.5 * (x * x + y * y))) -
+            std::exp(0.5 * (std::cos(2 * pi() * x) + std::cos(2 * pi() * y))) +
+            std::exp(1) + 20.0;
+    }
+};
+  /** Integer type for indexing arrays, vectors and matrices. */
+    // typedef long int Index;
+
+    /** @brief Dummy callback functor, which always and only returns true. */
+    // template<typename Scalar>
+    // class Callback
+    // {
+    // public:
+    //     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> Matrix;
+    //     typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
+
+    //     bool operator()(const Index, const Matrix&, const Vector &, const Index) const
+    //     {
+    //         std::cout <<"CALLBACK" << std::endl;
+    //         return true;
+    //     }
+    // };
 
 //------------------------------------------------------------------------------
 // DECLARED FUNCTIONS
@@ -59,8 +99,8 @@ using namespace std;
 //------------------------------------------------------------------------------
 
 int afContinuumManipSimplePlugin::init(int argc, char **argv, const afWorldPtr a_afWorld){
-
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
+    // auto callback  = afContinuumManipSimplePlugin::Callback<double>(this);
     m_worldPtr = a_afWorld;
     m_worldPtr->m_bulletWorld->getSolverInfo().m_erp=1.0; // improve out of plane error of joints
     m_worldPtr->m_bulletWorld->getSolverInfo().m_erp2=1.0; // improve out of plane error of joints
@@ -73,7 +113,7 @@ int afContinuumManipSimplePlugin::init(int argc, char **argv, const afWorldPtr a
     // m_contManipBaseRigidBody = m_worldPtr->getRigidBody(cont_manip_rigid_body_name);
     // T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
 
-    int num_manip = 3;
+    int num_manip = 20;
     std::string base_name = "/ambf/env/BODY snake_stick";
     std::string sphere_name = "/ambf/env/BODY Sphere";
     manip = std::make_shared<ContinuumManip>(base_name, m_worldPtr);
@@ -239,6 +279,84 @@ void afContinuumManipSimplePlugin::keyboardUpdate(GLFWwindow *a_window, int a_ke
             }
             std::cout << "m_obstacle_estimate_idx: " << m_obstacle_estimate_idx << std::endl;
         }
+
+        else if (a_key == GLFW_KEY_Y){
+            // for(size_t i=0; i<manip_list.size(); i++){
+            //     auto& man = manip_list[i];
+            //     auto& test_object = test_objects_list[i];
+            //     auto T_contmanipbase = man->m_contManipBaseRigidBody->getLocalTransform();
+            //     // auto T_firstjoint = man->m_segmentJointList[0]->getLocalTransform();
+            //     auto T_testobj = test_object->getLocalTransform();
+            //     // T_testobj.setLocalPos(T_contmanipbase.getLocalPos()+T_firstjoint.getLocalPos()+cVector3d(0.5*GetRandFromUniform(),0.5*GetRandFromUniform(),0.0));
+            //     auto first_seg_off = 0.3602972;
+            //     auto len = 0.6747028 - first_seg_off;
+            //     auto ang_rad = GetRandFromUniform() * M_PI;
+            //     auto r = GetRandFromUniform() * len;
+            //     T_testobj.setLocalPos(T_contmanipbase.getLocalPos()+cVector3d(r*std::cos(ang_rad),first_seg_off + r*std::sin(ang_rad),0.0));
+            //     test_object->setLocalTransform(T_testobj);
+
+                // Create optimizer object with Ackley functor as objective.
+                //
+                // You can specify an InertiaWeightStrategy functor as
+                // template parameter. There are ConstantWeight, LinearDecrease,
+                // ExponentialDecrease1, ExponentialDecrease2, ExponentialDecrease3
+                // available. (Default is ConstantWeight)
+                //
+                // You can additionally specify a Callback functor as template parameter.
+                auto callback = Callback<double>(this);
+                auto fitness = Fitness(this);
+                pso::ParticleSwarmOptimization<double, afContinuumManipSimplePlugin::Fitness,
+                    pso::ConstantWeight<double>,  afContinuumManipSimplePlugin::Callback<double> > optimizer(fitness, callback);
+
+                // Set number of iterations as stop criterion.
+                // Set it to 0 or negative for infinite iterations (default is 0).
+                optimizer.setMaxIterations(1000);
+
+                // Set the minimum change of the x-values (particles) (default is 1e-6).
+                // If the change in the current iteration is lower than this value, then
+                // the optimizer stops minimizing.
+                optimizer.setMinParticleChange(1e-6);
+
+                // Set the minimum change of the function values (default is 1e-6).
+                // If the change in the current iteration is lower than this value, then
+                // the optimizer stops minimizing.
+                optimizer.setMinFunctionChange(1e-6);
+
+                // Set the number of threads used for evaluation (OpenMP only).
+                // Set it to 0 or negative for auto detection (default is 1).
+                optimizer.setThreads(2);
+
+                // Turn verbosity on, so the optimizer prints status updates after each
+                // iteration.
+                optimizer.setVerbosity(2);
+
+                // Set the bounds in which the optimizer should search.
+                // Each column vector defines the (min, max) for each dimension  of the
+                // particles.
+                Eigen::MatrixXd bounds(2, 2);
+                auto first_seg_off = 0.3602972;
+                auto len = 0.6747028 - first_seg_off;
+                bounds << 0, 0,
+                        len, M_PI;
+
+                // start the optimization with a particle count
+                auto result = optimizer.minimize(bounds, 20);
+
+                std::cout << "Done! Converged: " << (result.converged ? "true" : "false")
+                    << " Iterations: " << result.iterations << std::endl;
+
+                // do something with final function value
+                std::cout << "Final fval: " << result.fval << std::endl;
+
+                // do something with final x-value
+                std::cout << "Final xval: " << result.xval.transpose() << std::endl;
+
+
+
+
+
+            // }
+        }
     }
     else{
         // controls rotational motion of tool
@@ -265,9 +383,9 @@ void afContinuumManipSimplePlugin::keyboardUpdate(GLFWwindow *a_window, int a_ke
             cVector3d rotDir(0, 0, 1);
             incrementDeviceRot(rotDir);
         }
-    }
+    
+    }   
 }
-
 
 void afContinuumManipSimplePlugin::mouseBtnsUpdate(GLFWwindow *a_window, int a_button, int a_action, int a_modes){
 
@@ -308,6 +426,26 @@ void afContinuumManipSimplePlugin::applyCablePull(double dt){
 void afContinuumManipSimplePlugin::UpdateCablePullText(){
     m_cablePullMagText->setText("Cable Pull Actual(Goal): " + cStr(m_cable_pull_mag,5) + "(" + cStr(m_cable_pull_mag_goal, 5) + ")");
 }
+
+// void afContinuumManipSimplePlugin::optCallback(){
+//     this->physicsUpdate(0.001);
+// }
+
+// template<typename Scalar>
+// bool afContinuumManipSimplePlugin::optCallback(const Index, const Matrix&, const Vector &, const Index){
+//     this->physicsUpdate(0.001);
+//     return true;
+// }
+// bool afContinuumManipSimplePlugin::Callback::operator()(const Index, const Matrix&, const Vector &, const Index){
+//     return true;
+// }
+
+
+// bool afContinuumManipSimplePlugin::Callback::operator()(const Index, const Matrix&, const Vector &, const Index)
+//     {
+//         this->physicsUpdate(0.001);
+//         return true;
+//     }
 
 void afContinuumManipSimplePlugin::obstacleEstimate(){  //TODO: Implementation not finished
     std::vector<double> goal_jp = {0.04719538614153862, 0.07040780782699585, 0.0539616122841835, 0.04232475906610489, 0.01811256818473339, 0.010549008846282959, -0.00471153948456049, -0.0024778724182397127, -0.021339787170290947, -0.02025371417403221, -0.02914055995643139, -0.022847743704915047, -0.0291144922375679, -0.023115238174796104, -0.02983745187520981, -0.0232921801507473, -0.02943757176399231, -0.023809820413589478, -0.02989761345088482, -0.02374465949833393, -0.0301345381885767, -0.024002499878406525, -0.030253717675805092, -0.023892860859632492, -0.030802471563220024, -0.02734425663948059, -0.049160074442625046};
@@ -358,4 +496,9 @@ void afContinuumManipSimplePlugin::obstacleEstimate(){  //TODO: Implementation n
             std::cout << "Error: " << total_err << std::endl;
             std::cout << "Mag Error: " << real_err << std::endl;
         }
+}
+
+double afContinuumManipSimplePlugin::GetRandFromUniform()
+{
+    return ((double)rand()/(double)RAND_MAX);
 }
