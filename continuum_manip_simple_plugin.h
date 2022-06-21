@@ -3,6 +3,7 @@
 #include <afFramework.h>
 #include "cable_pull_subscriber.h"
 #include <Eigen/Geometry>
+#include "psocpp.h"
 
 using namespace std;
 using namespace ambf;
@@ -67,6 +68,7 @@ class afContinuumManipSimplePlugin: public afSimulatorPlugin{
     std::vector<std::shared_ptr<ContinuumManip>> manip_list;
     std::vector<afRigidBodyPtr> test_objects_list;
 
+
     typedef long int Index;
     template<typename Scalar>
     class Callback
@@ -75,6 +77,7 @@ class afContinuumManipSimplePlugin: public afSimulatorPlugin{
         afContinuumManipSimplePlugin *self;
         Callback(afContinuumManipSimplePlugin* self): self(self){};
         // Callback(){};
+        
         typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> Matrix;
         typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
 
@@ -184,6 +187,8 @@ private:
 
     double m_cable_pull_mag_goal = 0.0;
     double m_cable_pull_mag = 0.0;
+    double m_counter = 0;
+    double m_num_manip = 1;
 
     void obstacleEstimate();
 
@@ -191,7 +196,11 @@ private:
     // typedef long int Index;
     typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> Matrix;
     typedef Eigen::Matrix<double, Eigen::Dynamic, 1> Vector;
-    
+
+public:
+    std::shared_ptr< pso::ParticleSwarmOptimization<double, afContinuumManipSimplePlugin::Fitness,
+            pso::ConstantWeight<double> > > optimizer;
+
     // template<typename Scalar>
     // bool optCallback(const Index, const Matrix&, const Vector &, const Index);
 

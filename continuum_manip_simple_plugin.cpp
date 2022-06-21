@@ -113,13 +113,13 @@ int afContinuumManipSimplePlugin::init(int argc, char **argv, const afWorldPtr a
     // m_contManipBaseRigidBody = m_worldPtr->getRigidBody(cont_manip_rigid_body_name);
     // T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
 
-    int num_manip = 20;
+    m_num_manip = 20;
     std::string base_name = "/ambf/env/BODY snake_stick";
     std::string sphere_name = "/ambf/env/BODY Sphere";
     manip = std::make_shared<ContinuumManip>(base_name, m_worldPtr);
     manip_list.push_back(manip);
     test_objects_list.push_back(m_worldPtr->getRigidBody(sphere_name));
-    for(size_t i=1; i<num_manip; i++){
+    for(size_t i=1; i<m_num_manip; i++){
         std::string new_base_name = base_name+std::to_string(i);
         auto ptr = std::make_shared<ContinuumManip>(new_base_name, m_worldPtr);
         manip_list.push_back(ptr);
@@ -177,12 +177,14 @@ void afContinuumManipSimplePlugin::graphicsUpdate(){
 }
 
 void afContinuumManipSimplePlugin::physicsUpdate(double dt){
-
+    int obst_wait_iters = 100;
     m_worldPtr->getChaiWorld()->computeGlobalPositions(true);
     applyCablePull(dt);
-    if (m_obstacle_estimate_enabled){
+    if (m_obstacle_estimate_enabled && m_counter > obst_wait_iters){
         obstacleEstimate();
+        m_counter = -1;
     }
+    m_counter ++;
 }
 
 ///
@@ -256,21 +258,62 @@ void afContinuumManipSimplePlugin::keyboardUpdate(GLFWwindow *a_window, int a_ke
         }
 
         else if (a_key == GLFW_KEY_G) {
-            m_obstacle_estimate_enabled = ! m_obstacle_estimate_enabled;
-            if(m_obstacle_estimate_enabled){
-                // auto test_voxel = m_worldPtr->getRigidBody("Sphere");
-                for(size_t i=0; i<manip_list.size(); i++){
-                    auto& man = manip_list[i];
-                    auto& test_object = test_objects_list[i];
-                    auto Tseg = man->m_segmentBodyList[m_obstacle_estimate_idx]->getLocalTransform();
-                    double cm_rad = 0.03;
-                    double test_voxel_rad = 0.005;
-                    double offset = 0.001;
-                    double dir_sign = (m_obstacle_estimate_idx%2)?1.0:-1.0;
-                    Tseg.setLocalPos(Tseg.getLocalPos()+cVector3d( dir_sign*(cm_rad+test_voxel_rad+offset),0.0,0.0));
-                    test_object->setLocalTransform(Tseg);
+            if(!m_obstacle_estimate_enabled){
+                auto fitness = Fitness(this);
+ //               pso::ParticleSwarmOptimization<double, afContinuumManipSimplePlugin::Fitness,
+ //                   pso::ConstantWeight<double>,  afContinuumManipSimplePlugin::Callback<double> > optimizer(fitness, callback);
+                optimizer = std::make_shared<pso::ParticleSwarmOptimization<double, afContinuumManipSimplePlugin::Fitness,
+                    pso::ConstantWeight<double> > >(fitness);
+
+                // Set number of iterations as stop criterion.
+                // Set it to 0 or negative for infinite iterations (default is 0).
+                optimizer->setMaxIterations(1000);
+
+                // Set the minimum change of the x-values (particles) (default is 1e-6).
+                // If the change in the current iteration is lower than this value, then
+                // the optimizer stops minimizing.
+                optimizer->setMinParticleChange(1e-6);
+
+                // Set the minimum change of the function values (default is 1e-6).
+                // If the change in the current iteration is lower than this value, then
+                // the optimizer stops minimizing.
+                optimizer->setMinFunctionChange(1e-6);
+
+                // Set the number of threads used for evaluation (OpenMP only).
+                // Set it to 0 or negative for auto detection (default is 1).
+                optimizer->setThreads(2);
+
+                // Turn verbosity on, so the optimizer prints status updates after each
+                // iteration.
+                optimizer->setVerbosity(2);
+
+                // Set the bounds in which the optimizer should search.
+                // Each column vector defines the (min, max) for each dimension  of the
+                // particles.
+                Eigen::MatrixXd bounds(2, 2);
+                auto first_seg_off = 0.3602972;
+                auto len = 0.6747028 - first_seg_off;
+                bounds << 0, 0,
+                        len, M_PI;
+
+                // setup the optimization with a particle count
+                optimizer->setup_minimize(bounds,m_num_manip);
+        
+                auto& particles = optimizer->interim_result.particles;
+                for(Index i = 0; i < particles.cols(); i++){
+                double r = particles(0,i);
+                double th = particles(1,i);
+                auto& man = manip_list[i];
+                auto& test_object = test_objects_list[i];
+                auto T_contmanipbase = man->m_contManipBaseRigidBody->getLocalTransform();
+                auto T_testobj = test_object->getLocalTransform();
+                auto first_seg_off = 0.3602972;
+                double p = 0.001;
+                T_testobj.setLocalPos(T_contmanipbase.getLocalPos()+cVector3d(r*std::cos(th),first_seg_off + r*std::sin(th),0.0));
+                test_object->setLocalTransform(T_testobj);
                 }
-            }        
+            }   
+            m_obstacle_estimate_enabled = ! m_obstacle_estimate_enabled;         
         }
         else if (a_key == GLFW_KEY_H) {
             m_obstacle_estimate_idx += 1;
@@ -281,6 +324,7 @@ void afContinuumManipSimplePlugin::keyboardUpdate(GLFWwindow *a_window, int a_ke
         }
 
         else if (a_key == GLFW_KEY_Y){
+            /*
             // for(size_t i=0; i<manip_list.size(); i++){
             //     auto& man = manip_list[i];
             //     auto& test_object = test_objects_list[i];
@@ -305,8 +349,10 @@ void afContinuumManipSimplePlugin::keyboardUpdate(GLFWwindow *a_window, int a_ke
                 // You can additionally specify a Callback functor as template parameter.
                 auto callback = Callback<double>(this);
                 auto fitness = Fitness(this);
+ //               pso::ParticleSwarmOptimization<double, afContinuumManipSimplePlugin::Fitness,
+ //                   pso::ConstantWeight<double>,  afContinuumManipSimplePlugin::Callback<double> > optimizer(fitness, callback);
                 pso::ParticleSwarmOptimization<double, afContinuumManipSimplePlugin::Fitness,
-                    pso::ConstantWeight<double>,  afContinuumManipSimplePlugin::Callback<double> > optimizer(fitness, callback);
+                    pso::ConstantWeight<double> > optimizer(fitness);
 
                 // Set number of iterations as stop criterion.
                 // Set it to 0 or negative for infinite iterations (default is 0).
@@ -339,23 +385,11 @@ void afContinuumManipSimplePlugin::keyboardUpdate(GLFWwindow *a_window, int a_ke
                 bounds << 0, 0,
                         len, M_PI;
 
-                // start the optimization with a particle count
-                auto result = optimizer.minimize(bounds, 20);
+                // setup the optimization with a particle count
+                optimizer.setup_minimize(bounds,20);
+                // auto result = optimizer.minimize(bounds, 20);
+                */
 
-                std::cout << "Done! Converged: " << (result.converged ? "true" : "false")
-                    << " Iterations: " << result.iterations << std::endl;
-
-                // do something with final function value
-                std::cout << "Final fval: " << result.fval << std::endl;
-
-                // do something with final x-value
-                std::cout << "Final xval: " << result.xval.transpose() << std::endl;
-
-
-
-
-
-            // }
         }
     }
     else{
@@ -448,54 +482,48 @@ void afContinuumManipSimplePlugin::UpdateCablePullText(){
 //     }
 
 void afContinuumManipSimplePlugin::obstacleEstimate(){  //TODO: Implementation not finished
-    std::vector<double> goal_jp = {0.04719538614153862, 0.07040780782699585, 0.0539616122841835, 0.04232475906610489, 0.01811256818473339, 0.010549008846282959, -0.00471153948456049, -0.0024778724182397127, -0.021339787170290947, -0.02025371417403221, -0.02914055995643139, -0.022847743704915047, -0.0291144922375679, -0.023115238174796104, -0.02983745187520981, -0.0232921801507473, -0.02943757176399231, -0.023809820413589478, -0.02989761345088482, -0.02374465949833393, -0.0301345381885767, -0.024002499878406525, -0.030253717675805092, -0.023892860859632492, -0.030802471563220024, -0.02734425663948059, -0.049160074442625046};
-    for(size_t i=0; i<manip_list.size(); i++){
-    auto& man = manip_list[i];
-    auto& test_object = test_objects_list[i];
-        std::vector<double> jp;
-       
+    auto& particles = optimizer->interim_result.particles;
+    for(Index i = 0; i < particles.cols(); i++){
+        auto& man = manip_list[i];
+        auto& test_object = test_objects_list[i];
+        auto T_contmanipbase = man->m_contManipBaseRigidBody->getLocalTransform();
+        auto T_testobj = test_object->getLocalTransform();
+        auto first_seg_off = 0.3602972;
+        auto x = T_testobj.getLocalPos() - T_contmanipbase.getLocalPos();
+        x(1)-=first_seg_off;
+        x(2)=0.0;
+        auto r = x.length();
+        auto th = std::atan2(x(1),x(0));
+        particles(0,i) = r;
+        particles(1,i) = th;
+    }     
+                    
+    optimizer->run_one_interation_minimize();
+    auto& bestParticles = optimizer->interim_result.bestParticles;
 
-            for(auto& joint: man->m_segmentJointList){
-                jp.push_back(joint->getPosition());
-            }
+    for(Index i = 0; i < bestParticles.cols(); i++){
+        double r = bestParticles(0,i);
+        double th = bestParticles(1,i);
+        auto& man = manip_list[i];
+        auto& test_object = test_objects_list[i];
+        auto T_contmanipbase = man->m_contManipBaseRigidBody->getLocalTransform();
+        auto T_testobj = test_object->getLocalTransform();
+        auto first_seg_off = 0.3602972;
+        double p = 0.01;
+        // test_object->applyForce(p* (cVector3d(r*std::cos(th),first_seg_off + r*std::sin(th),0.0) - T_contmanipbase.getLocalPos()));
+        auto x = (cVector3d(r*std::cos(th),first_seg_off + r*std::sin(th),0.0) + T_contmanipbase.getLocalPos()) - T_testobj.getLocalPos();
+        x(3) = 0.0;
+        x.normalize();
+        x*=p;
+        T_testobj.setLocalPos(T_testobj.getLocalPos()+x);
+        test_object->setLocalTransform(T_testobj);
+
+
+        std::cout <<"TEST: " << x(0) << ", " << x(1) << ", " << x(2) << std::endl;
+        // T_testobj.setLocalPos(T_contmanipbase.getLocalPos()+cVector3d(r*std::cos(th),first_seg_off + r*std::sin(th),0.0));
         
-        auto total_err = 0.0;
-        auto real_err = 0.0;
-        for (size_t i=0; i<m_num_segs; i++){
-            total_err += jp[i]-goal_jp[i];
-            real_err += abs(jp[i]-goal_jp[i]);
-            std::cout << jp[i]-goal_jp[i] << ", ";
-
-        }
-        std::cout << std::endl;
-        // auto test_voxel = m_worldPtr->getRigidBody("Sphere");
-        // auto Tvox = test_voxel->getLocalTransform();
-
-
-            for (size_t i=0; i<m_num_segs; i++){
-                if(i == m_obstacle_estimate_idx){
-                    auto p = 0.8*0.001;
-                    double dir_sign = (i%2)?1.0:-1.0;
-                    auto unsigned_cmd = p*(total_err);// + d[i]*(jp[i]-m_old_jp[i]);
-                    double cmd = dir_sign*unsigned_cmd;
-                    double offset = 0.001;
-                    auto Tseg = man->m_segmentBodyList[m_obstacle_estimate_idx]->getLocalTransform();
-                    double cm_rad = 0.03;
-                    double test_voxel_rad = 0.005;
-                    auto x_pos = cVector3d( dir_sign*(cm_rad+test_voxel_rad+offset),0.0,0.0);
-                    auto ideal_orig_loc = Tseg*x_pos;
-                    auto Tvox = test_object->getLocalTransform();
-                    auto y_loc = Tvox.getLocalPos();
-                    Tvox.setLocalPos(Tvox.getLocalPos()+cmd*x_pos);
-                    test_object->setLocalTransform(Tvox);
-                    std::cout << "cmd*x_pos: " << cmd*ideal_orig_loc << std::endl;
-                }
-            }
-            m_old_jp = jp;
-            std::cout << std::endl;
-            std::cout << "Error: " << total_err << std::endl;
-            std::cout << "Mag Error: " << real_err << std::endl;
-        }
+        // test_object->setLocalTransform(T_testobj);
+    } 
 }
 
 double afContinuumManipSimplePlugin::GetRandFromUniform()

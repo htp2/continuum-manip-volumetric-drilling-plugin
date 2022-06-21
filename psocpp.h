@@ -47,7 +47,7 @@ namespace pso
         Scalar weight_;
     public:
         ConstantWeight()
-            : ConstantWeight(10000.0)
+            : ConstantWeight(1.0)
         { }
 
         /** Constructor, which accepts the weight that is returned by the functor.
@@ -250,6 +250,26 @@ namespace pso
             Scalar fval;
             Vector xval;
         };
+
+        struct InterimResult
+        {
+            Index iterations;
+            bool converged;
+            Scalar fval;
+            Vector xval; 
+            Matrix bounds;
+            Matrix particles;
+            Matrix velocities;
+            Vector fvals;
+            Matrix bestParticles;
+            Vector bestFvals;
+            Matrix prevParticles;
+            Vector prevFvals;
+            Vector diff;
+            Index gbest;
+        };
+
+        InterimResult interim_result;
 
     private:
         Objective objective_;
@@ -504,6 +524,18 @@ namespace pso
             std::uniform_real_distribution<Scalar> distrib(0.0, 1.0);
             dice_ = std::bind(distrib, gen);
         }
+        ParticleSwarmOptimization(Objective objective)
+            : objective_(objective), callback_(), weightStrategy_(), threads_(1),
+            maxIt_(0), xeps_(static_cast<Scalar>(1e-6)),
+            feps_(static_cast<Scalar>(1e-6)), phip_(static_cast<Scalar>(2.0)),
+            phig_(static_cast<Scalar>(2.0)), maxVel_(static_cast<Scalar>(0.0)),
+            verbosity_(0), dice_()
+        {
+            std::default_random_engine gen(std::time(0));
+            std::uniform_real_distribution<Scalar> distrib(0.0, 1.0);
+            dice_ = std::bind(distrib, gen);
+        }
+
 
 
         /** Set the amount of threads, which are used for evaluating the
@@ -695,6 +727,142 @@ namespace pso
             maintainBounds(bounds, particles);
 
             return _minimize(bounds, particles);
+        }
+
+        void setup_minimize(const Matrix &bounds,
+            const Index cnt){
+            if(cnt == 0)
+                throw std::runtime_error("particle count cannot be 0");
+            if(bounds.rows() != 2)
+                throw std::runtime_error("bounds has not exactly 2 rows (min, max)");
+            for(Index i = 0; i < bounds.cols(); ++i)
+            {
+                if(bounds(0, i) >= bounds(1, i))
+                    throw std::runtime_error("bounds min is greater than max");
+            }
+
+            Matrix particles(bounds.cols(), cnt);
+            randomizeParticles(bounds, particles);
+            maintainBounds(bounds, particles);
+
+            Matrix velocities(particles.rows(), particles.cols());
+
+            Vector fvals(particles.cols());
+
+            Matrix bestParticles = particles;
+            Vector bestFvals(particles.cols());
+
+            Matrix prevParticles(particles.rows(), particles.cols());
+            Vector prevFvals(particles.cols());
+
+            Vector diff(particles.rows());
+
+            Index gbest = 0;
+
+            // initialize velocities randomly
+            randomizeVelocities(bounds, velocities);
+            // evaluate objective function for the initial particles
+            evaluateObjective(particles, fvals);
+            bestFvals = fvals;
+            bestFvals.minCoeff(&gbest);
+            // init stop conditions
+            Index iterations = 0;
+            Scalar fchange = feps_ + 1;
+            Scalar xchange = xeps_ + 1;
+
+            interim_result.bestFvals = bestFvals ;
+            interim_result.bestParticles = bestParticles;
+            interim_result.bounds = bounds;
+            interim_result.converged = false;
+            interim_result.diff = diff; 
+            // interim_result.fval = ; 
+            interim_result.fvals = fvals;
+            interim_result.gbest = gbest;
+            interim_result.iterations = iterations;
+            interim_result.prevFvals = prevFvals;
+            interim_result.prevParticles = prevParticles;
+            interim_result.velocities = velocities;
+            interim_result.particles = particles;
+            // interim_result.xval = ;
+            }
+
+        void run_one_interation_minimize(){
+            Scalar fchange = feps_ + 1;
+            Scalar xchange = xeps_ + 1;
+
+            auto& particles = interim_result.particles;
+            auto& bestParticles = interim_result.bestParticles;
+            auto& gbest = interim_result.gbest;
+            auto& iterations = interim_result.iterations;
+            auto& velocities = interim_result.velocities;
+            auto& bounds = interim_result.bounds;
+            auto& fvals = interim_result.fvals;
+            auto& prevParticles = interim_result.prevParticles;
+            auto& prevFvals = interim_result.prevFvals;
+            auto& bestFvals = interim_result.bestFvals;
+
+            // calculate new velocities
+            calculateVelocities(particles, bestParticles, gbest, iterations, velocities);
+
+            // move particles by velocity and stay within bounds
+            particles += velocities;
+            maintainBounds(bounds, particles);
+
+            // evaluate objective for moved particles
+            evaluateObjective(particles, fvals);
+
+            prevParticles = bestParticles;
+            prevFvals = bestFvals;
+
+            for(Index i = 0; i < fvals.size(); ++i)
+            {
+                // check if there was an improvement and update best vals
+                if(fvals(i) < bestFvals(i))
+                {
+                    bestFvals(i) = fvals(i);
+                    bestParticles.col(i) = particles.col(i);
+                }
+            }
+            bestFvals.minCoeff(&gbest);
+
+            // calculate new diffs
+            xchange = (bestParticles - prevParticles).colwise().norm().sum();
+            fchange = (bestFvals - prevFvals).array().abs().sum();
+
+            xchange /= bestParticles.cols();
+            fchange /= bestFvals.size();
+
+            // evaluate callback and save its result
+            bool callbackResult = callback_(iterations, bestParticles,
+                bestFvals, gbest);
+
+            if(verbosity_ > 0)
+            {
+                std::stringstream ss;
+                ss << "it=" << std::setfill('0')
+                    << std::setw(4) << iterations
+                    << std::fixed << std::showpoint << std::setprecision(6)
+                    << "    fchange=" << fchange
+                    << "    xchange=" << xchange;
+
+                if(verbosity_ > 2)
+                    ss << "    callback=" << (callbackResult ? "true" : "false");
+
+                ss << "    fval=" << bestFvals(gbest);
+
+                if(verbosity_ > 1)
+                    ss << "    xval=" << vector2str(bestParticles.col(gbest));
+
+                std::cout << ss.str() << std::endl;;
+            
+
+            ++iterations;
+            }
+
+            interim_result.iterations = iterations;
+            interim_result.converged = fchange <= feps_ || xchange <= xeps_;
+            interim_result.fval = bestFvals(gbest);
+            interim_result.xval = bestParticles.col(gbest);
         }
 
         void getRandomParticles(const Matrix &bounds,
