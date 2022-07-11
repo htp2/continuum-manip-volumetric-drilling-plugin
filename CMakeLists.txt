@@ -63,13 +63,16 @@ message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
 add_library(continuum_manip_volumetric_drilling_plugin SHARED continuum_manip_volumetric_drilling_plugin.cpp continuum_manip_volumetric_drilling_plugin.h collision_publisher.h collision_publisher.cpp cable_pull_subscriber.h cable_pull_subscriber.cpp)
 add_dependencies(continuum_manip_volumetric_drilling_plugin ${catkin_EXPORTED_TARGETS})
 target_link_libraries (continuum_manip_volumetric_drilling_plugin ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
-
 set_property(TARGET continuum_manip_volumetric_drilling_plugin PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
+add_library(continuum_manip_simple_plugin SHARED continuum_manip_simple_plugin.cpp continuum_manip_simple_plugin.h cable_pull_subscriber.h cable_pull_subscriber.cpp psocpp.h obstacle_est_subpub.cpp obstacle_est_subpub.h)
+add_dependencies(continuum_manip_simple_plugin ${catkin_EXPORTED_TARGETS})
+target_link_libraries (continuum_manip_simple_plugin ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
+set_property(TARGET continuum_manip_simple_plugin PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 catkin_package(
  INCLUDE_DIRS .
- LIBRARIES continuum_manip_volumetric_drilling_plugin
+ LIBRARIES continuum_manip_volumetric_drilling_plugin continuum_manip_simple_plugin
  CATKIN_DEPENDS vdrilling_msgs ambf_msgs
 #  DEPENDS system_lib
 )

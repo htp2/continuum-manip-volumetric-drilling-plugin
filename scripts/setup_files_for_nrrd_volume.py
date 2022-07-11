@@ -76,7 +76,12 @@ def save_image(array, im_name):
 def normalize_data(data):
 	max = data.max()
 	min = data.min()
-	normalized_data = (data - min) / float(max - min)
+	if max==min:
+		if min!= 0: # assume entire image is single volume
+			normalized_data = data/min
+		# here, else is implicit - image is all zero and will remain that way
+	else:
+		normalized_data = (data - min) / float(max - min)
 	return normalized_data
 
 

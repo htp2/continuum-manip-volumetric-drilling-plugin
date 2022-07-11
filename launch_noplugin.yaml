@@ -1,6 +1,4 @@
-# AMBF Version: (0.1)
-# This is the base file for Coordination Application
-# world config: ADF/world/world.yaml
+adf version: 1.0
 world config: ADF/world/world.yaml
 color config: ADF/color/colors.yaml
 input devices config: ADF/input_devices/input_devices.yaml
@@ -33,3 +31,4 @@ multibody configs:
   - "ADF/pixel.yaml"  #21
   - "ADF/R1_sphere.yaml"  #22
   - "ADF/bigss_snake_centered_collision_meshes.yaml" #23
+  - "ADF/cube.yaml" #24

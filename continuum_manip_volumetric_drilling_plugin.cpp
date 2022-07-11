@@ -76,7 +76,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     }
     std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
     // anatomy_volume_name = "spine_seg";
-    anatomy_volume_name = "pixel";
+    anatomy_volume_name = "cube";
 
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
 
@@ -105,6 +105,8 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_ambf_scale_to_mm = 0.01;
     // Add drill burr
     double burr_r = m_ambf_scale_to_mm * 6.5/2;
+
+/*
     m_burrMesh = new cShapeSphere(burr_r); // 2mm by default with 1 AMBF unit = 0.049664 m
     m_burrMesh->setRadius(burr_r);
     m_burrMesh->m_material->setBlack();
@@ -114,7 +116,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     cTransform offset(cVector3d(0.0,m_ambf_scale_to_mm*3,0.0));
     m_lastSegmentRigidBody->addChildSceneObject(m_burrMesh, offset);
     m_worldPtr->addSceneObjectToWorld(m_burrMesh);
-    
+*/  
     // // import C-arm (x-ray image source) model
     // m_carmRigidBody = m_worldPtr->getRigidBody("carm");
     // T_carm = m_carmRigidBody->getLocalTransform();
@@ -194,7 +196,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     // Get drills initial pose
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
-    T_burr = m_burrMesh->getLocalTransform();
+    // T_burr = m_burrMesh->getLocalTransform();
 
     // Set up voxels_removed publisher
     m_drillingPub = new DrillingPublisher("ambf", "volumetric_drilling");
@@ -249,7 +251,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         T_contmanip_base.setLocalRot(m_mainCamera->getLocalRot() * T_i.getLocalRot());
     }
 
-    T_burr = m_burrMesh->getLocalTransform();
+    // T_burr = m_burrMesh->getLocalTransform();
     toolCursorsPosUpdate(T_contmanip_base);
 
     if (!m_volume_collisions_enabled){
@@ -313,8 +315,12 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         for ( int i=0; i<m_segmentBodyList.size(); i++){
             m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
         }
+        // apply force from burr
+        // m_segmentBodyList.back()->applyForceAtPointOnBody(100000.0*m_burrToolCursorList[0]->getDeviceLocalForce(),m_burrMesh->getLocalPos());
+        m_burrBody->applyForce(100000.0*m_burrToolCursorList[0]->getDeviceLocalForce());
+        
 
-        // check if device remains stuck inside voxel object
+        // check if device remains stuck inside     voxel object
         // Also orient the force to match the camera rotation
         cVector3d force = cTranspose(m_mainCamera->getLocalRot()) * m_targetToolCursor->getDeviceLocalForce();
         // m_toolCursorList[0]->setDeviceLocalForce(force);
@@ -445,9 +451,10 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
         m_shaftToolCursorList.push_back(shaft_cursor);
         // m_worldPtr->addSceneObjectToWorld(shaft_cursor);
     }
-        for(int i = 0; i<num_shaft_cursor; i++){
+    for(int i = 0; i<num_burr_cursor; i++){
         auto burr_cursor = new cToolCursor(chai_world);
         m_burrToolCursorList.push_back(burr_cursor);
+        m_burrBody = m_worldPtr->getRigidBody("/ambf/env/BODY Burr");
         // m_worldPtr->addSceneObjectToWorld(burr_cursor);
     }
 
@@ -533,8 +540,9 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose){
     }
 
     for( auto& burr_cursor : m_burrToolCursorList){
-        burr_cursor->setDeviceLocalTransform(m_burrMesh->getLocalTransform());
+        burr_cursor->setDeviceLocalTransform(m_burrBody->getLocalTransform());
     }
+
 
     for (int i=0; i<m_segmentToolCursorList.size(); i++){
         m_segmentToolCursorList[i]->setDeviceLocalTransform(m_segmentBodyList[i]->getLocalTransform());
@@ -930,7 +938,7 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         else if (a_key == GLFW_KEY_B){
             m_showDrill = !m_showDrill;
             m_contManipBaseRigidBody->m_visualMesh->setShowEnabled(m_showDrill);
-            m_burrMesh->setShowEnabled(m_showDrill);
+            // m_burrMesh->setShowEnabled(m_showDrill);
 
         }
 
