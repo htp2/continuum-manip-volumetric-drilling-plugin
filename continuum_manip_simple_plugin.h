@@ -4,6 +4,8 @@
 #include "cable_pull_subscriber.h"
 #include <Eigen/Geometry>
 #include "psocpp.h"
+#include "obstacle_est_subpub.h"
+
 
 using namespace std;
 using namespace ambf;
@@ -43,11 +45,11 @@ class ContinuumManip{
     std::vector<afRigidBodyPtr> m_segmentBodyList;
     std::vector<afJointPtr> m_segmentJointList;
     afRigidBodyPtr m_contManipBaseRigidBody;
+    double m_mag_cmd = 0.0;
 
     private:
     std::string m_cont_manip_rigid_body_name;
     static const int m_num_segs = 27;
-
     
 
 };
@@ -94,16 +96,16 @@ class afContinuumManipSimplePlugin: public afSimulatorPlugin{
                     T_testobj.setLocalPos(T_contmanipbase.getLocalPos()+cVector3d(r*std::cos(th),first_seg_off + r*std::sin(th),0.0));
                     test_object->setLocalTransform(T_testobj);
                 } 
-                for(size_t i=0; i<100; i++){
-                    // self->physicsUpdate(0.001);
-                    self->m_worldPtr->pluginsPhysicsUpdate(0.01);
-                }
+                // for(size_t i=0; i<100; i++){
+                //     // self->physicsUpdate(0.001);
+                //     self->m_worldPtr->pluginsPhysicsUpdate(0.01);
+                // }
 
             }
         
             // self->physicsUpdate(0.001);
             // self->graphicsUpdate();
-            self->m_worldPtr->pluginsPhysicsUpdate(0.001);
+            // self->m_worldPtr->pluginsPhysicsUpdate(0.001);
             // self->m_worldPtr->pluginsGraphicsUpdate();
             // self->m_mainCamera->update(0.001);
             // std::cout << "CALLBACK" << std::endl;
@@ -120,7 +122,7 @@ class afContinuumManipSimplePlugin: public afSimulatorPlugin{
         template<typename Derived>
         double operator()(const Eigen::MatrixBase<Derived> &xval, int i) const 
         {
-            std::vector<double> goal_jp = {0.04719538614153862, 0.07040780782699585, 0.0539616122841835, 0.04232475906610489, 0.01811256818473339, 0.010549008846282959, -0.00471153948456049, -0.0024778724182397127, -0.021339787170290947, -0.02025371417403221, -0.02914055995643139, -0.022847743704915047, -0.0291144922375679, -0.023115238174796104, -0.02983745187520981, -0.0232921801507473, -0.02943757176399231, -0.023809820413589478, -0.02989761345088482, -0.02374465949833393, -0.0301345381885767, -0.024002499878406525, -0.030253717675805092, -0.023892860859632492, -0.030802471563220024, -0.02734425663948059, -0.049160074442625046};
+            // std::vector<double> goal_jp = {0.04719538614153862, 0.07040780782699585, 0.0539616122841835, 0.04232475906610489, 0.01811256818473339, 0.010549008846282959, -0.00471153948456049, -0.0024778724182397127, -0.021339787170290947, -0.02025371417403221, -0.02914055995643139, -0.022847743704915047, -0.0291144922375679, -0.023115238174796104, -0.02983745187520981, -0.0232921801507473, -0.02943757176399231, -0.023809820413589478, -0.02989761345088482, -0.02374465949833393, -0.0301345381885767, -0.024002499878406525, -0.030253717675805092, -0.023892860859632492, -0.030802471563220024, -0.02734425663948059, -0.049160074442625046};
 
             // assert(xval.size() == 2);
             // double r = xval(0);
@@ -134,12 +136,12 @@ class afContinuumManipSimplePlugin: public afSimulatorPlugin{
             auto total_err = 0.0;
             auto real_err = 0.0;
             for (size_t i=0; i<self->m_num_segs; i++){
-                total_err += jp[i]-goal_jp[i];
-                real_err += abs(jp[i]-goal_jp[i]);
-                std::cout << jp[i]-goal_jp[i] << ", ";
+                total_err += jp[i]-self->m_goal_jp[i];
+                real_err += abs(jp[i]-self->m_goal_jp[i]);
+                // std::cout << jp[i]-goal_jp[i] << ", ";
 
             }
-            std::cout << std::endl;
+            // std::cout << std::endl;
             return real_err;
             // auto& test_object = test_objects_list[i];
             // auto T_contmanipbase = man->m_contManipBaseRigidBody->getLocalTransform();
@@ -164,6 +166,7 @@ private:
     afRigidBodyPtr m_contManipBaseRigidBody;
     vector<afRigidBodyPtr> m_segmentBodyList;
     vector<afJointPtr> m_segmentJointList;
+    std::shared_ptr<ObstEstSubPub> obstacles_estimate_subpub;
 
     // rate of drill movement
     double m_drillRate = 0.0020f;
@@ -200,6 +203,7 @@ private:
 public:
     std::shared_ptr< pso::ParticleSwarmOptimization<double, afContinuumManipSimplePlugin::Fitness,
             pso::ConstantWeight<double> > > optimizer;
+    std::vector<double> m_goal_jp = {0.03857323154807091, 0.05876562371850014, 0.05156605318188667, 0.03878059983253479, 0.032945774495601654, 0.01658090576529503, 0.014382125809788704, -0.001148619456216693, 0.004339180421084166, -0.004708711989223957, -0.0011435482883825898, -0.018203508108854294, -0.020451009273529053, -0.03633563593029976, -0.04100726544857025, -0.05267582833766937, -0.0530061349272728, -0.05873632803559303, -0.055213797837495804, -0.05860369652509689, -0.05561099201440811, -0.0587981641292572, -0.05585761368274689, -0.05857396870851517, -0.057521265000104904, -0.06215948611497879, -0.06018473953008652};
 
     // template<typename Scalar>
     // bool optCallback(const Index, const Matrix&, const Vector &, const Index);

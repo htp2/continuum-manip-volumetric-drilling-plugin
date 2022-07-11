@@ -270,9 +270,9 @@ namespace pso
         };
 
         InterimResult interim_result;
+        Objective objective_;
 
     private:
-        Objective objective_;
         Callback callback_;
         InertiaWeightStrategy weightStrategy_;
 
@@ -786,11 +786,11 @@ namespace pso
             // interim_result.xval = ;
             }
 
-        void run_one_interation_minimize(){
+        void run_one_interation_minimize(Matrix &particles){
             Scalar fchange = feps_ + 1;
             Scalar xchange = xeps_ + 1;
 
-            auto& particles = interim_result.particles;
+            // auto& particles = interim_result.particles;
             auto& bestParticles = interim_result.bestParticles;
             auto& gbest = interim_result.gbest;
             auto& iterations = interim_result.iterations;

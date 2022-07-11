@@ -137,6 +137,7 @@ private:
     cToolCursor* m_test_cursor;
     vector<afRigidBodyPtr> m_segmentBodyList;
     vector<afJointPtr> m_segmentJointList;
+    afRigidBodyPtr m_burrBody;
     vector<double> m_mag_cmd = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
     vector<double> m_old_jp = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
