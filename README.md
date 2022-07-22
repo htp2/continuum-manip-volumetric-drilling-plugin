@@ -1,26 +1,13 @@
-# Drilling Simulator
-### [News Coverage](https://techxplore.com/news/2021-12-virtual-reality-simulator-surgeons-skull-base.html) | [Paper](https://arxiv.org/abs/2111.08097) | [Video](https://youtu.be/36pYIt1KGs4)
-This repo provides a realistic virtual drilling simulator presented in our Best Paper at AE-CAI MICCAI 2021, [Virtual reality for synergistic surgical training and data generation](https://arxiv.org/abs/2111.08097).
+Adapted from the work of Adnan Munawar et al. See their work at https://github.com/LCSR-SICKKIDS/volumetric_drilling
 
-If you found this work helpful, please reference us using the following citation:
-```
-@article{munawar2021virtual,
-  title={Virtual reality for synergistic surgical training and data generation},
-  author={Munawar, Adnan and Li, Zhaoshuo and Kunjam, Punit and Nagururu, Nimesh and Ding, Andy S and Kazanzides, Peter and Looi, Thomas and Creighton, Francis X and Taylor, Russell H and Unberath, Mathias},
-  journal={Computer Methods in Biomechanics and Biomedical Engineering: Imaging \& Visualization},
-  pages={1--9},
-  year={2021},
-  publisher={Taylor \& Francis}
-}
-```
+This repo was developed by Henry Phalen as part of his work as a graduate student at Johns Hopkins University. The program simulates a continuum manipulator that is able to manipulate / remove parts of a volumetric model.
 
-## Overview
+The initial application is to simulate the control of a dexterous surgical tool for curved drilling for autonomous surgical procedures in the femur and spine.
 
-The virtual reality drilling simulator is able to actively modify anatomy with a virtual drill. The simulator has both VR and haptics integration as well as the ability to generate data for use in downstream algorithm development. Volumetric_drilling is a plugin built on top of Asynchronous Multibody Framework ([AMBF](https://github.com/WPI-AIM/ambf)) developed by Munawar et al. We show the use of the plugin in lateral skull base surgery. 
-
-![image](https://user-images.githubusercontent.com/61888209/136677737-af8e1a6c-1f76-44d7-bb3c-6a9d99ec08fd.png)
+Most of the instructions below are the same as https://github.com/LCSR-SICKKIDS/volumetric_drilling (Thanks Adnan!), but there are some additions, particularly in the keyboard hotkey section.
 
 ## 1. Installation Instructions:
+
 Lets call the absolute location of this package as **<volumetric_plugin_path>**. E.g. if you cloned this repo in your home folder, **<volumetric_plugin_path>** = `~/volumetric_drilling/` OR `/home/<username>/volumetric_plugin`
 ### 1.1 Install and Source AMBF 2.0
 
@@ -120,33 +107,38 @@ The virtual drill can be manipulated via a keyboard or haptic devices such as th
 
 | # | Linear Motion of Tool | Description                                  |
 |---|-----------------------|----------------------------------------------|
-| 1 | [Ctrl+W]              | Moves vertically upward w.r.t. camera        |
-| 2 | [Ctrl+S]              | Moves vertically downward w.r.t. camera      |
-| 3 | [Ctrl+A]              | Moves horizontally left w.r.t. camera        |
-| 4 | [Ctrl+D]              | Moves horizontally right w.r.t. camera       |
-| 5 | [Ctrl+I]              | Moves in the forward direction w.r.t camera  |
-| 6 | [Ctrl+K]              | Moves in the backward direction w.r.t camera |
+| 1 | [Ctrl+W]              | Moves vertically upward w.r.t. base frame    |
+| 2 | [Ctrl+S]              | Moves vertically downward w.r.t. base frame      |
+| 3 | [Ctrl+A]              | Moves horizontally left w.r.t. base frame        |
+| 4 | [Ctrl+D]              | Moves horizontally right w.r.t. base frame       |
+| 5 | [Ctrl+I]              | Moves in the forward direction w.r.t base frame  |
+| 6 | [Ctrl+K]              | Moves in the backward direction w.r.t base frame |
 
 
 | # | Angular Motion of Tool | Description                                     |
 |---|------------------------|-------------------------------------------------|
-| 1 | [Num 8]                | Rotates towards upward direction w.r.t tool     |
-| 2 | [Num 5]                | Rotates towards downward direction w.r.t. tool  |
-| 3 | [Num 4]                | Rotates towards the left direction w.r.t. tool  |
-| 4 | [Num 6]                | Rotates towards the right direction w.r.t. tool |
+| 1 | [Num 8]                | Rotates towards upward direction w.r.t base frame     |
+| 2 | [Num 5]                | Rotates towards downward direction w.r.t. base frame  |
+| 3 | [Num 4]                | Rotates towards the left direction w.r.t. base frame  |
+| 4 | [Num 6]                | Rotates towards the right direction w.r.t. base frame |
 
 
 | # | Miscellaneous | Description                                                                        |
 |---|---------------|------------------------------------------------------------------------------------|
 | 1 | [Ctrl+O (letter o)]      | Toggle the drill's control mode between Haptic Device / Keyboard to ROS Comm       |
-| 1 | [C]      | Changes the size of drill burr/ radius of tip sphere (2 mm, 4 mm, and, 6 mm)       |
 | 2 | [Ctrl+N]      | Resets the shape of the volume                                                     |
 | 3 | [Alt+R]       | Resets the whole world and this plugin                                             |
-| 2 | [X]           | Toggles the functionality of sudden jumping of drill mesh towards the followSphere |
 | 3 | [B]           | Toggles the visibility of drill mesh in the scene                                  |
-| 4 | [Ctrl+C] | Toggles the visbility of collision spheres | 
+| 4 | [Ctrl+C] | Toggles the visbility of collision spheres |
+| 5 | [Ctrl+KP-] | Toggles tip trace data collection for visualization |
+| 6 | [Ctrl+KP*] | Toggles the visbility of the tip trace |
+| 7 | [Ctrl+[ ] | Toggles tip volume collision |
+| 8 | [Ctrl+] ] | Resets collision spheres with mesh locations |
+| 9 | [Ctrl+/ ] | Toggles whether cable setting comes from keyboard or ROS topic |
+| 10 | [Ctrl+; ] | Decreases cable pull magnitude |
+| 11 | [Ctrl+' ] | Increases cable pull magnitude |
+| 12 | [Ctrl+= ] | Toggles the burr as on/off (whether or not voxels will be removed from anatomy) |
 
-#### 2.4.2 Geomagic Touch/Phantom Omni
 
 ### 2.5 Navigating in Simulator
 Camera movement in the simulator can be accomplished through AMBF's python client, mouse movement or Head Mounted Displays (HMDs)
