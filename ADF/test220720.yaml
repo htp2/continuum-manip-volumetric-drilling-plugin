@@ -1,24 +1,24 @@
 # AMBF Version: (0.1)
 bodies: []
 joints: []
-volumes: [VOLUME cube]
+volumes: [VOLUME test220720]
 high resolution path: ./meshes/high_res/
 low resolution path: ./meshes/low_res/
 ignore inter-collision: true
 namespace: /ambf/env/
 
-VOLUME cube:
-  name: cube
+VOLUME test220720:
+  name: test220720
   location:
-    position: {x: 0.0, y: 1.15, z: 0.0}
-    orientation: {r: 0.0, p: 0.0, y: 0.0}
-  scale: 1.0
-  dimensions: {x: 1.5218000173568783, y: 1.8370300209522317, z: 2.6400000393390655}
+    position: {x: 0.4085090637207031, y: 0.20975997924804687, z: -10.755}
+    orientation: {r: 0.0, p: 0.0, y: 1.5707963267948966}
+  scale: 10.0
+  dimensions: {x: 0.199, y: 0.381, z: 0.433}
   images:
-    path: ../resources/volumes/cube/
+    path: ../resources/volumes/test220720/
     prefix: plane00
     format: png
-    count: 330
+    count: 433
   shaders:
     path: ./shaders/volume/
     vertex: shader.vs

@@ -94,7 +94,7 @@ private:
 
     // a haptic device handler
     cHapticDeviceHandler* m_deviceHandler;
-
+    cMultiSegment* m_traveled_points;
     // a pointer to the current haptic device
     cGenericHapticDevicePtr m_hapticDevice;
 
@@ -118,6 +118,9 @@ private:
     // Local offset between shaft tool cursors
     double m_dX = 0.03;
 
+    // Chai 33 world pointer
+    cWorld* m_chaiWorldPtr;
+
     // camera to render the world
     afCameraPtr m_mainCamera;
 
@@ -134,7 +137,6 @@ private:
     vector<cToolCursor*> m_segmentToolCursorList;
     vector<cToolCursor*> m_shaftToolCursorList;
     vector<cToolCursor*> m_burrToolCursorList;
-    cToolCursor* m_test_cursor;
     vector<afRigidBodyPtr> m_segmentBodyList;
     vector<afJointPtr> m_segmentJointList;
     afRigidBodyPtr m_burrBody;
@@ -185,6 +187,8 @@ private:
     double m_cable_pull_mag = 0.0;
 
     void obstacleEstimate();
+
+    bool fillGoalPointsFromCSV(const std::string& filename, std::vector<cVector3d>& goal_points);
 
 };
 

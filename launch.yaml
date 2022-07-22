@@ -6,7 +6,7 @@ plugins: [
   {
     name: DRILLING_SIMULATOR,
     filename: libcontinuum_manip_volumetric_drilling_plugin.so,
-    path: ../../build/continuum_manip_volumetric_drilling_plugin/ # This is to use if catkin-built
+    path: ../../build/continuum_manip_volumetric_drilling_plugin/, # This is to use if catkin-built
     #  path: ../../build/continuum-manip-volumetric-drilling-plugin/  # This is to use if built directly using cmake
   }
 ]
@@ -37,5 +37,10 @@ multibody configs:
   - "ADF/bigss_snake_centered_collision_meshes.yaml" #23
   - "ADF/cube.yaml" #24
   - "ADF/bigss_snake_centered_collision_meshes_burr.yaml" #25"
+  - "ADF/spine_seg_cropped.yaml" #26
+  - "ADF/spine_seg_crop_test.yaml" #27
+  - "ADF/test220720.yaml" #28
+
+
 
   

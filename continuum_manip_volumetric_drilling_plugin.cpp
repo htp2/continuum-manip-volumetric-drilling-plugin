@@ -48,6 +48,7 @@
 
 #include "continuum_manip_volumetric_drilling_plugin.h"
 #include <boost/program_options.hpp>
+#include <fstream>
 
 using namespace std;
 
@@ -84,6 +85,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     m_storedColor = cColorb(0x00, 0x00, 0x00, 0x00);
 
+    std::vector<cVector3d> goal_points;
+    fillGoalPointsFromCSV("/home/henry/snake_registration/simulation/data_process/goal_points.csv", goal_points);
+    std::cout << "NUM_GOAL_PTS: " << goal_points.size() << std::endl;
 
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
     m_worldPtr = a_afWorld;
@@ -92,11 +96,30 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_worldPtr->m_bulletWorld->setGravity(btVector3(0.0,0.0,0.0));
     // Get first camera
     m_mainCamera = m_worldPtr->getCameras()[0];
+    
+    // Get chai3D world pointer
+    m_chaiWorldPtr = m_worldPtr->getChaiWorld();
+
+    // create a line segment object
+    cMultiSegment* segments = new cMultiSegment();
+    m_chaiWorldPtr->addChild(segments);
+    segments->newVertex(goal_points[0]);
+    for(auto i=1; i<goal_points.size(); i++){
+        segments->newVertex(goal_points[i]);
+        segments->newSegment(i-1,i);
+    }    
+    cColorf color;
+    color.setYellowGold();
+    segments->setLineColor(color);
+    // assign line width
+    segments->setLineWidth(4.0);
+    // use display list for faster rendering
+    segments->setUseDisplayList(true);
 
     // importing continuum manipulator model
     m_contManipBaseRigidBody = m_worldPtr->getRigidBody("snake_stick");
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
-    m_lastSegmentRigidBody = m_worldPtr->getRigidBody("/ambf/env/BODY seg27");
+    m_lastSegmentRigidBody = m_worldPtr->getRigidBody("/ambf/env/BODY Burr");
 
     if (!m_contManipBaseRigidBody){
         cerr << "ERROR! FAILED TO FIND DRILL RIGID BODY NAMED " << "snake_stick" << endl;
@@ -106,17 +129,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // Add drill burr
     double burr_r = m_ambf_scale_to_mm * 6.5/2;
 
-/*
-    m_burrMesh = new cShapeSphere(burr_r); // 2mm by default with 1 AMBF unit = 0.049664 m
-    m_burrMesh->setRadius(burr_r);
-    m_burrMesh->m_material->setBlack();
-    m_burrMesh->m_material->setShininess(0);
-    m_burrMesh->m_material->m_specular.set(0, 0, 0);
-    m_burrMesh->setShowEnabled(true);
-    cTransform offset(cVector3d(0.0,m_ambf_scale_to_mm*3,0.0));
-    m_lastSegmentRigidBody->addChildSceneObject(m_burrMesh, offset);
-    m_worldPtr->addSceneObjectToWorld(m_burrMesh);
-*/  
     // // import C-arm (x-ray image source) model
     // m_carmRigidBody = m_worldPtr->getRigidBody("carm");
     // T_carm = m_carmRigidBody->getLocalTransform();
@@ -215,6 +227,25 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     // Set up cable pull subscriber
     m_cablePullSub = new CablePullSubscriber("ambf", "volumetric_drilling");
+
+    // create a line segment for traveled points
+    m_traveled_points = new cMultiSegment();
+    m_chaiWorldPtr->addChild(m_traveled_points);
+    m_traveled_points->newVertex(m_lastSegmentRigidBody->getLocalPos());
+    // for(auto i=1; i<goal_points.size(); i++){
+    //     traveled->newVertex(goal_points[i]);
+    //     traveled->newSegment(i-1,i);
+    // }    
+    color.setRedCrimson();
+    m_traveled_points->setLineColor(color);
+    // assign line width
+    m_traveled_points->setLineWidth(4.0);
+    // use display list for faster rendering
+    m_traveled_points->setUseDisplayList(true);   
+
+
+    // glfwCreateWindow(640, 480, "My Title", NULL, NULL);
+
     return 1;
 }
 
@@ -231,6 +262,16 @@ void afVolmetricDrillingPlugin::graphicsUpdate(){
         ((cTexture3d*)m_voxelObj->m_texture.get())->markForPartialUpdate(min, max);
         m_flagMarkVolumeForUpdate = false;
     }
+
+    
+    m_traveled_points->newVertex(m_lastSegmentRigidBody->getLocalPos());
+    int vert_idx = m_traveled_points->getNumVertices()-1;
+    m_traveled_points->newSegment(vert_idx-1, vert_idx);
+    // for(auto i=1; i<goal_points.size(); i++){
+    //     traveled->newVertex(goal_points[i]);
+    //     traveled->newSegment(i-1,i);
+    // }    
+
 }
 
 void afVolmetricDrillingPlugin::physicsUpdate(double dt){
@@ -251,7 +292,6 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         T_contmanip_base.setLocalRot(m_mainCamera->getLocalRot() * T_i.getLocalRot());
     }
 
-    // T_burr = m_burrMesh->getLocalTransform();
     toolCursorsPosUpdate(T_contmanip_base);
 
     if (!m_volume_collisions_enabled){
@@ -316,7 +356,6 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
             m_segmentBodyList[i]->applyForce(100000.0*m_segmentToolCursorList[i]->getDeviceLocalForce());
         }
         // apply force from burr
-        // m_segmentBodyList.back()->applyForceAtPointOnBody(100000.0*m_burrToolCursorList[0]->getDeviceLocalForce(),m_burrMesh->getLocalPos());
         m_burrBody->applyForce(100000.0*m_burrToolCursorList[0]->getDeviceLocalForce());
         
 
@@ -491,13 +530,6 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
         seg_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
         seg_cursor->setRadius(m_ambf_scale_to_mm*6/2);
     }
-    m_test_cursor = new cToolCursor(chai_world);
-    m_test_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
-    m_test_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
-    m_test_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
-    m_test_cursor->setRadius(m_ambf_scale_to_mm * 1.0);
-    m_test_cursor->initialize();
-    m_worldPtr->addSceneObjectToWorld(m_test_cursor);
     // Initialize the start pose of the tool cursors
     toolCursorsPosUpdate(T_contmanip_base);
     for( auto& cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList}){
@@ -1193,4 +1225,42 @@ void afVolmetricDrillingPlugin::obstacleEstimate(){  //TODO: Implementation not 
     std::cout << std::endl;
 
     }
+}
+
+bool afVolmetricDrillingPlugin::fillGoalPointsFromCSV(const std::string& filename, std::vector<cVector3d>& goal_points){
+    std::ifstream file(filename);
+    if (!file){
+      std::cout << "Error reading: "<< filename << std::endl;
+      return false;
+    }
+    int q = 0;
+
+
+    while (file)
+    {
+        std::string s;
+        if (!std::getline( file, s )) break;
+        std::istringstream ss( s );
+        std::vector <std::string> record;
+        while (ss)
+        {
+        std::string s;
+        if (!getline( ss, s, ',' )) break;
+        record.push_back( s );
+        }
+
+        goal_points.push_back(cVector3d(std::stod(record[0]),std::stod(record[1]),std::stod(record[2])));
+        // data.push_back( record );
+    }
+
+
+    // while(file){
+    //     std::cout << "q: " << q << std::endl;
+    //     double x,y,z;
+    //     file >> x >> y >> z;
+    //     goal_points.push_back(cVector3d(x,y,z));
+    //     q++;
+    // }
+  return true;
+
 }

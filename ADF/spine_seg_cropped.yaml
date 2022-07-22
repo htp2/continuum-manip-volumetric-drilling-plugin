@@ -1,24 +1,24 @@
 # AMBF Version: (0.1)
 bodies: []
 joints: []
-volumes: [VOLUME cube]
+volumes: [VOLUME spine_seg_cropped]
 high resolution path: ./meshes/high_res/
 low resolution path: ./meshes/low_res/
 ignore inter-collision: true
 namespace: /ambf/env/
 
-VOLUME cube:
-  name: cube
+VOLUME spine_seg_cropped:
+  name: spine_seg_cropped
   location:
-    position: {x: 0.0, y: 1.15, z: 0.0}
+    position: {x: 0.0, y: 0.0, z: 0.0}
     orientation: {r: 0.0, p: 0.0, y: 0.0}
-  scale: 1.0
-  dimensions: {x: 1.5218000173568783, y: 1.8370300209522317, z: 2.6400000393390655}
+  scale: 10.0
+  dimensions: {x: -0.08587300097942384, y: -0.09674300110340155, z: 0.04640000069141388}
   images:
-    path: ../resources/volumes/cube/
+    path: ../resources/volumes/spine_seg_cropped/
     prefix: plane00
     format: png
-    count: 330
+    count: 89
   shaders:
     path: ./shaders/volume/
     vertex: shader.vs
