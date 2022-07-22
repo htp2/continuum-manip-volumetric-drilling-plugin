@@ -85,6 +85,9 @@ private:
     bool m_flagStart = true;
     
     bool m_volume_collisions_enabled = false;
+    
+    bool m_collect_tip_trace_enabled = false;
+    bool m_show_tip_trace_enabled = false;
 
     int m_counter = 0;
 

@@ -243,9 +243,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // use display list for faster rendering
     m_traveled_points->setUseDisplayList(true);   
 
-
-    // glfwCreateWindow(640, 480, "My Title", NULL, NULL);
-
     return 1;
 }
 
@@ -262,16 +259,11 @@ void afVolmetricDrillingPlugin::graphicsUpdate(){
         ((cTexture3d*)m_voxelObj->m_texture.get())->markForPartialUpdate(min, max);
         m_flagMarkVolumeForUpdate = false;
     }
-
-    
-    m_traveled_points->newVertex(m_lastSegmentRigidBody->getLocalPos());
-    int vert_idx = m_traveled_points->getNumVertices()-1;
-    m_traveled_points->newSegment(vert_idx-1, vert_idx);
-    // for(auto i=1; i<goal_points.size(); i++){
-    //     traveled->newVertex(goal_points[i]);
-    //     traveled->newSegment(i-1,i);
-    // }    
-
+    if(m_collect_tip_trace_enabled){
+        m_traveled_points->newVertex(m_lastSegmentRigidBody->getLocalPos());
+        int vert_idx = m_traveled_points->getNumVertices()-1;
+        m_traveled_points->newSegment(vert_idx-1, vert_idx);
+    }
 }
 
 void afVolmetricDrillingPlugin::physicsUpdate(double dt){
@@ -709,6 +701,15 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
             std::string cable_control_mode = m_cableKeyboardControl?"Keyboard":"Subscriber";
             m_cableControlModeText->setText("Cable Control Mode = " + cable_control_mode);
         }
+        else if (a_key == GLFW_KEY_KP_MULTIPLY) {
+            m_collect_tip_trace_enabled = !m_collect_tip_trace_enabled;
+            std::cout << "Collect Tip Trace Enabled State: " << m_collect_tip_trace_enabled << std::endl;
+        }
+        else if (a_key == GLFW_KEY_KP_SUBTRACT) {
+            m_show_tip_trace_enabled = !m_show_tip_trace_enabled;
+            m_traveled_points->setShowEnabled(m_show_tip_trace_enabled);
+            std::cout << "Show Tip Trace Enabled State: " << m_show_tip_trace_enabled << std::endl;
+        }        
 
         else if (a_key == GLFW_KEY_G) {
             m_obstacle_estimate_enabled = ! m_obstacle_estimate_enabled;
@@ -970,8 +971,11 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         else if (a_key == GLFW_KEY_B){
             m_showDrill = !m_showDrill;
             m_contManipBaseRigidBody->m_visualMesh->setShowEnabled(m_showDrill);
+            for(auto& seg: m_segmentBodyList){
+                seg->m_visualMesh->setShowEnabled(m_showDrill);
+            }
+            m_burrBody->m_visualMesh->setShowEnabled(m_showDrill);
             // m_burrMesh->setShowEnabled(m_showDrill);
-
         }
 
     }
