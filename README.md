@@ -28,14 +28,25 @@ image-transport # Can be installed via apt install ros-<version>-image-transport
 Build and source ambf (make sure you're on branch ambf-2.0 before building) as per the instructions on AMBFs wiki: https://github.com/WPI-AIM/ambf/wiki/Installing-AMBF.
 
 ### 1.2 Clone and Build Simulator
+
+#### [Recommended] build with catkin
+Assuming you are trying to integrate into a larger catkin_ws
 ``` bash
-git clone https://github.com/LCSR-SICKKIDS/volumetric_drilling
-cd <volumetric_plugin_path>
+cd <catkin_ws>
+git clone <this repo>
+catkin build
+```
+#### Building outside catkin
+You can also just build using CMake
+``` bash
+git clone <this repo>
+cd <continuum-manip-volumetric-drilling-plugin-path>
 mkdir build
 cd build
 cmake ..
 make
 ```
+
 If everything went smoothly, we are good to go.
 
 ## 2 Running the Plugin with ambf_simulator:
@@ -49,59 +60,28 @@ https://github.com/WPI-AIM/ambf/wiki/Command-Line-Arguments
 
 Note that the executable binary,`ambf_simulator`, is located in `ambf/bin/lin-x86_64` and you must be in that folder to run the simulator.
 
-### 2.1 Different Volume Options
-We provide three different volumes to choose from:
-
-#### Option 1:
-A low res volume (`1`) and a drill (`0`):
+### Running with the continuum manipulator
+To startup with a simple block volume you can drill into, you can use:
 ```bash
 cd ambf/bin/lin-x86_64/
-./ambf_simulator --launch_file <volumetric_plugin_path>/launch.yaml -l 0,1
+./ambf_simulator --launch_file <continuum-manip-volumetric-drilling-plugin-path>/launch.yaml -l 24,25
 ```
+#### Controls with continuum manipulator (CM)
+1. At the start you will need to press: ( Ctrl+] ) and ( Ctrl+[ ) to start the volumetric collisions and have the tool cursors track the mesh positions (this is a workaround to prevent all the tool cursors from starting at 0,0,0 before the first frame and then flying into position, getting stuck and/or causing a bunch of vibrations in the CM). This will be fixed eventually.
 
-#### Option 2:
-A medium res volume (`2`) and a drill (`0`):
-```bash
-cd ambf/bin/lin-x86_64/
-./ambf_simulator --launch_file <volumetric_plugin_path>/launch.yaml -l 0,2
-```
+2. Control the base of the CM by holding Ctrl and pressing any of the W, A, S, D, I, or K keys for translation. Specifics, and rotation can be found in the table below.
 
-#### Option 3:
-A high res volume (`3`) and a drill (`0`):
-```bash
-cd ambf/bin/lin-x86_64/
-./ambf_simulator --launch_file <volumetric_plugin_path>/launch.yaml -l 0,3
-```
+3. Control the bend of the CM by pressing the Ctrl+; and Ctrl+' keys to increase or decrease a 'cable tension' setpoint
+
 #### Option 4: User-provided volume
 Patient specific anatomy may also be used in the simulator. The volumes are an array of images (JPG or PNG) that are rendered via texture-based volume rendering. With images and an ADF for the volume, user specified anatomy can easily be used in the simulator. We provide utility scripts (located in the `scripts` folder) that can convert both segmented and non-segmented data from the NRRD format to an array of images.
 
-### 2.2 Camera Options:
-Different cameras, defined via ADF model files, can be loaded alongside the simulation.
-
-#### Option 1:
-You can add `4` to any of the above commands to load a segmentation_camera. This camera publishes a segmented depth point cloud. Launch example:
-```bash
-cd ambf/bin/lin-x86_64/
-./ambf_simulator --launch_file <volumetric_plugin_path>/launch.yaml -l 0,1,4
-```
-#### Option 2:
-You can add `5` to any of the above commands to load two cameras (one of each stereo eye). Each of these cameras publishes a its video. Launch example:
-```bash
-cd ambf/bin/lin-x86_64/
-./ambf_simulator --launch_file <volumetric_plugin_path>/launch.yaml -l 0,1,5
-```
-
-#### Option 1 and 2 combined:
-You can also load both the segmentation_camera and the two stereo_cameras together as:
-```bash
-cd ambf/bin/lin-x86_64/
-./ambf_simulator --launch_file <volumetric_plugin_path>/launch.yaml -l 0,1,4,5
 ```
 ### 2.3 Changing Scene Parameters
 All the relevant ADF scene objects are in the ADF folder and can be modified as needed. For example, camera intrinsics can be adjusted via the field view angle and image resolution parameters of Camera ADFs.
 
 ### 2.4 Manipulating Drill
-The virtual drill can be manipulated via a keyboard or haptic devices such as the Geomagic Touch/Phantom Omni.
+The virtual drill can be manipulated via a keyboard or using ROS commands
 
 #### 2.4.1 Keyboard Navigation
 
