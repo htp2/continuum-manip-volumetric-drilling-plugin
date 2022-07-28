@@ -13,7 +13,7 @@ import tf2_geometry_msgs
 import time
 import os
 from mpl_toolkits.mplot3d import Axes3D
-from scipy.optimize import minimize, LinearConstraint
+from scipy.optimize import minimize, LinearConstraint, Bounds
 import PyKDL
 
 class cm_insert_bend_controller:
@@ -46,7 +46,8 @@ class cm_insert_bend_controller:
         # print("v",v)
         insertion = v[0]
         bend = v[1]
-        pred_new_pos = current_position_world.p + J1*insertion*dt + J2*bend*dt
+        test_scale = 5.0
+        pred_new_pos = current_position_world.p + J1*insertion*dt + test_scale*J2*bend*dt
         err = pred_new_pos - goal_position_world.p
         return err.Norm()
 
@@ -90,10 +91,18 @@ class cm_insert_bend_controller:
 
             insert_dir = T_base.M.UnitY()
 
+            bend_max = 0.032
+            bend_min = -0.032
+            max_cable_vel_bound_to_keep_in_range = max(0.0,(bend_max - self.bend_command.data)*self.ros_node_rate_hz)
+            # only goes negative if current pos bigger than max
+            min_cable_vel_bound_to_keep_in_range = min(0.0,(bend_min - self.bend_command.data)*self.ros_node_rate_hz)
+
+
             v = [0.0,0.0]
-            vel_constraint = LinearConstraint(np.eye(2), lb=[-0.01,-0.0001], ub=[0.01,0.0001], keep_feasible=True)
+            vel_bounds = Bounds(lb=[-0.01,max(-0.0005,min_cable_vel_bound_to_keep_in_range)], ub=[0.01, min(0.0005, max_cable_vel_bound_to_keep_in_range) ])
+            # vel_constraint = LinearConstraint(np.eye(2), lb=[-0.01,-0.0001], ub=[0.01,0.0001])
             # res = minimize(self.dist_to_goal, v, args=(T_goal, T_pos, tip_dir_bendplane, bend_dir_bendplane))
-            res = minimize(self.dist_to_goal, v, args=(self.T_current_goal, T_tip, tip_dir_bendplane, bend_dir_bendplane), constraints=vel_constraint)
+            res = minimize(self.dist_to_goal, v, args=(self.T_current_goal, T_tip, tip_dir_bendplane, bend_dir_bendplane), bounds=vel_bounds)
 
             v_in, v_bend = res.x
             print(f"v_in: {v_in}, v_bend: {v_bend}")

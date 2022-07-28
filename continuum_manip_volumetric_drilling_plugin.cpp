@@ -65,7 +65,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     p_opt::options_description cmd_opts("drilling_simulator Command Line Options");
     cmd_opts.add_options()
             ("info", "Show Info")
-            ("anatomy_volume_name", p_opt::value<std::string>()->default_value("mastoidectomy_volume"), "Name of volume given in yaml. Default spine_test_volume");
+            ("anatomy_volume_name", p_opt::value<std::string>()->default_value("cube"), "Name of volume given in yaml. Default spine_test_volume");
 
     p_opt::variables_map var_map;
     p_opt::store(p_opt::command_line_parser(argc, argv).options(cmd_opts).allow_unregistered().run(), var_map);
@@ -75,9 +75,49 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         std::cout<< cmd_opts << std::endl;
         return -1;
     }
+
+    string file_path = __FILE__;
+    string cur_path = file_path.substr(0, file_path.rfind("/"));
+    string target_path_filepath = cur_path + "/resources/goal_points.csv";
+    
+    // Bring in ambf world, make adjustments as needed to improve simulation accuracy
+    m_worldPtr = a_afWorld;
+    m_worldPtr->m_bulletWorld->getSolverInfo().m_erp=1.0; // improve out of plane error of joints
+    m_worldPtr->m_bulletWorld->getSolverInfo().m_erp2=1.0; // improve out of plane error of joints
+    m_worldPtr->m_bulletWorld->setGravity(btVector3(0.0,0.0,0.0));
+    // Get chai3D world pointer
+    m_chaiWorldPtr = m_worldPtr->getChaiWorld();
+
+    // Display goal line segments(TODO? move out of here)
+    cMultiSegment* segments = new cMultiSegment();
+    std::vector<cVector3d> goal_points;
+    std::cout << "NUM_GOAL_PTS: " << goal_points.size() << std::endl;
+    
+    ifstream f(target_path_filepath.c_str());
+    if (f.good()){
+        fillGoalPointsFromCSV(target_path_filepath, goal_points);
+        // create a line segment object
+        m_chaiWorldPtr->addChild(segments);
+        segments->newVertex(goal_points[0]);
+        for(auto i=1; i<goal_points.size(); i++){
+            segments->newVertex(goal_points[i]);
+            segments->newSegment(i-1,i);
+        }    
+        cColorf color;
+        color.setYellowGold();
+        segments->setLineColor(color);
+        // assign line width
+        segments->setLineWidth(4.0);
+        // use display list for faster rendering
+        segments->setUseDisplayList(true);
+    }
+    f.close();
+    
+
+
     std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
     // anatomy_volume_name = "spine_seg";
-    anatomy_volume_name = "cube";
+    // anatomy_volume_name = "cube";
 
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
 
@@ -85,36 +125,13 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     m_storedColor = cColorb(0x00, 0x00, 0x00, 0x00);
 
-    std::vector<cVector3d> goal_points;
-    fillGoalPointsFromCSV("/home/henry/snake_registration/simulation/data_process/goal_points.csv", goal_points);
-    std::cout << "NUM_GOAL_PTS: " << goal_points.size() << std::endl;
+    
 
-    // Bring in ambf world, make adjustments as needed to improve simulation accuracy
-    m_worldPtr = a_afWorld;
-    m_worldPtr->m_bulletWorld->getSolverInfo().m_erp=1.0; // improve out of plane error of joints
-    m_worldPtr->m_bulletWorld->getSolverInfo().m_erp2=1.0; // improve out of plane error of joints
-    m_worldPtr->m_bulletWorld->setGravity(btVector3(0.0,0.0,0.0));
-    // Get first camera
+       // Get first camera
     m_mainCamera = m_worldPtr->getCameras()[0];
     
-    // Get chai3D world pointer
-    m_chaiWorldPtr = m_worldPtr->getChaiWorld();
 
-    // create a line segment object
-    cMultiSegment* segments = new cMultiSegment();
-    m_chaiWorldPtr->addChild(segments);
-    segments->newVertex(goal_points[0]);
-    for(auto i=1; i<goal_points.size(); i++){
-        segments->newVertex(goal_points[i]);
-        segments->newSegment(i-1,i);
-    }    
-    cColorf color;
-    color.setYellowGold();
-    segments->setLineColor(color);
-    // assign line width
-    segments->setLineWidth(4.0);
-    // use display list for faster rendering
-    segments->setUseDisplayList(true);
+
 
     // importing continuum manipulator model
     m_contManipBaseRigidBody = m_worldPtr->getRigidBody("snake_stick");
@@ -187,42 +204,21 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_cableControlModeText->setText("Cable Control Mode = Keyboard");
     m_mainCamera->getFrontLayer()->addChild(m_cableControlModeText);
 
-    // TODO: Add enable volumetric collision indicator
-    // m_cableControlModeText = new cLabel(font);
-    // m_cableControlModeText->setLocalPos(20,10);
-    // m_cableControlModeText->m_fontColor.setGreen();
-    // m_cableControlModeText->setFontScale(.5);
-    // m_cableControlModeText->setText("Cable Control Mode = Keyboard");
-    // m_mainCamera->getFrontLayer()->addChild(m_cableControlModeText);
-
-
-    // TODO?: load xray image into AMBF directly
-    // auto xray_image = std::make_shared<cImage>(100,100);
-    // xray_image->setPixelColor(10,10,1);
-    // // create bitmap object
-    // cBitmap* bitmap = new cBitmap();
-    // // add bitmap to front layer of camera
-    // m_mainCamera->getFrontLayer()->addChild(bitmap);
-    // // load image file
-    // bitmap->loadFromImage(xray_image);
-
     // Get drills initial pose
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
-    // T_burr = m_burrMesh->getLocalTransform();
 
     // Set up voxels_removed publisher
     m_drillingPub = new DrillingPublisher("ambf", "volumetric_drilling");
+    
     // Volume Properties
     float dim[3];
     dim[0] = m_volumeObject->getDimensions().get(0);
     dim[1]= m_volumeObject->getDimensions().get(1);
     dim[2] = m_volumeObject->getDimensions().get(2);
-
     int voxelCount[3];
     voxelCount[0] = m_volumeObject->getVoxelCount().get(0);
     voxelCount[1]= m_volumeObject->getVoxelCount().get(1);
     voxelCount[2] = m_volumeObject->getVoxelCount().get(2);
-
     m_drillingPub -> volumeProp(dim, voxelCount);
 
     // Set up cable pull subscriber
@@ -232,17 +228,13 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_traveled_points = new cMultiSegment();
     m_chaiWorldPtr->addChild(m_traveled_points);
     m_traveled_points->newVertex(m_lastSegmentRigidBody->getLocalPos());
-    // for(auto i=1; i<goal_points.size(); i++){
-    //     traveled->newVertex(goal_points[i]);
-    //     traveled->newSegment(i-1,i);
-    // }    
+    cColorf color;
     color.setRedCrimson();
     m_traveled_points->setLineColor(color);
     // assign line width
     m_traveled_points->setLineWidth(4.0);
     // use display list for faster rendering
     m_traveled_points->setUseDisplayList(true);   
-
     return 1;
 }
 
