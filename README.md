@@ -66,6 +66,12 @@ To startup with a simple block volume you can drill into, you can use:
 cd ambf/bin/lin-x86_64/
 ./ambf_simulator --launch_file <continuum-manip-volumetric-drilling-plugin-path>/launch.yaml -l 24,25
 ```
+### Drilling into a different volume
+Run the simulator with the added ```--anatomy_volume_name arg``` where arg matches the name given to a volume you are including using the ```-l arg``` command. For example, if there is a volume called ```spine_seg``` that is listed as #15 in the launch.yaml file, and the CM is listed as #25, you could use the following command:
+e.g.,
+```bash
+./ambf_simulator --launch_file /home/henry/bigss/catkin_ws/src/continuum-manip-volumetric-drilling-plugin/launch.yaml -l 15,25 --anatomy_volume_name spine_seg
+```
 #### Controls with continuum manipulator (CM)
 1. At the start you will need to press: ( Ctrl+] ) and ( Ctrl+[ ) to start the volumetric collisions and have the tool cursors track the mesh positions (this is a workaround to prevent all the tool cursors from starting at 0,0,0 before the first frame and then flying into position, getting stuck and/or causing a bunch of vibrations in the CM). This will be fixed eventually.
 
