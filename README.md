@@ -6,6 +6,10 @@ The initial application is to simulate the control of a dexterous surgical tool 
 
 Most of the instructions below are the same as https://github.com/LCSR-SICKKIDS/volumetric_drilling (Thanks Adnan!), but there are some additions, particularly in the keyboard hotkey section.
 
+
+This pairs well with another plugin I wrote (https://github.com/htp2/ambf_trace_plugin), you might find reference to it in the launch file!
+
+
 ## 1. Installation Instructions:
 
 Lets call the absolute location of this package as **<volumetric_plugin_path>**. E.g. if you cloned this repo in your home folder, **<volumetric_plugin_path>** = `~/volumetric_drilling/` OR `/home/<username>/volumetric_plugin`
@@ -116,8 +120,6 @@ The virtual drill can be manipulated via a keyboard or using ROS commands
 | 3 | [Alt+R]       | Resets the whole world and this plugin                                             |
 | 3 | [B]           | Toggles the visibility of drill mesh in the scene                                  |
 | 4 | [Ctrl+C] | Toggles the visbility of collision spheres |
-| 5 | [Ctrl+KP-] | Toggles tip trace data collection for visualization |
-| 6 | [Ctrl+KP*] | Toggles the visbility of the tip trace |
 | 7 | [Ctrl+[ ] | Toggles tip volume collision |
 | 8 | [Ctrl+] ] | Resets collision spheres with mesh locations |
 | 9 | [Ctrl+/ ] | Toggles whether cable setting comes from keyboard or ROS topic |
