@@ -901,20 +901,35 @@ bool afVolmetricDrillingPlugin::close()
     return true;
 }
 
-void afVolmetricDrillingPlugin::applyCablePull(double dt){
-    if(!m_cableKeyboardControl){
-        m_cable_pull_mag_goal = m_cablePullSub->cable_pull_target;
+void afVolmetricDrillingPlugin::applyCablePull(double dt){    
+    // Set position goal if applicable
+    double cable_pull_mag_change;
+    if(m_cableKeyboardControl || m_cablePullSub->command_type == cable_pull_command_type::POSITION){
+        if(m_cableKeyboardControl){}//m_cable_pull_mag_goal already set by keyboard commands
+        else{
+            if(m_cablePullSub->command_type != cable_pull_command_type::POSITION) //sanity check
+                {std::cerr << "conflicting cable pull commands" << std::endl;}
+            m_cable_pull_mag_goal = m_cablePullSub->cable_pull_position_target;
+        }
+        double cable_pull_mag_err = (m_cable_pull_mag_goal - m_cable_pull_mag);
+        cable_pull_mag_change = 0.01*cable_pull_mag_err;
+        if (abs(cable_pull_mag_change) > 0.00001){
+            cable_pull_mag_change =  cable_pull_mag_change/abs(cable_pull_mag_change) * 0.00001;
+        }
     }
-    double cable_pull_mag_err = (m_cable_pull_mag_goal - m_cable_pull_mag);
-    double cable_pull_mag_change = 0.01*cable_pull_mag_err;
-    if (abs(cable_pull_mag_change) > 0.00001){
-        cable_pull_mag_change =  cable_pull_mag_change/abs(cable_pull_mag_change) * 0.00001;
+    else{ 
+        if(m_cablePullSub->command_type != cable_pull_command_type::VELOCITY) //sanity check
+            {std::cerr << "conflicting cable pull commands" << std::endl;}
+        cable_pull_mag_change = m_cablePullSub->cable_pull_velocity_target*dt; // currently assuming instantaneous 'accel', TODO?
     }
+
+    m_cable_pull_velocity = cable_pull_mag_change / dt;
     m_cable_pull_mag += cable_pull_mag_change;
-    m_cablePullSub->publishCablePullMeasured(m_cable_pull_mag);
-    auto z = cVector3d(0.0, 0.0, 1.0);
+
+    m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
     last_seg_ptr->applyTorque((1.0/dt)*0.001*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol2());
+
 }
 
 cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform& in){    
