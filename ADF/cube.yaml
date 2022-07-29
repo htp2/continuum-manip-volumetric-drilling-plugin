@@ -13,7 +13,7 @@ VOLUME cube:
     position: {x: 0.0, y: 1.15, z: 0.0}
     orientation: {r: 0.0, p: 0.0, y: 0.0}
   scale: 1.0
-  dimensions: {x: 1.5218000173568783, y: 1.8370300209522317, z: 2.6400000393390655}
+  dimensions: {x: 1.5218000173568783, y: 1.8370300209522317, z: 0.576439400513969}
   images:
     path: ../resources/volumes/cube/
     prefix: plane00
