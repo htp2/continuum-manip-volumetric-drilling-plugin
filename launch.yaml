@@ -8,6 +8,11 @@ plugins: [
     filename: libcontinuum_manip_volumetric_drilling_plugin.so,
     path: ../../build/continuum_manip_volumetric_drilling_plugin/, # This is to use if catkin-built
     #  path: ../../build/continuum-manip-volumetric-drilling-plugin/  # This is to use if built directly using cmake
+  },
+  {
+    name: TRACE_PLUGIN,
+    filename: libambf_trace_plugin.so,
+    path: ../../build/ambf_trace_plugin/, # This is to use if catkin-built
   }
 ]
 multibody configs:

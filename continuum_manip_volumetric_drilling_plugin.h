@@ -143,8 +143,6 @@ private:
     vector<afRigidBodyPtr> m_segmentBodyList;
     vector<afJointPtr> m_segmentJointList;
     afRigidBodyPtr m_burrBody;
-    vector<double> m_mag_cmd = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-    vector<double> m_old_jp = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
 
     // radius of tool cursors
     vector<double> m_toolCursorRadius{0.02, 0.013, 0.015, 0.017, 0.019, 0.021, 0.023, 0.025};
@@ -188,11 +186,6 @@ private:
 
     double m_cable_pull_mag_goal = 0.0;
     double m_cable_pull_mag = 0.0;
-
-    void obstacleEstimate();
-
-    bool fillGoalPointsFromCSV(const std::string& filename, std::vector<cVector3d>& goal_points);
-
 };
 
 

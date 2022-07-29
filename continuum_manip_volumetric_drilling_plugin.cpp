@@ -65,8 +65,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     p_opt::options_description cmd_opts("drilling_simulator Command Line Options");
     cmd_opts.add_options()
             ("info", "Show Info")
-            ("anatomy_volume_name", p_opt::value<std::string>()->default_value("cube"), "Name of volume given in yaml. Default spine_test_volume");
-
+            ("anatomy_volume_name", p_opt::value<std::string>()->default_value("cube"), "Name of volume given in yaml. Default spine_test_volume")
+            ("base_body_name", p_opt::value<std::string>()->default_value("snake_stick"), "Name of body given in yaml. Default snake_stick")
+            ("tool_body_name", p_opt::value<std::string>()->default_value("Burr"), "Name of body given in yaml. Default Burr");
     p_opt::variables_map var_map;
     p_opt::store(p_opt::command_line_parser(argc, argv).options(cmd_opts).allow_unregistered().run(), var_map);
     p_opt::notify(var_map);
@@ -78,8 +79,11 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     string file_path = __FILE__;
     string cur_path = file_path.substr(0, file_path.rfind("/"));
-    string target_path_filepath = cur_path + "/resources/goal_points.csv";
-    
+
+    std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
+    std::string base_body_name = var_map["base_body_name"].as<std::string>();
+    std::string tool_body_name = var_map["tool_body_name"].as<std::string>();
+
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
     m_worldPtr = a_afWorld;
     m_worldPtr->m_bulletWorld->getSolverInfo().m_erp=1.0; // improve out of plane error of joints
@@ -88,75 +92,32 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // Get chai3D world pointer
     m_chaiWorldPtr = m_worldPtr->getChaiWorld();
 
-    // Display goal line segments(TODO? move out of here)
-    cMultiSegment* segments = new cMultiSegment();
-    std::vector<cVector3d> goal_points;
-    std::cout << "NUM_GOAL_PTS: " << goal_points.size() << std::endl;
-    
-    ifstream f(target_path_filepath.c_str());
-    if (f.good()){
-        fillGoalPointsFromCSV(target_path_filepath, goal_points);
-        // create a line segment object
-        m_chaiWorldPtr->addChild(segments);
-        segments->newVertex(goal_points[0]);
-        for(auto i=1; i<goal_points.size(); i++){
-            segments->newVertex(goal_points[i]);
-            segments->newSegment(i-1,i);
-        }    
-        cColorf color;
-        color.setYellowGold();
-        segments->setLineColor(color);
-        // assign line width
-        segments->setLineWidth(4.0);
-        // use display list for faster rendering
-        segments->setUseDisplayList(true);
-    }
-    f.close();
-    
-
-
-    std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
-    // anatomy_volume_name = "spine_seg";
-    // anatomy_volume_name = "cube";
-
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
-
     m_boneColor = cColorb(255, 249, 219, 255);
-
     m_storedColor = cColorb(0x00, 0x00, 0x00, 0x00);
-
     
-
-       // Get first camera
+    // Get first camera
     m_mainCamera = m_worldPtr->getCameras()[0];
     
-
-
-
-    // importing continuum manipulator model
-    m_contManipBaseRigidBody = m_worldPtr->getRigidBody("snake_stick");
-    T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
-    m_lastSegmentRigidBody = m_worldPtr->getRigidBody("/ambf/env/BODY Burr");
-
+    // Importing continuum manipulator model
+    m_contManipBaseRigidBody = m_worldPtr->getRigidBody(base_body_name);
     if (!m_contManipBaseRigidBody){
-        cerr << "ERROR! FAILED TO FIND DRILL RIGID BODY NAMED " << "snake_stick" << endl;
+        cerr << "ERROR! FAILED TO FIND RIGID BODY NAMED " << base_body_name << endl;
         return -1;
     }
-    m_ambf_scale_to_mm = 0.01;
-    // Add drill burr
-    double burr_r = m_ambf_scale_to_mm * 6.5/2;
-
-    // // import C-arm (x-ray image source) model
-    // m_carmRigidBody = m_worldPtr->getRigidBody("carm");
-    // T_carm = m_carmRigidBody->getLocalTransform();
-
+    T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
+    
     // Import anatomy volume
     m_volumeObject = m_worldPtr->getVolume(anatomy_volume_name);
     if (!m_volumeObject){
-        cerr << "ERROR! FAILED TO FIND DRILL VOLUME NAMED " << anatomy_volume_name << endl;
+        cerr << "ERROR! FAILED TO FIND VOLUME NAMED " << anatomy_volume_name << endl;
         return -1;
     }
     m_voxelObj = m_volumeObject->getInternalVolume();
+ 
+    // Various scalars needed for other calculation
+    m_ambf_scale_to_mm = 0.01;
+    double burr_r = m_ambf_scale_to_mm * 6.5/2;
 
     // create a haptic device handler
     m_deviceHandler = new cHapticDeviceHandler();
@@ -223,18 +184,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     // Set up cable pull subscriber
     m_cablePullSub = new CablePullSubscriber("ambf", "volumetric_drilling");
-
-    // create a line segment for traveled points
-    m_traveled_points = new cMultiSegment();
-    m_chaiWorldPtr->addChild(m_traveled_points);
-    m_traveled_points->newVertex(m_lastSegmentRigidBody->getLocalPos());
-    cColorf color;
-    color.setRedCrimson();
-    m_traveled_points->setLineColor(color);
-    // assign line width
-    m_traveled_points->setLineWidth(4.0);
-    // use display list for faster rendering
-    m_traveled_points->setUseDisplayList(true);   
     return 1;
 }
 
@@ -250,11 +199,6 @@ void afVolmetricDrillingPlugin::graphicsUpdate(){
         m_mutexVoxel.release();
         ((cTexture3d*)m_voxelObj->m_texture.get())->markForPartialUpdate(min, max);
         m_flagMarkVolumeForUpdate = false;
-    }
-    if(m_collect_tip_trace_enabled){
-        m_traveled_points->newVertex(m_lastSegmentRigidBody->getLocalPos());
-        int vert_idx = m_traveled_points->getNumVertices()-1;
-        m_traveled_points->newSegment(vert_idx-1, vert_idx);
     }
 }
 
@@ -278,10 +222,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
 
     toolCursorsPosUpdate(T_contmanip_base);
 
-    if (!m_volume_collisions_enabled){
-
-    }
-    else {
+    if (m_volume_collisions_enabled){
         // check for shaft collision
         checkShaftCollision();
 
@@ -352,13 +293,8 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
         //     // std::cout << m_toolCursorList[i+1]->getDeviceLocalForce() << std::endl;
         // }
     }
+
     applyCablePull(dt);
-    if (m_obstacle_estimate_enabled){
-        obstacleEstimate();
-    }
-
-
-
 
     /////////////////////////////////////////////////////////////////////////
     // MANIPULATION
@@ -525,7 +461,6 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld){
     }
 }
 
-
 ///
 /// \brief incrementDevicePos
 /// \param a_vel
@@ -563,9 +498,6 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose){
     for (int i=0; i<m_segmentToolCursorList.size(); i++){
         m_segmentToolCursorList[i]->setDeviceLocalTransform(m_segmentBodyList[i]->getLocalTransform());
     }
-    // auto mesh_vox_viz = m_worldPtr->getRigidBody("/ambf/env/BODY Sphere");
-    // m_test_cursor->setDeviceLocalTransform(m_volumeObject->getLocalTransform());
-
 }
 
 ///
@@ -691,38 +623,10 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         else if (a_key == GLFW_KEY_SLASH) {
             m_cableKeyboardControl = !m_cableKeyboardControl;
             std::string cable_control_mode = m_cableKeyboardControl?"Keyboard":"Subscriber";
+            m_cableKeyboardControl?m_cableControlModeText->m_fontColor.setGreen():m_cableControlModeText->m_fontColor.setRed();
             m_cableControlModeText->setText("Cable Control Mode = " + cable_control_mode);
         }
-        else if (a_key == GLFW_KEY_KP_MULTIPLY) {
-            m_collect_tip_trace_enabled = !m_collect_tip_trace_enabled;
-            std::cout << "Collect Tip Trace Enabled State: " << m_collect_tip_trace_enabled << std::endl;
-        }
-        else if (a_key == GLFW_KEY_KP_SUBTRACT) {
-            m_show_tip_trace_enabled = !m_show_tip_trace_enabled;
-            m_traveled_points->setShowEnabled(m_show_tip_trace_enabled);
-            std::cout << "Show Tip Trace Enabled State: " << m_show_tip_trace_enabled << std::endl;
-        }        
 
-        else if (a_key == GLFW_KEY_G) {
-            m_obstacle_estimate_enabled = ! m_obstacle_estimate_enabled;
-            if(m_obstacle_estimate_enabled){
-                auto test_voxel = m_worldPtr->getRigidBody("Sphere");
-                auto Tseg = m_segmentBodyList[m_obstacle_estimate_idx]->getLocalTransform();
-                double cm_rad = 0.03;
-                double test_voxel_rad = 0.005;
-                double offset = 0.001;
-                double dir_sign = (m_obstacle_estimate_idx%2)?1.0:-1.0;
-                Tseg.setLocalPos(Tseg.getLocalPos()+cVector3d( dir_sign*(cm_rad+test_voxel_rad+offset),0.0,0.0));
-                test_voxel->setLocalTransform(Tseg);
-            }        
-        }
-        else if (a_key == GLFW_KEY_H) {
-            m_obstacle_estimate_idx += 1;
-            if (m_obstacle_estimate_idx >= 27){ //TODO: don't hardcode num segs
-                m_obstacle_estimate_idx = 0;
-            }
-            std::cout << "m_obstacle_estimate_idx: " << m_obstacle_estimate_idx << std::endl;
-        }
         else if (a_key == GLFW_KEY_E) {
             bool paused = m_worldPtr->isPhysicsPaused();
             if(paused){
@@ -967,9 +871,7 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
                 seg->m_visualMesh->setShowEnabled(m_showDrill);
             }
             m_burrBody->m_visualMesh->setShowEnabled(m_showDrill);
-            // m_burrMesh->setShowEnabled(m_showDrill);
         }
-
     }
 }
 
@@ -1029,234 +931,4 @@ cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform&
 
 void afVolmetricDrillingPlugin::UpdateCablePullText(){
     m_cablePullMagText->setText("Cable Pull Actual(Goal): " + cStr(m_cable_pull_mag,5) + "(" + cStr(m_cable_pull_mag_goal, 5) + ")");
-}
-
-void afVolmetricDrillingPlugin::obstacleEstimate(){  //TODO: Implementation not finished
-    // std::vector<double> goal_jp = {0.05,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-    bool try_other = true;
-    if (try_other){
-        // std::vector<double> goal_jp = {0.04598064720630646, 0.07355032116174698, 0.06571654230356216, 0.05298386141657829, 0.044411156326532364, 0.02748243883252144, 0.022117244079709053, 0.0032777676824480295, 0.004773199092596769, -0.004514013882726431, -0.001684710499830544, -0.01998526230454445, -0.03429340571165085, -0.04465359076857567, 0.0010657543316483498, -0.0030041607096791267, 0.004267149139195681, -0.0047470321878790855, 0.004536849446594715, -0.004658693913370371, 0.004520443268120289, -0.004670663736760616, 0.004522195551544428, -0.004617181606590748, 0.0045381877571344376, -0.0038580403197556734, 0.0022528348490595818};
-        // // std::vector<double> goal_jp = {0.05,0.05,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-
-        // std::vector<double> jp;
-        // for(auto& joint: m_segmentJointList){
-        //     jp.push_back(joint->getPosition());
-        // }
-
-        // // std::vector<double> obstacle_est_force = {0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-        // std::vector<double> p = {0.1,0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-        // std::vector<double> d = {0.00,0.00,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-
-        // for (size_t i=0; i<m_mag_cmd.size(); i++){
-        //     p[i] = 0.1;
-        //     d[i] = 0.1*0.1*3/0.001;
-        //     // double dir_sign = ((i+1)%2)?1.0:-1.0;
-        //     double dir_sign = -1.0;
-        //     m_mag_cmd[i] += p[i]*(jp[i]-goal_jp[i]) + d[i]*(jp[i]-m_old_jp[i]);
-            
-        //     double cmd = dir_sign*m_mag_cmd[i];
-        //     // cmd = obstacle_est_force[i];
-            
-        //     m_segmentBodyList[i]->applyForce(cVector3d(cmd,0.0,0.0));
-        //     std::cout << cmd << ", ";
-        // }
-        // m_old_jp = jp;
-        // std::cout << std::endl;
-/*       std::vector<double> goal_jp = {0.04783817380666733, 0.07944251596927643, 0.0695638656616211, 0.06234162673354149, 0.04686809331178665, 0.040152788162231445, 0.022980578243732452, 0.018691405653953552, 0.0005839845980517566, 0.004291052930057049, -0.004663290921598673, 0.00444193696603179, -0.004662439227104187, 0.004441532306373119, -0.004904694389551878, 0.004418355878442526, -0.004646665416657925, 0.004354341886937618, -0.004670975264161825, 0.004543555434793234, -0.004634646698832512, 0.004549236968159676, -0.004633617587387562, 0.0045800586231052876, -0.004622905049473047, 0.003911590203642845, -0.002235197462141514};
-        
-        std::vector<double> jp;
-        for(auto& joint: m_segmentJointList){
-            jp.push_back(joint->getPosition());
-        }
-
-        // std::vector<double> obstacle_est_force = {0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-        std::vector<double> p = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-        std::vector<double> d = {0.00,0.00,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-
-        auto total_err = 0.0;
-        for (size_t i=0; i<m_mag_cmd.size(); i++){
-            total_err += abs(jp[i]-goal_jp[i]);
-        }
-
-        for (size_t i=0; i<m_mag_cmd.size(); i++){
-            if(i == m_obstacle_estimate_idx){
-                p[i] = 0.8*0.001;
-                d[i] = 0.1*0.001*3/0.001;
-                // double dir_sign = (i%2)?1.0:-1.0;
-                double dir_sign = 1.0;
-                m_mag_cmd[i] += p[i]*(total_err) + d[i]*(jp[i]-m_old_jp[i]);
-                double cmd = dir_sign*m_mag_cmd[i];
-                m_segmentBodyList[i]->applyForce(cVector3d(cmd,0.0,0.0));
-            }
-        
-            else
-            {
-                p[i] = 0.0;
-                d[i] = 0.0;
-                m_mag_cmd[i] = 0.0;               
-            }
-        }
-        m_old_jp = jp;
-        std::cout << std::endl;
-
-            // if(abs(cmd) > 0.0){
-                
-            //     std::cout << cmd << ", ";
-            // }
-        
-        
-
-        std::cout << "Error: " << total_err << std::endl;
-        // for (size_t i=0; i<m_mag_cmd.size(); i++){
-        //     std::cout << jp[i]-goal_jp[i] << " ,";
-        // }
-        // std::cout << std::endl;
- */
-
-
-        std::vector<double> goal_jp = {0.04719538614153862, 0.07040780782699585, 0.0539616122841835, 0.04232475906610489, 0.01811256818473339, 0.010549008846282959, -0.00471153948456049, -0.0024778724182397127, -0.021339787170290947, -0.02025371417403221, -0.02914055995643139, -0.022847743704915047, -0.0291144922375679, -0.023115238174796104, -0.02983745187520981, -0.0232921801507473, -0.02943757176399231, -0.023809820413589478, -0.02989761345088482, -0.02374465949833393, -0.0301345381885767, -0.024002499878406525, -0.030253717675805092, -0.023892860859632492, -0.030802471563220024, -0.02734425663948059, -0.049160074442625046};
-        std::vector<double> jp;
-        for(auto& joint: m_segmentJointList){
-            jp.push_back(joint->getPosition());
-        }
-
-        auto total_err = 0.0;
-        auto real_err = 0.0;
-        for (size_t i=0; i<m_mag_cmd.size(); i++){
-            total_err += jp[i]-goal_jp[i];
-            real_err += abs(jp[i]-goal_jp[i]);
-            std::cout << jp[i]-goal_jp[i] << ", ";
-
-        }
-        std::cout << std::endl;
-
-        auto test_voxel = m_worldPtr->getRigidBody("Sphere");
-        auto Tvox = test_voxel->getLocalTransform();
-
-
-        for (size_t i=0; i<m_mag_cmd.size(); i++){
-            if(i == m_obstacle_estimate_idx){
-                auto p = 0.8*0.001;
-                // auto p =0.0;
-                // d[i] = 0.1*0.001*3/0.001;
-                double dir_sign = (i%2)?1.0:-1.0;
-                // double dir_sign = 1.0;
-                auto unsigned_cmd = p*(total_err);// + d[i]*(jp[i]-m_old_jp[i]);
-                double cmd = dir_sign*unsigned_cmd;
-                double offset = 0.001;
-                auto Tseg = m_segmentBodyList[m_obstacle_estimate_idx]->getLocalTransform();
-                double cm_rad = 0.03;
-                double test_voxel_rad = 0.005;
-                auto x_pos = cVector3d( dir_sign*(cm_rad+test_voxel_rad+offset),0.0,0.0);
-                auto ideal_orig_loc = Tseg*x_pos;
-
-                // Tseg.setLocalPos(Tseg.getLocalPos()+cVector3d( dir_sign*(cm_rad+test_voxel_rad),0.0,0.0));
-                // test_voxel->setLocalTransform(Tseg);
-                
-                auto y_loc = Tvox.getLocalPos();
- 
-                // Tvox.setLocalPos(Tvox.getLocalPos()+cVector3d(cmd,-p*(y_loc(1)-ideal_orig_loc(1)),0.0));
-                Tvox.setLocalPos(Tvox.getLocalPos()+cmd*x_pos);
-                test_voxel->setLocalTransform(Tvox);
-                std::cout << "cmd*x_pos: " << cmd*ideal_orig_loc << std::endl;
-
-            }
-        
-            // else
-            // {
-            //     p[i] = 0.0;
-            //     d[i] = 0.0;
-            //     m_mag_cmd[i] = 0.0;               
-            // }
-        }
-        m_old_jp = jp;
-        std::cout << std::endl;
-
-            // if(abs(cmd) > 0.0){
-                
-            //     std::cout << cmd << ", ";
-            // }
-        
-        
-
-        std::cout << "Error: " << total_err << std::endl;
-        std::cout << "Mag Error: " << real_err << std::endl;
-
-        // for (size_t i=0; i<m_mag_cmd.size(); i++){
-        //     std::cout << jp[i]-goal_jp[i] << " ,";
-        // }
-        // std::cout << std::endl;
-  
-
-    }
-
-
-
-    else{
-    // std::vector<double> goal_jp = {0.04598064720630646, 0.07355032116174698, 0.06571654230356216, 0.05298386141657829, 0.044411156326532364, 0.02748243883252144, 0.022117244079709053, 0.0032777676824480295, 0.004773199092596769, -0.004514013882726431, -0.001684710499830544, -0.01998526230454445, -0.03429340571165085, -0.04465359076857567, 0.0010657543316483498, -0.0030041607096791267, 0.004267149139195681, -0.0047470321878790855, 0.004536849446594715, -0.004658693913370371, 0.004520443268120289, -0.004670663736760616, 0.004522195551544428, -0.004617181606590748, 0.0045381877571344376, -0.0038580403197556734, 0.0022528348490595818};
-    std::vector<double> goal_jp = {0.04719538614153862, 0.07040780782699585, 0.0539616122841835, 0.04232475906610489, 0.01811256818473339, 0.010549008846282959, -0.00471153948456049, -0.0024778724182397127, -0.021339787170290947, -0.02025371417403221, -0.02914055995643139, -0.022847743704915047, -0.0291144922375679, -0.023115238174796104, -0.02983745187520981, -0.0232921801507473, -0.02943757176399231, -0.023809820413589478, -0.02989761345088482, -0.02374465949833393, -0.0301345381885767, -0.024002499878406525, -0.030253717675805092, -0.023892860859632492, -0.030802471563220024, -0.02734425663948059, -0.049160074442625046};
-    
-    std::vector<double> jp;
-    for(auto& joint: m_segmentJointList){
-        jp.push_back(joint->getPosition());
-    }
-
-    // std::vector<double> obstacle_est_force = {0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-    std::vector<double> p = {0.008,0.008,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-    std::vector<double> d = {0.00,0.00,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
-
-    for (size_t i=0; i<m_mag_cmd.size(); i++){
-        p[i] = 0.8*0.001;
-        d[i] = 0.1*0.001*3/0.001;
-        // double dir_sign = (i%2)?1.0:-1.0;
-        double dir_sign = -1.0;
-        m_mag_cmd[i] += p[i]*(jp[i]-goal_jp[i]) + d[i]*(jp[i]-m_old_jp[i]);
-        
-        double cmd = dir_sign*m_mag_cmd[i];
-        // cmd = obstacle_est_force[i];
-        m_segmentJointList[i]->commandEffort(cmd);
-        std::cout << cmd << ", ";
-    }
-    m_old_jp = jp;
-    std::cout << std::endl;
-
-    }
-}
-
-bool afVolmetricDrillingPlugin::fillGoalPointsFromCSV(const std::string& filename, std::vector<cVector3d>& goal_points){
-    std::ifstream file(filename);
-    if (!file){
-      std::cout << "Error reading: "<< filename << std::endl;
-      return false;
-    }
-    int q = 0;
-
-
-    while (file)
-    {
-        std::string s;
-        if (!std::getline( file, s )) break;
-        std::istringstream ss( s );
-        std::vector <std::string> record;
-        while (ss)
-        {
-        std::string s;
-        if (!getline( ss, s, ',' )) break;
-        record.push_back( s );
-        }
-
-        goal_points.push_back(cVector3d(std::stod(record[0]),std::stod(record[1]),std::stod(record[2])));
-        // data.push_back( record );
-    }
-
-
-    // while(file){
-    //     std::cout << "q: " << q << std::endl;
-    //     double x,y,z;
-    //     file >> x >> y >> z;
-    //     goal_points.push_back(cVector3d(x,y,z));
-    //     q++;
-    // }
-  return true;
-
 }
