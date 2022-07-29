@@ -51,6 +51,7 @@ protected:
     void setOverrideDrillControl(bool val){m_overrideDrillControl = val;}
 
     void applyCablePull(double dt);
+
     void UpdateCablePullText();
 
     cTransform btTransformTocTransform(const btTransform& in);
@@ -186,6 +187,8 @@ private:
 
     double m_cable_pull_mag_goal = 0.0;
     double m_cable_pull_mag = 0.0;
+    double m_cable_pull_velocity = 0.0;
+
 };
 
 
