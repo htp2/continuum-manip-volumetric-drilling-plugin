@@ -45,6 +45,8 @@ multibody configs:
   - "ADF/spine_seg_cropped.yaml" #26
   - "ADF/spine_seg_crop_test.yaml" #27
   - "ADF/test220720.yaml" #28
+  - "ADF/ur5.yaml" #29
+  - "ADF/connect_test.yaml" #30
 
 
 

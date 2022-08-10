@@ -29,7 +29,6 @@ private:
     ros::Subscriber cablepull_move_jp_sub;
     ros::Subscriber cablepull_servo_jv_sub;
     ros::Publisher cablepull_measured_js_publisher;
-    ros::Publisher cablePullPositionPub;
 
 };
 

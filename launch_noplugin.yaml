@@ -32,3 +32,9 @@ multibody configs:
   - "ADF/R1_sphere.yaml"  #22
   - "ADF/bigss_snake_centered_collision_meshes.yaml" #23
   - "ADF/cube.yaml" #24
+  - "ADF/bigss_snake_centered_collision_meshes_burr.yaml" #25"
+  - "ADF/spine_seg_cropped.yaml" #26
+  - "ADF/spine_seg_crop_test.yaml" #27
+  - "ADF/test220720.yaml" #28
+  - "ADF/ur5.yaml" #29
+  - "ADF/connect_test.yaml" #30

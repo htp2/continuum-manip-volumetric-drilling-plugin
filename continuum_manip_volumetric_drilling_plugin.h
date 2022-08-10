@@ -56,6 +56,8 @@ protected:
 
     cTransform btTransformTocTransform(const btTransform& in);
 
+    void sliceVolume(int axisIdx, double delta);
+
 private:
     cTransform T_contmanip_base; // Drills target pose
     cTransform T_carm; // Carm pose
@@ -188,6 +190,11 @@ private:
     double m_cable_pull_mag_goal = 0.0;
     double m_cable_pull_mag = 0.0;
     double m_cable_pull_velocity = 0.0;
+
+
+    cVector3d m_maxVolCorner, m_minVolCorner;
+    cVector3d m_maxTexCoord, m_minTexCoord;
+    cVector3d m_textureCoordScale; // Scale between volume corners extent and texture coordinates extent
 
 };
 

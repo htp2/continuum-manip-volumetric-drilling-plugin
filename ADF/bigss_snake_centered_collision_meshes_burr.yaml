@@ -1607,11 +1607,11 @@ BODY seg9:
 BODY snake_stick:
   name: snake_stick
   mesh: snake_stick.STL
-  mass: 0.0
+  mass: 0.01
   inertia:
-    ix: 0.0
-    iy: 0.0
-    iz: 0.0
+    ix: 1.0e-05
+    iy: 1.0e-05
+    iz: 1.0e-05
   collision margin: 0.001
   scale: 1.0
   location:
