@@ -74,7 +74,7 @@ BODY base_link:
       b: 0.45
       g: 0.45
       r: 0.09
-    transparency: 1.0
+    transparency: 0.5
 BODY shoulder_link:
   name: shoulder_link
   mesh: shoulder_link.STL
@@ -124,7 +124,7 @@ BODY shoulder_link:
       b: 0.06562
       g: 0.06562
       r: 0.25
-    transparency: 1.0
+    transparency: 0.5
 BODY upper_arm_link:
   name: upper_arm_link
   mesh: upper_arm_link.STL
@@ -174,7 +174,7 @@ BODY upper_arm_link:
       b: 0.45
       g: 0.45
       r: 0.09
-    transparency: 1.0
+    transparency: 0.5
 BODY forearm_link:
   name: forearm_link
   mesh: forearm_link.STL
@@ -224,7 +224,7 @@ BODY forearm_link:
       b: 0.09625
       g: 0.09625
       r: 0.35
-    transparency: 1.0
+    transparency: 0.5
 BODY wrist_1_link:
   name: wrist_1_link
   mesh: wrist_1_link.STL
@@ -274,7 +274,7 @@ BODY wrist_1_link:
       b: 0.45
       g: 0.45
       r: 0.09
-    transparency: 1.0
+    transparency: 0.5
 BODY wrist_2_link:
   name: wrist_2_link
   mesh: wrist_2_link.STL
@@ -324,7 +324,7 @@ BODY wrist_2_link:
       b: 0.09625
       g: 0.09625
       r: 0.35
-    transparency: 1.0
+    transparency: 0.5
 BODY wrist_3_link:
   name: wrist_3_link
   mesh: wrist_3_link.STL
@@ -374,7 +374,7 @@ BODY wrist_3_link:
       b: 0.45
       g: 0.45
       r: 0.09
-    transparency: 1.0
+    transparency: 0.5
 JOINT shoulder_pan_joint:
   name: shoulder_pan_joint
   parent: BODY base_link

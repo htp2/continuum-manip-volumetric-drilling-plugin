@@ -3,6 +3,7 @@
 import rospy
 
 from geometry_msgs.msg import TransformStamped
+from sensor_msgs.msg import JointState
 from std_msgs.msg import Float32
 from ambf_msgs.msg import RigidBodyState
 import numpy as np
@@ -22,8 +23,8 @@ class free_space_calibration:
         base_marker_sub = rospy.Subscriber('ambf/env/snake_stick/State', RigidBodyState, self.ambf_base_marker_sub_callback)
         tip_marker_sub  = rospy.Subscriber('ambf/env/seg27/State', RigidBodyState, self.ambf_tip_marker_sub_callback)
         
-        bend_sub = rospy.Subscriber('/ambf/volumetric_drilling/bend_motor/measured_js/', Float32, self.bend_sub_callback)
-        self.bend_pub = rospy.Publisher('/ambf/volumetric_drilling/bend_motor/move_jp/', Float32)
+        bend_sub = rospy.Subscriber('/ambf/volumetric_drilling/bend_motor/measured_js/', JointState, self.bend_sub_callback)
+        self.bend_pub = rospy.Publisher('/ambf/volumetric_drilling/bend_motor/move_jp/', JointState)
 
 
         self.collect = False
@@ -66,7 +67,9 @@ class free_space_calibration:
                 for r in range(reps):
                     for p in pos:
                         self.bend_motor_cmd_all.append(p)
-                        self.bend_pub.publish(Float32(p))
+                        msg_pub = JointState()
+                        msg_pub.position = [p]
+                        self.bend_pub.publish(msg_pub)
                         rospy.sleep(2000*self.ms)
                         self.collect_over_period(500*self.ms) 
                         self.save_to_output()
@@ -136,9 +139,9 @@ class free_space_calibration:
         self.tip_marker_sub_callback(ambf_rigid_body_state_to_transform_stamped(ambf_rigid_body_state))
 
     def bend_sub_callback(self,motor_pos):
-        self.bend_motor_pos = motor_pos
+        self.bend_motor_pos = motor_pos.position[0]
         if self.collect:
-            self.bend_motor_pos_sublist.append(motor_pos)
+            self.bend_motor_pos_sublist.append(motor_pos.position[0])
 
     def reset_sublists(self):
         self.base_transforms_sublist = []
@@ -150,15 +153,15 @@ class free_space_calibration:
         x = np.zeros(len(lengths))
         y = np.zeros(len(lengths))
         z = np.zeros(len(lengths))
-        thx = np.zeros(len(lengths))
-        thy = np.zeros(len(lengths))
         thz = np.zeros(len(lengths))
+        # qx = np.zeros(len(lengths))
+        # qy = np.zeros(len(lengths))
+        # qz = np.zeros(len(lengths))
+        # qw = np.zeros(len(lengths))
 
         print("bend lengths: ", lengths)
-
         base_T_tip_zero = np.linalg.inv(self.base_zero_transform) @ self.tip_zero_transform
         print("base_T_tip_zero: ", base_T_tip_zero) # Not using right now
-
 
         for i in range(len(lengths)):
             base_T_tip =  np.linalg.inv(self.base_transforms_measured_avg[i]) @ self.tip_transforms_measured_avg[i]
@@ -167,9 +170,8 @@ class free_space_calibration:
             z[i]=base_T_tip[2,3]
             print(base_T_tip)
             th,dir,_ = tr.rotation_from_matrix(base_T_tip)
-            thx[i] = th * np.sign(dir[0])
-            thy[i] = th * np.sign(dir[1])
             thz[i] = th * np.sign(dir[2])
+            # qx[i],qy[i],qz[i],qw[i] = tr.quaternion_from_matrix(base_T_tip)
             print(dir)
 
         l = np.array(lengths)
@@ -177,42 +179,55 @@ class free_space_calibration:
         x_coeff = np.polyfit(l, x, degree)
         y_coeff = np.polyfit(l, y, degree)
         z_coeff = np.polyfit(l, z, degree)
-        thx_coeff = np.polyfit(l, thx, degree)
-        thy_coeff = np.polyfit(l, thy, degree)
-        thz_coeff = np.polyfit(l, thz, degree)
+        thz_coeff  = np.polyfit(l, thz, degree)
+        # qx_coeff = np.polyfit(l, qx, degree)
+        # qy_coeff = np.polyfit(l, qy, degree)
+        # qz_coeff = np.polyfit(l, qz, degree)
+        # qw_coeff = np.polyfit(l, qw, degree)
 
         poly_x = np.poly1d(x_coeff)
         poly_y = np.poly1d(y_coeff)
         poly_z = np.poly1d(z_coeff)
-        poly_thx = np.poly1d(thx_coeff)
-        poly_thy = np.poly1d(thy_coeff)
         poly_thz = np.poly1d(thz_coeff)
+        # poly_qx = np.poly1d(qx_coeff)
+        # poly_qy = np.poly1d(qy_coeff)
+        # poly_qz = np.poly1d(qz_coeff)
+        # poly_qw = np.poly1d(qw_coeff)
 
         new_l = np.linspace(min(l), max(l))
         new_x = poly_x(new_l)
         new_y = poly_y(new_l)
         new_z = poly_z(new_l)
-        new_thx = poly_thx(new_l)
-        new_thy = poly_thy(new_l)
         new_thz = poly_thz(new_l)
+        # new_qx = poly_qx(new_l)
+        # new_qy = poly_qy(new_l)
+        # new_qz = poly_qz(new_l)
+        # new_qw = poly_qw(new_l)
 
-        fig, (ax_x, ax_y, ax_z, ax_thx, ax_thy, ax_thz) = plt.subplots(6)
+        # fig, (ax_x, ax_y, ax_z, ax_thx, ax_thy, ax_thz, ax_thw) = plt.subplots(7)
+        fig, (ax_x, ax_y, ax_z, ax_thz) = plt.subplots(4)
         ax_x.plot(l, x, "o", new_l, new_x)
         ax_x.set(xlabel="cable length (mm)", ylabel="Tip X value (m)")
         ax_y.plot(l, y, "o", new_l, new_y)
         ax_y.set(xlabel="cable length (mm)", ylabel="Tip Y value (m)")
         ax_z.plot(l, z, "o", new_l, new_z)
         ax_z.set(xlabel="cable length (mm)", ylabel="Tip Z value (m)")
-        ax_thx.plot(l, thx, "o", new_l, new_thx)
-        ax_thx.set(xlabel="cable length (mm)", ylabel="Tip Rotation Angle (th_x) (rad)")        
-        ax_thy.plot(l, thy, "o", new_l, new_thy)
-        ax_thy.set(xlabel="cable length (mm)", ylabel="Tip Rotation Angle (th_y) (rad)")     
+        # ax_thx.plot(l, qx, "o", new_l, new_qx)
+        # ax_thx.set(xlabel="cable length (mm)", ylabel="Tip Rotation (q_x)")        
+        # ax_thy.plot(l, qy, "o", new_l, new_qy)
+        # ax_thy.set(xlabel="cable length (mm)", ylabel="Tip Rotation (q_y)")     
+        # ax_thz.plot(l, qz, "o", new_l, new_qz)
+        # ax_thz.set(xlabel="cable length (mm)", ylabel="Tip Rotation (q_z)")     
+        # ax_thw.plot(l, qw, "o", new_l, new_qw)
+        # ax_thw.set(xlabel="cable length (mm)", ylabel="Tip Rotation (q_w) ")   
         ax_thz.plot(l, thz, "o", new_l, new_thz)
-        ax_thz.set(xlabel="cable length (mm)", ylabel="Tip Rotation Angle (th_z) (rad)")     
-
+        ax_thz.set(xlabel="cable length (mm)", ylabel="Tip Rotation Angle (rad) (th_z)")  
         timestamp = time.strftime("%Y%m%d%H%M%S_")
-        save_filename = self.save_dir+timestamp+"xyzth_snake_polyfit_coeffs.txt"
-        np.savetxt(save_filename,np.array((x_coeff,y_coeff,z_coeff,thx_coeff,thy_coeff,thz_coeff)))
+
+        save_filename = self.save_dir+timestamp+"xyzthz_snake_polyfit_coeffs.txt"
+        # np.savetxt(save_filename,np.array((x_coeff,y_coeff,z_coeff,qx_coeff,qy_coeff,qz_coeff,qw_coeff)))
+        np.savetxt(save_filename,np.array((x_coeff,y_coeff,z_coeff,thz_coeff)))
+
         print("Coefficients saved to " + save_filename)
         print("Close Graph to Continue:")
         plt.show()

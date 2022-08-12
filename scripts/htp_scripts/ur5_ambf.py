@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python3 
 
 import numpy as np
 from ambf_client import Client
@@ -141,9 +141,12 @@ class UR5_AMBF:
 	### Would be best to just do this straight from AMBF or defn files using pykdl or others. However, I beleive jacobian defns are different
 	def set_dh(self, robot_type):
 		if robot_type == 'UR5':
+			# HTP - changes to DH here go to end effector, instead of to the origin of wrist_3_link
 			self.d = np.array([0.089159, 0, 0, 0.10915, 0.09465, 0.0823])            
+			# self.d = np.array([0.089159, 0, 0, 0.10915, 0.09465, 0.0823+0.0750998])            
 			self.a = np.array([0, -0.425, -0.39225, 0, 0, 0])                        
-			self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])  
+			# self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])  
+			self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, np.pi/2])  
 		
 		if robot_type == 'UR10':
 			self.d = np.array([0.1273, 0, 0, 0.163941, 0.1157, 0.0922])              # UR10
@@ -169,6 +172,7 @@ class UR5_AMBF:
 		return T_d @ Rzt @ T_a @ Rxa
 
 	def FK(self, th):
+		th[0] -= np.pi  # This accounts for an offset in the definitions
 		FK_T = np.eye(4)  # Starting the transformations
 		Origins_T = []         # Storing the transformations from base to each joint
 		
