@@ -28,7 +28,6 @@ class UR5_AMBF:
 		self.pub_measured_cp = rospy.Publisher("/ambf/env/"+name+"/measured_cp", PoseStamped, queue_size=1)
 		self.pub_jacobian = rospy.Publisher("/ambf/env/"+name+"/jacobian", Float64MultiArray, queue_size=1)
 
-		self.servo_jp([0.0,-1.0,1.0,0.0,0.0,0.0])
 		self.set_dh("UR5")
 	# def set_home_pose(self, pose):
 	# 	self.T_t_b_home = pose
@@ -222,5 +221,10 @@ if __name__ == "__main__":
 	time.sleep(0.5)
 
 	ur5 = UR5_AMBF(_client,'ur5')
+	while(ur5.base.get_num_joints()==0):
+		print("Waiting for ur5 model to load...")
+		time.sleep(0.5)
+	print("UR5_AMBF loaded")
+	ur5.servo_jp([0.0,-1.0,1.0,0.0,0.0,0.0]) # set init pose
 	ur5.run()
 	_client.clean_up()
