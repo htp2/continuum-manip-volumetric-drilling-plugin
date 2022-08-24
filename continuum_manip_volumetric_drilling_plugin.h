@@ -108,6 +108,7 @@ private:
 
     afRigidBodyPtr m_contManipBaseRigidBody;
     afRigidBodyPtr m_carmRigidBody;
+    afRigidBodyPtr m_body_base_attached_to;
 
     afRigidBodyPtr m_lastSegmentRigidBody;
 

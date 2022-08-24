@@ -80,7 +80,8 @@ class UR5_AMBF:
 		self.base.set_joint_pos(5, jp[5])
 
 	def servo_jv(self, jv):
-		# print("Setting Joint Vel", jv)
+		if (not self.is_present()):
+			return
 		self.base.set_joint_vel(0, jv[0])
 		self.base.set_joint_vel(1, jv[1])
 		self.base.set_joint_vel(2, jv[2])
@@ -131,6 +132,10 @@ class UR5_AMBF:
 
 	def run(self):
 		while not rospy.is_shutdown():
+			if not self.is_present():
+				self.base = self.client.get_obj_handle(self.name + '/base_link')
+				print("Tried to reconnect")
+		
 			self.publish_measured_js()
 			self.FK(self.measured_js())
 			self.rate.sleep()
@@ -216,11 +221,20 @@ class UR5_AMBF:
 
 if __name__ == "__main__":
 	# Create a instance of the client
-	_client = Client("ur5_ambf")
-	_client.connect()
 	time.sleep(0.5)
-
-	ur5 = UR5_AMBF(_client,'ur5')
+	while(not rospy.is_shutdown()):
+		_client = Client("ur5_ambf")
+		_client.connect()
+		ur5 = UR5_AMBF(_client,'ur5')
+		print(ur5.base)
+		if ur5.base is not None:
+			print("Found AMBF client and loaded")
+			break
+		else:
+			print("Assuming ambf client still loading and waiting...")
+			_client.clean_up()
+			time.sleep(0.5)
+	
 	while(ur5.base.get_num_joints()==0):
 		print("Waiting for ur5 model to load...")
 		time.sleep(0.5)

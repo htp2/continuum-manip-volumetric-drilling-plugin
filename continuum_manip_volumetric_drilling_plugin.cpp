@@ -67,7 +67,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
             ("info", "Show Info")
             ("anatomy_volume_name", p_opt::value<std::string>()->default_value("cube"), "Name of volume given in yaml. Default spine_test_volume")
             ("base_body_name", p_opt::value<std::string>()->default_value("snake_stick"), "Name of body given in yaml. Default snake_stick")
-            ("tool_body_name", p_opt::value<std::string>()->default_value("Burr"), "Name of body given in yaml. Default Burr");
+            ("tool_body_name", p_opt::value<std::string>()->default_value("Burr"), "Name of body given in yaml. Default Burr")
+            ("body_base_attached_to_name", p_opt::value<std::string>()->default_value(""), "Name of body given in yaml. Default empty");
+
     p_opt::variables_map var_map;
     p_opt::store(p_opt::command_line_parser(argc, argv).options(cmd_opts).allow_unregistered().run(), var_map);
     p_opt::notify(var_map);
@@ -83,6 +85,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
     std::string base_body_name = var_map["base_body_name"].as<std::string>();
     std::string tool_body_name = var_map["tool_body_name"].as<std::string>();
+    std::string body_base_attached_to_name = var_map["body_base_attached_to_name"].as<std::string>();
 
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
     m_worldPtr = a_afWorld;
@@ -107,6 +110,15 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     }
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
     
+    // Importing body base attached to (if applicable)
+    if(!body_base_attached_to_name.empty()){
+        m_body_base_attached_to = m_worldPtr->getRigidBody(body_base_attached_to_name);
+        if (!m_body_base_attached_to){
+            cerr << "ERROR! FAILED TO FIND RIGID BODY NAMED " << body_base_attached_to_name << endl;
+            return -1;
+        }
+    }
+
     // Import anatomy volume
     m_volumeObject = m_worldPtr->getVolume(anatomy_volume_name);
     if (!m_volumeObject){
@@ -214,6 +226,10 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt){
 
     m_worldPtr->getChaiWorld()->computeGlobalPositions(true);
     bool clutch;
+    // cTransform offset(cVector3d(0.0, 1.0, 0.0));
+    // if(m_body_base_attached_to){
+    //     m_contManipBaseRigidBody->setLocalTransform(m_body_base_attached_to->getLocalTransform()*offset); //TODO Offset
+    // }
 
     // If a valid haptic device is found, then it should be available
     if (getOverrideDrillControl()){
@@ -882,6 +898,8 @@ bool afVolmetricDrillingPlugin::close()
 void afVolmetricDrillingPlugin::applyCablePull(double dt){    
     // Set position goal if applicable
     double cable_pull_mag_change;
+    double max_mag_change = 0.001;
+
     if(m_cableKeyboardControl || m_cablePullSub->command_type == cable_pull_command_type::POSITION){
         if(m_cableKeyboardControl){}//m_cable_pull_mag_goal already set by keyboard commands
         else{
@@ -890,9 +908,9 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt){
             m_cable_pull_mag_goal = m_cablePullSub->cable_pull_position_target;
         }
         double cable_pull_mag_err = (m_cable_pull_mag_goal - m_cable_pull_mag);
-        cable_pull_mag_change = 0.01*cable_pull_mag_err;
-        if (abs(cable_pull_mag_change) > 0.00001){
-            cable_pull_mag_change =  cable_pull_mag_change/abs(cable_pull_mag_change) * 0.00001;
+        cable_pull_mag_change = cable_pull_mag_err;
+        if (abs(cable_pull_mag_change) > max_mag_change){
+            cable_pull_mag_change =  cable_pull_mag_change/abs(cable_pull_mag_change) * max_mag_change;
         }
     }
     else{ 
@@ -906,8 +924,8 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt){
 
     m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
-    last_seg_ptr->applyTorque(m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol2());
-
+    last_seg_ptr->applyTorque(10.0*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol2());
+    // last_seg_ptr->applyForce(cVector3d(-10.0*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol1()), last_seg_ptr->getLocalRot()*cVector3d( 2 *m_ambf_scale_to_mm,0.0,0.0) );
 }
 
 cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform& in){    

@@ -46,7 +46,7 @@ find_package(AMBF)
 find_package(Boost COMPONENTS program_options filesystem)
 
 # add_subdirectory(vdrilling_msgs)
-find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs)
+find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs ambf_client)
 
 include_directories(${AMBF_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
@@ -74,6 +74,6 @@ catkin_package(
  INCLUDE_DIRS .
  LIBRARIES continuum_manip_volumetric_drilling_plugin 
 #  LIBRARIES continuum_manip_volumetric_drilling_plugin continuum_manip_simple_plugin
- CATKIN_DEPENDS vdrilling_msgs ambf_msgs
+ CATKIN_DEPENDS vdrilling_msgs ambf_msgs ambf_client
 #  DEPENDS system_lib
 )

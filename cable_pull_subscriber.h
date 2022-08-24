@@ -20,7 +20,7 @@ public:
     double cable_pull_velocity_target;
     double cable_pull_velocity_actual;
     void publish_cablepull_measured_js(double meas_pos, double meas_vel);
-    cable_pull_command_type command_type;
+    cable_pull_command_type command_type = cable_pull_command_type::POSITION;
 
 private:
     void cablepull_move_jp_callback(sensor_msgs::JointState msg);

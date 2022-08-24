@@ -48,6 +48,7 @@ multibody configs:
   - "ADF/ur5.yaml" #29
   - "ADF/connect_test.yaml" #30
   - "ADF/bigss_snake_centered_collision_meshes_burr_massless.yaml" #31
+  - "ADF/table.yaml" #32
 
 
 

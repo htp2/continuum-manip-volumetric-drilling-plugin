@@ -37,7 +37,7 @@ class cm_insert_bend_controller:
         self.bend_command = Float32()
         self.insertion_vel = 0
         self.bend_vel = 0
-        self.ros_node_rate_hz = 20
+        self.ros_node_rate_hz = 1000
         self.node_rate = rospy.Rate(self.ros_node_rate_hz)
         self.goal_points = np.genfromtxt("/home/henry/snake_registration/simulation/data_process/goal_points.csv",delimiter=',')
         self.num_goals = self.goal_points.shape[0]

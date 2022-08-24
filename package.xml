@@ -51,17 +51,19 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>ambf_msgs</build_depend>
   <build_depend>vdrilling_msgs</build_depend>
- 
+   <build_depend>ambf_client</build_depend>
+
 
   <!-- <build_depend>ambf_msgs</build_depend> -->
   <build_export_depend>ambf_msgs</build_export_depend>
   <build_export_depend>vdrilling_msgs</build_export_depend>
+  <build_export_depend>ambf_client</build_export_depend>
 
 
   <!-- <build_export_depend>ambf_msgs</build_export_depend> -->
   <exec_depend>ambf_msgs</exec_depend>
   <exec_depend>vdrilling_msgs</exec_depend>
-
+  <exec_depend>ambf_client</exec_depend>
 
   <!-- <exec_depend>ambf_msgs</exec_depend> -->
 

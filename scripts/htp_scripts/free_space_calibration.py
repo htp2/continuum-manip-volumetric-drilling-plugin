@@ -58,8 +58,8 @@ class free_space_calibration:
 
             if user_in == "A":
                 reps = 1
-                motor_min = 0.005
-                motor_max = 0.02
+                motor_min = 0.0
+                motor_max = 0.26
                 motor_pos = np.linspace(motor_min,motor_max,20)
 
                 motor_pos_rev = np.flipud(motor_pos)

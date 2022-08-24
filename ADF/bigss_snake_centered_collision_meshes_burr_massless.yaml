@@ -70,9 +70,9 @@ BODY seg1:
   mesh: seg1.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -127,9 +127,9 @@ BODY seg10:
   mesh: seg10.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -184,9 +184,9 @@ BODY seg11:
   mesh: seg11.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -241,9 +241,9 @@ BODY seg12:
   mesh: seg12.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -298,9 +298,9 @@ BODY seg13:
   mesh: seg13.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -355,9 +355,9 @@ BODY seg14:
   mesh: seg14.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -412,9 +412,9 @@ BODY seg15:
   mesh: seg15.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -469,9 +469,9 @@ BODY seg16:
   mesh: seg16.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -526,9 +526,9 @@ BODY seg17:
   mesh: seg17.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -583,9 +583,9 @@ BODY seg18:
   mesh: seg18.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -640,9 +640,9 @@ BODY seg19:
   mesh: seg19.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -697,9 +697,9 @@ BODY seg2:
   mesh: seg2.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -754,9 +754,9 @@ BODY seg20:
   mesh: seg20.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -811,9 +811,9 @@ BODY seg21:
   mesh: seg21.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -868,9 +868,9 @@ BODY seg22:
   mesh: seg22.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -925,9 +925,9 @@ BODY seg23:
   mesh: seg23.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -982,9 +982,9 @@ BODY seg24:
   mesh: seg24.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1039,9 +1039,9 @@ BODY seg25:
   mesh: seg25.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1096,9 +1096,9 @@ BODY seg26:
   mesh: seg26.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1153,9 +1153,9 @@ BODY seg27:
   mesh: seg27.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1210,9 +1210,9 @@ BODY seg3:
   mesh: seg3.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1267,9 +1267,9 @@ BODY seg4:
   mesh: seg4.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1324,9 +1324,9 @@ BODY seg5:
   mesh: seg5.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1381,9 +1381,9 @@ BODY seg6:
   mesh: seg6.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1438,9 +1438,9 @@ BODY seg7:
   mesh: seg7.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1495,9 +1495,9 @@ BODY seg8:
   mesh: seg8.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1552,9 +1552,9 @@ BODY seg9:
   mesh: seg9.STL
   mass: 0.01
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
@@ -1609,9 +1609,9 @@ BODY snake_stick:
   mesh: snake_stick.STL
   mass: 0.0
   inertia:
-    ix: 1.0e-05
-    iy: 1.0e-05
-    iz: 1.0e-05
+    ix: 1.0e-03
+    iy: 1.0e-03
+    iz: 1.0e-03
   collision margin: 0.001
   scale: 1.0
   location:
