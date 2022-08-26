@@ -49,6 +49,9 @@ multibody configs:
   - "ADF/connect_test.yaml" #30
   - "ADF/bigss_snake_centered_collision_meshes_burr_massless.yaml" #31
   - "ADF/table.yaml" #32
+  - "ADF/spine_seg_at_origin.yaml" #33
+  - "ADF/bigss_snake_burr_at_spine_seg_femur.yaml" #34
+
 
 
 

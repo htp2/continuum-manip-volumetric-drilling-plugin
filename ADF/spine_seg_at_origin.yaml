@@ -17,7 +17,7 @@ VOLUME spine_seg:
   scale: 10.0
   dimensions: {x: 0.199, y: 0.381, z: 0.433}
   images:
-    path: ../resources/volumes/spine_seg_crop_test/
+    path: ../resources/volumes/spine_seg/
     prefix: plane00
     format: png
     count: 433
