@@ -16,18 +16,22 @@ class UR5_AMBF:
 		self.name = name
 		self.base = self.client.get_obj_handle(name + '/base_link')
 		time.sleep(0.5)
-		self.rate = rospy.Rate(120)
+		self.rate_hz = 120
+		self.rate = rospy.Rate(self.rate_hz)
 
 		self._T_b_w = None
 		self._T_w_b = None
 		self._base_pose_updated = False
 		self._num_joints = 6
+		self.servo_jv_cmd=[0,0,0,0,0,0]
+		self.servo_jp_cmd=[0,0,0,0,0,0]
+		self.servo_jp_flag=False
 		self.pub_measured_js = rospy.Publisher("/ambf/env/"+name+"/measured_js", JointState, queue_size=1)
 		self.sub_servo_jp = rospy.Subscriber("/ambf/env/"+name+"/servo_jp", JointState, self.sub_servo_jp_callback)
 		self.sub_servo_jv = rospy.Subscriber("/ambf/env/"+name+"/servo_jv", JointState, self.sub_servo_jv_callback)
 		self.pub_measured_cp = rospy.Publisher("/ambf/env/"+name+"/measured_cp", PoseStamped, queue_size=1)
 		self.pub_jacobian = rospy.Publisher("/ambf/env/"+name+"/jacobian", Float64MultiArray, queue_size=1)
-
+		# self.run_once = False
 		self.set_dh("UR5")
 	# def set_home_pose(self, pose):
 	# 	self.T_t_b_home = pose
@@ -71,6 +75,8 @@ class UR5_AMBF:
 	#     pass
 
 	def servo_jp(self, jp):
+		if (not self.is_present()):
+			return
 		# jp = self._joint_error_model.add_to_joints(jp, self._joints_error_mask)
 		self.base.set_joint_pos(0, jp[0])
 		self.base.set_joint_pos(1, jp[1])
@@ -102,6 +108,7 @@ class UR5_AMBF:
 		j4 = self.base.get_joint_pos(4)
 		j5 = self.base.get_joint_pos(5)
 		q = [j0, j1, j2, j3, j4, j5]
+		self.js=q
 		# q = self._joint_error_model.remove_from_joints(q, self._joints_error_mask)
 		return q
 
@@ -118,10 +125,22 @@ class UR5_AMBF:
 		return self.base.get_joint_names()
 
 	def sub_servo_jv_callback(self, msg): #JointState
-		self.servo_jv(msg.velocity)
+		self.servo_jv_cmd = msg.velocity
+        # self.servo_jv(msg.velocity)
+		# if self.run_once:
+		# 	return
+		# # self.run_once = True
+		# # jp=[0,0,0,0,0,0]# jp = self.measured_js()
+		# delp = [v*1.0/self.rate_hz for v in msg.velocity]
+		# new_js = [(x+y) for x,y in zip(self.js, delp)]
+		# new_js[0]+=np.pi
+		# self.servo_jp(new_js)
 
 	def sub_servo_jp_callback(self, msg): #JointState
-		self.servo_jp(msg.position)
+		self.servo_jp_cmd = msg.position
+		self.servo_jp_flag = True
+        # self.servo_jp(msg.position)
+
 
 	def publish_measured_js(self):
 		msg = JointState()
@@ -135,9 +154,14 @@ class UR5_AMBF:
 			if not self.is_present():
 				self.base = self.client.get_obj_handle(self.name + '/base_link')
 				print("Tried to reconnect")
-		
 			self.publish_measured_js()
 			self.FK(self.measured_js())
+			if self.servo_jp_flag:
+				self.servo_jp(self.servo_jp_cmd)
+				self.servo_jp_flag=False
+			else:
+				self.servo_jv(self.servo_jv_cmd)
+
 			self.rate.sleep()
 	
 	
@@ -239,6 +263,7 @@ if __name__ == "__main__":
 		print("Waiting for ur5 model to load...")
 		time.sleep(0.5)
 	print("UR5_AMBF loaded")
-	ur5.servo_jp([0.0,-1.0,1.0,0.0,0.0,0.0]) # set init pose
+	ur5.servo_jp([0.0,-1.0,1.0,0.0,-np.pi/8,np.pi]) # set init pose
+	time.sleep(2.0) # let the move command finish
 	ur5.run()
 	_client.clean_up()

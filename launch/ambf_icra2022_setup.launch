@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_with_CM_plugin" type="run_ur5_cm.sh"
+      output="screen"/>
+
+  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_ros_ur5" type="ur5_ambf.py" output="screen"/> 
+
+    <node pkg="continuum_manip_volumetric_drilling_plugin" name="xreg_imager" type="start_xreg_imager.sh"
+        output="screen"/>
+
+  <include file="$(find snake_estimator)/launch/snake_estimator_kalman.launch"/> 
+  
+  <!-- <include file="$(find spine_robot_control)/launch/URWithSnakeAMBF.launch"/>  -->
+
+  <node pkg="rqt_image_view" type="rqt_image_view" name="image_view" args="/snake_imager/image"/>
+
+
+  <!-- Just for gt comparison -->
+  <node pkg="snake_estimator" name="snake_kinematics_estimator_py" type="snake_kinematics_estimator.py" output="screen"/> 
+
+</launch>

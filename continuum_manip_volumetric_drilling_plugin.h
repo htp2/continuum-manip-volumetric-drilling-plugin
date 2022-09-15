@@ -196,7 +196,16 @@ private:
     cVector3d m_maxVolCorner, m_minVolCorner;
     cVector3d m_maxTexCoord, m_minTexCoord;
     cVector3d m_textureCoordScale; // Scale between volume corners extent and texture coordinates extent
+    double m_summed_burr_force;
+    // cVector3d m_summed_burr_force;
 
+    int m_col_count = 0;
+    std::vector<std::vector<std::vector<double>>> m_force_to_drill_voxel;
+    // double m_force_thresh = 5e-6;
+    double m_force_thresh = 1e-4;
+    bool m_debug_print = false;
+    bool m_vary_drilling_behavior = false;
+    bool fillGoalPointsFromCSV(const std::string& filename, std::vector<cVector3d>& trace_points);
 };
 
 

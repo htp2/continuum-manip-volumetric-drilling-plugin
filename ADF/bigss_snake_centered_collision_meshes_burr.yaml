@@ -1634,9 +1634,9 @@ BODY snake_stick:
       y: 0
   passive: false
   color: random
-  publish children names: false
-  publish joint names: false
-  publish joint positions: false
+  publish children names: true
+  publish joint names: true
+  publish joint positions: true
   friction:
     rolling: 0.0
     static: 0.5
@@ -2563,6 +2563,7 @@ JOINT seg27-Burr:
   parent pivot:
     x: 0.0
     y: 0.04
+    # y: 0.06
     z: 0.0
   child axis:
     x: 0.0

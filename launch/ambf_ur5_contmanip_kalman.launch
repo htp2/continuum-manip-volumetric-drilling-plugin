@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_with_CM_plugin" type="run_ur5_cm.sh"
+      output="screen"/>
+
+  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_ros_ur5" type="ur5_ambf.py" output="screen"/> 
+
+  <!-- <include file="$(find snake_estimator)/launch/snake_estimator_kalman.launch"/>  -->
+
+
+
+</launch>
