@@ -60,7 +60,16 @@ add_definitions(${AMBF_DEFINITIONS})
 message("---> LIBS " ${catkin_INCLUDE_DIRS})
 message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
 
-add_library(continuum_manip_volumetric_drilling_plugin SHARED continuum_manip_volumetric_drilling_plugin.cpp continuum_manip_volumetric_drilling_plugin.h collision_publisher.h collision_publisher.cpp cable_pull_subscriber.h cable_pull_subscriber.cpp)
+add_library(continuum_manip_volumetric_drilling_plugin SHARED 
+    continuum_manip_volumetric_drilling_plugin.cpp 
+    continuum_manip_volumetric_drilling_plugin.h 
+    collision_publisher.h 
+    collision_publisher.cpp 
+    cable_pull_subscriber.h 
+    cable_pull_subscriber.cpp 
+    # cm_vdrilling_plugin_updatecbs.cpp
+)
+
 add_dependencies(continuum_manip_volumetric_drilling_plugin ${catkin_EXPORTED_TARGETS})
 target_link_libraries (continuum_manip_volumetric_drilling_plugin ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
 set_property(TARGET continuum_manip_volumetric_drilling_plugin PROPERTY POSITION_INDEPENDENT_CODE TRUE)

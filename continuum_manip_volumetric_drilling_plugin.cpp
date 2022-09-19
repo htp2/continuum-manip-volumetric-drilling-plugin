@@ -231,7 +231,23 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
         // remove from ball around entry point
         double entry_burr_size = 8.0 * m_ambf_scale_to_mm;
-        const std::string filename = "/home/henry/bigss/catkin_ws/src/continuum-manip-volumetric-drilling-plugin/resources/axis.csv";
+        std::string filename = "$CATKIN_WS/src/continuum-manip-volumetric-drilling-plugin/resources/axis.csv";
+        // Substitute env variable if passed in
+        std::string envpath;
+        size_t begin = filename.find("$");
+        if (begin != std::string::npos) {           /* contains '$'? */
+            size_t end = filename.find("/", begin);     /* find following '/' */
+            // Extract environment variable from line
+            std::string envvar = filename.substr (begin + 1, end - 1);
+            // Get from environment (NULL returned if it does not exist)
+            if (const char *envtmp = std::getenv(envvar.c_str()))
+                envpath = envtmp;
+            else {
+                std::cerr << "error: $" << envvar << " not in environment.\n";
+            }
+            // Replace variable name with contents in line
+            filename.replace(begin, end, envpath);
+        }
         std::vector<cVector3d> trace_points;
         fillGoalPointsFromCSV(filename, trace_points);
         auto T_inv = m_volumeObject->getLocalTransform();
