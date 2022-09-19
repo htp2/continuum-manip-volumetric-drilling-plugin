@@ -67,6 +67,8 @@ add_library(continuum_manip_volumetric_drilling_plugin SHARED
     collision_publisher.cpp 
     cable_pull_subscriber.h 
     cable_pull_subscriber.cpp 
+    cmvd_settings_rossub.h
+    cmvd_settings_rossub.cpp
     # cm_vdrilling_plugin_updatecbs.cpp
 )
 

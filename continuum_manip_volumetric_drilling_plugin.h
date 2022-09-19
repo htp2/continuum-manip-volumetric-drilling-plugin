@@ -6,6 +6,7 @@
 #include <afFramework.h>
 #include "collision_publisher.h"
 #include "cable_pull_subscriber.h"
+#include "cmvd_settings_rossub.h"
 
 using namespace std;
 using namespace ambf;
@@ -29,6 +30,8 @@ class afVolmetricDrillingPlugin: public afSimulatorPlugin{
 
     DrillingPublisher* m_drillingPub;
     CablePullSubscriber* m_cablePullSub;
+    CMVDSettingsSub* m_settingsPub;
+
 protected:
     // Initialize tool cursors
     void toolCursorInit(const afWorldPtr);
@@ -60,6 +63,16 @@ protected:
     cTransform btTransformTocTransform(const btTransform& in);
 
     void sliceVolume(int axisIdx, double delta);
+
+    void setShowToolCursors(bool bool_show);
+
+    void setDrillControlMode(bool bool_set);
+
+    void setVolumeCollisionsEnabled(bool bool_set);
+
+    void setCableControlMode(bool bool_set);
+
+    void setPhysicsPaused(bool bool_set);
 
 private:
     cTransform T_contmanip_base; // Drills target pose
@@ -209,6 +222,9 @@ private:
     bool m_debug_print = false;
     bool m_vary_drilling_behavior = false;
     bool fillGoalPointsFromCSV(const std::string& filename, std::vector<cVector3d>& trace_points);
+
+    void checkForSettingsUpdate(void);
+
 };
 
 

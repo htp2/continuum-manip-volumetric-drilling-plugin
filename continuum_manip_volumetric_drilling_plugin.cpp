@@ -47,6 +47,8 @@
 //==============================================================================
 
 #include "continuum_manip_volumetric_drilling_plugin.h"
+#include "cmvd_settings_rossub.h"
+
 #include <boost/program_options.hpp>
 #include <fstream>
 
@@ -203,6 +205,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // Set up voxels_removed publisher
     m_drillingPub = new DrillingPublisher("ambf", "volumetric_drilling");
 
+    //Set up settings ros pub
+    m_settingsPub = new CMVDSettingsSub("ambf", "volumetric_drilling"); 
+
     // Volume Properties
     float dim[3];
     dim[0] = m_volumeObject->getDimensions().get(0);
@@ -231,7 +236,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
         // remove from ball around entry point
         double entry_burr_size = 8.0 * m_ambf_scale_to_mm;
-        const std::string filename = "$CATKIN_WS/src/continuum-manip-volumetric-drilling-plugin/resources/axis.csv";
+        const std::string filename = "/home/henry/bigss/catkin_ws/src/continuum-manip-volumetric-drilling-plugin/resources/axis.csv";
         std::vector<cVector3d> trace_points;
         fillGoalPointsFromCSV(filename, trace_points);
         auto T_inv = m_volumeObject->getLocalTransform();
@@ -287,7 +292,8 @@ void afVolmetricDrillingPlugin::graphicsUpdate()
 
 void afVolmetricDrillingPlugin::physicsUpdate(double dt)
 {
-
+    checkForSettingsUpdate();
+    
     m_worldPtr->getChaiWorld()->computeGlobalPositions(true);
     bool clutch;
 
@@ -690,29 +696,12 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
 
         else if (a_key == GLFW_KEY_O)
         {
-            setOverrideDrillControl(!getOverrideDrillControl());
-            if (getOverrideDrillControl())
-            {
-                m_drillControlModeText->m_fontColor.setRed();
-                m_drillControlModeText->setText("Drill Control Mode = External afComm");
-            }
-            else
-            {
-                m_drillControlModeText->m_fontColor.setGreen();
-                m_drillControlModeText->setText("Drill Control Mode = Haptic Device / Keyboard");
-            }
+            setDrillControlMode(!getOverrideDrillControl());
         }
 
         else if (a_key == GLFW_KEY_C)
         {
-            m_showGoalProxySpheres = !m_showGoalProxySpheres;
-            for (auto &cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList})
-            {
-                for (auto &cursor : cursor_list)
-                {
-                    cursor->m_hapticPoint->setShow(m_showGoalProxySpheres, m_showGoalProxySpheres);
-                }
-            }
+            setShowToolCursors(!m_showGoalProxySpheres);
         }
 
         else if (a_key == GLFW_KEY_SEMICOLON)
@@ -731,7 +720,7 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         }
         else if (a_key == GLFW_KEY_LEFT_BRACKET)
         {
-            m_volume_collisions_enabled = !m_volume_collisions_enabled;
+            setVolumeCollisionsEnabled(!m_volume_collisions_enabled);
         }
         else if (a_key == GLFW_KEY_RIGHT_BRACKET)
         {
@@ -745,26 +734,12 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
 
         else if (a_key == GLFW_KEY_SLASH)
         {
-            m_cableKeyboardControl = !m_cableKeyboardControl;
-            std::string cable_control_mode = m_cableKeyboardControl ? "Keyboard" : "Subscriber";
-            m_cableKeyboardControl ? m_cableControlModeText->m_fontColor.setGreen() : m_cableControlModeText->m_fontColor.setRed();
-            m_cableControlModeText->setText("Cable Control Mode = " + cable_control_mode);
+            setCableControlMode(!m_cableKeyboardControl);
         }
 
         else if (a_key == GLFW_KEY_E)
         {
-            bool paused = m_worldPtr->isPhysicsPaused();
-            if (paused)
-            {
-                m_worldPtr->pausePhysics(false);
-            }
-            else
-            {
-                auto last_seg_ptr = m_segmentBodyList.back();
-                last_seg_ptr->applyTorque(cVector3d(0.0, 0.0, 0.0));
-                m_worldPtr->pausePhysics(true);
-            }
-            std::cout << "Toggled plugin physics paused to: " << m_worldPtr->isPhysicsPaused() << std::endl;
+            setPhysicsPaused(!m_worldPtr->isPhysicsPaused());
         }
 
         // option - polygonize model and save to file
@@ -953,7 +928,6 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         // controls rotational motion of tool
         else if (a_key == GLFW_KEY_KP_5)
         {
-
             cVector3d rotDir(0, 1, 0);
             incrementDeviceRot(rotDir);
         }
@@ -1150,6 +1124,62 @@ void afVolmetricDrillingPlugin::sliceVolume(int axisIdx, double delta)
     cerr << "> " << delta_dir_str << " Volume size along " << axis_str << " axis.                            \r";
 }
 
+void afVolmetricDrillingPlugin::setShowToolCursors(bool bool_show){
+    m_showGoalProxySpheres = bool_show;
+    for (auto &cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList})
+    {
+        for (auto &cursor : cursor_list)
+        {
+            cursor->m_hapticPoint->setShow(m_showGoalProxySpheres, m_showGoalProxySpheres);
+        }
+    } 
+}
+
+void afVolmetricDrillingPlugin::setDrillControlMode(bool bool_set){
+    setOverrideDrillControl(bool_set);
+    if (getOverrideDrillControl())
+    {
+        m_drillControlModeText->m_fontColor.setRed();
+        m_drillControlModeText->setText("Drill Control Mode = External afComm");
+    }
+    else
+    {
+        m_drillControlModeText->m_fontColor.setGreen();
+        m_drillControlModeText->setText("Drill Control Mode = Haptic Device / Keyboard");
+    }
+}
+
+void afVolmetricDrillingPlugin::setCableControlMode(bool bool_set){
+    m_cableKeyboardControl = bool_set;
+    std::string cable_control_mode = m_cableKeyboardControl ? "Keyboard" : "Subscriber";
+    m_cableKeyboardControl ? m_cableControlModeText->m_fontColor.setGreen() : m_cableControlModeText->m_fontColor.setRed();
+    m_cableControlModeText->setText("Cable Control Mode = " + cable_control_mode);
+}
+
+void afVolmetricDrillingPlugin::setPhysicsPaused(bool bool_set){
+    bool paused = m_worldPtr->isPhysicsPaused();
+    if(paused == bool_set){
+        std::cout << "Attempted to set physics to paused: " << bool_set << " but already at that setting" << std::endl;
+        return;
+    }
+
+    if (bool_set)
+    {
+        m_worldPtr->pausePhysics(false);
+    }
+    else
+    {
+        auto last_seg_ptr = m_segmentBodyList.back();
+        last_seg_ptr->applyTorque(cVector3d(0.0, 0.0, 0.0));
+        m_worldPtr->pausePhysics(true);
+    }
+    std::cout << "Toggled plugin physics paused to: " << m_worldPtr->isPhysicsPaused() << std::endl;
+}
+
+void afVolmetricDrillingPlugin::setVolumeCollisionsEnabled(bool bool_set){
+    m_volume_collisions_enabled = bool_set;
+}
+
 bool afVolmetricDrillingPlugin::fillGoalPointsFromCSV(const std::string &filename, std::vector<cVector3d> &trace_points)
 {
     std::ifstream file(filename);
@@ -1175,4 +1205,49 @@ bool afVolmetricDrillingPlugin::fillGoalPointsFromCSV(const std::string &filenam
         trace_points.push_back(cVector3d(std::stod(record[0]), std::stod(record[1]), std::stod(record[2])));
     }
     return true;
+}
+
+void afVolmetricDrillingPlugin::checkForSettingsUpdate(void)
+{
+    if(m_settingsPub->setCableControlMode_changed)
+    {
+        setCableControlMode(m_settingsPub->setCableControlMode_last_val);
+        m_settingsPub->setCableControlMode_changed = false;
+    }
+    if(m_settingsPub->setDrillControlMode_changed)
+    {
+        setDrillControlMode(m_settingsPub->setDrillControlMode_last_val);
+        m_settingsPub->setDrillControlMode_changed = false;
+    }
+    if(m_settingsPub->setPhysicsPaused_changed)
+    {
+        setPhysicsPaused(m_settingsPub->setPhysicsPaused_last_val);
+        m_settingsPub->setPhysicsPaused_changed = false;
+    }
+    if(m_settingsPub->setShowToolCursors_changed)
+    {
+        setShowToolCursors(m_settingsPub->setShowToolCursors_last_val);
+        m_settingsPub->setShowToolCursors_changed = false;
+    }
+    if(m_settingsPub->setVolumeCollisionsEnabled_changed)
+    {
+        setVolumeCollisionsEnabled(m_settingsPub->setVolumeCollisionsEnabled_last_val);
+        m_settingsPub->setVolumeCollisionsEnabled_changed = false;
+    }
+    if(m_settingsPub->initToolCursors_changed)
+    {
+        toolCursorInit(m_worldPtr);
+        m_settingsPub->initToolCursors_changed = false;
+
+    }
+    if(m_settingsPub->resetVoxels_changed)
+    {
+        m_volumeObject->reset();
+        m_settingsPub->resetVoxels_changed = false;
+    }
+    if(m_settingsPub->setBurrOn_changed)
+    {
+        m_burrOn = m_settingsPub->setBurrOn_last_val;
+        m_settingsPub->setBurrOn_changed = false;
+    }
 }
