@@ -34,9 +34,20 @@ Build and source ambf (make sure you're on branch ambf-2.0 before building) as p
 ### 1.2 Clone and Build Simulator
 
 #### [Recommended] build with catkin
-Assuming you are trying to integrate into a larger catkin_ws
+
+##### [Recommended] Set catkin_ws environment variable for convenience
+For convenince in setting default filepaths in the code, we suggest users set an environment variable ```CATKIN_WS``` 
+
+If you have not set CATKIN_WS as an environment variable, do:
+
+```export $CATKIN_WS=<catkin_ws_dir>```
+It is recommended to put this directly into your .bashrc so it is set automatically. You only need to do this once
+```bash
+echo 'export CATKIN_WS=/home/henry/bigss/catkin_ws' >> ~/.bashrc
+```
+##### Clone and build
 ``` bash
-cd <catkin_ws>
+cd $CATKIN_WS
 git clone <this repo>
 catkin build
 ```
@@ -74,7 +85,7 @@ cd ambf/bin/lin-x86_64/
 Run the simulator with the added ```--anatomy_volume_name arg``` where arg matches the name given to a volume you are including using the ```-l arg``` command. For example, if there is a volume called ```spine_seg``` that is listed as #15 in the launch.yaml file, and the CM is listed as #25, you could use the following command:
 e.g.,
 ```bash
-./ambf_simulator --launch_file /home/henry/bigss/catkin_ws/src/continuum-manip-volumetric-drilling-plugin/launch.yaml -l 15,25 --anatomy_volume_name spine_seg
+./ambf_simulator --launch_file $CATKIN_WS/src/continuum-manip-volumetric-drilling-plugin/launch.yaml -l 15,25 --anatomy_volume_name spine_seg
 ```
 #### Controls with continuum manipulator (CM)
 1. At the start you will need to press: ( Ctrl+] ) and ( Ctrl+[ ) to start the volumetric collisions and have the tool cursors track the mesh positions (this is a workaround to prevent all the tool cursors from starting at 0,0,0 before the first frame and then flying into position, getting stuck and/or causing a bunch of vibrations in the CM). This will be fixed eventually.
