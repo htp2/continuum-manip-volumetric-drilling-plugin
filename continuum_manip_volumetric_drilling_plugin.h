@@ -1,4 +1,7 @@
 // To silence warnings on MacOS
+#ifndef CONTINUUM_MANIP_VOLUMETRIC_DRILLING_PLUGIN_H
+#define CONTINUUM_MANIP_VOLUMETRIC_DRILLING_PLUGIN_H
+
 #define GL_SILENCE_DEPRECATION
 #include <afFramework.h>
 #include "collision_publisher.h"
@@ -211,3 +214,5 @@ private:
 
 
 AF_REGISTER_SIMULATOR_PLUGIN(afVolmetricDrillingPlugin)
+
+#endif // CONTINUUM_MANIP_VOLUMETRIC_DRILLING_PLUGIN_H

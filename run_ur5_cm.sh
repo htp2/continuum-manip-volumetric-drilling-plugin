@@ -13,4 +13,5 @@
     -l 11,15,25,29,30 \
     --name_body_to_trace seg27 \
     --anatomy_volume_name spine_seg \
-    --csv_filename_static_traces /home/henry/bigss/catkin_ws/src/continuum-manip-volumetric-drilling-plugin/resources/axis.csv
+    --csv_filename_static_traces /home/henry/bigss/catkin_ws/src/continuum-manip-volumetric-drilling-plugin/resources/axis.csv \
+    --vary_drilling_behavior 1
