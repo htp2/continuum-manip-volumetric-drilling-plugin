@@ -35,13 +35,17 @@ Build and source ambf (make sure you're on branch ambf-2.0 before building) as p
 
 #### [Recommended] build with catkin
 
-If you have not set `CATKIN_WS` as an environment variable, do:
-```bash
-export $CATKIN_WS=<catkin_ws_dir>
-```
-You can also write the above line into your `.bashrc`
+##### [Recommended] Set catkin_ws environment variable for convenience
+For convenince in setting default filepaths in the code, we suggest users set an environment variable ```CATKIN_WS``` 
 
-Assuming you are trying to integrate into a larger catkin_ws
+If you have not set CATKIN_WS as an environment variable, do:
+
+```export $CATKIN_WS=<catkin_ws_dir>```
+It is recommended to put this directly into your .bashrc so it is set automatically. You only need to do this once
+```bash
+echo 'export CATKIN_WS=/home/henry/bigss/catkin_ws' >> ~/.bashrc
+```
+##### Clone and build
 ``` bash
 cd $CATKIN_WS
 git clone <this repo>
