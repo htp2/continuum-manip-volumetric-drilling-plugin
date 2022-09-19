@@ -71,7 +71,8 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     cmd_opts.add_options()("base_body_name", p_opt::value<std::string>()->default_value("snake_stick"), "Name of body given in yaml. Default snake_stick");
     cmd_opts.add_options()("tool_body_name", p_opt::value<std::string>()->default_value("Burr"), "Name of body given in yaml. Default Burr");
     cmd_opts.add_options()("body_base_attached_to_name", p_opt::value<std::string>()->default_value(""), "Name of body given in yaml. Default empty");
-    cmd_opts.add_options()("vary_drilling_behavior", p_opt::value<std::string>()->default_value("0"), ". Turn on [experimental] features to vary drilling behavior Default false");;
+    cmd_opts.add_options()("vary_drilling_behavior", p_opt::value<std::string>()->default_value("0"), ". Turn on [experimental] features to vary drilling behavior Default false");
+    cmd_opts.add_options()("debug_traj_file", p_opt::value<std::string>()->default_value(""), ". Input needed for [experimental] features Default empty");
 
     p_opt::variables_map var_map;
     p_opt::store(p_opt::command_line_parser(argc, argv).options(cmd_opts).allow_unregistered().run(), var_map);
@@ -92,6 +93,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     std::string body_base_attached_to_name = var_map["body_base_attached_to_name"].as<std::string>();
     std::string vary_drilling_behavior = var_map["vary_drilling_behavior"].as<std::string>();
     m_vary_drilling_behavior = boost::lexical_cast<bool>(vary_drilling_behavior);
+    std::string debug_traj_file = var_map["debug_traj_file"].as<std::string>();
 
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
     m_worldPtr = a_afWorld;
@@ -219,6 +221,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     voxelCount[2] = m_volumeObject->getVoxelCount().get(2);
     m_drillingPub->volumeProp(dim, voxelCount);
 
+    // Start experimental behavior 
     if (m_vary_drilling_behavior)
     {
         std::vector<std::vector<std::vector<double>>> forces(voxelCount[0], std::vector<std::vector<double>>(voxelCount[1], std::vector<double>(voxelCount[2], m_force_thresh)));
@@ -236,9 +239,8 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
         // remove from ball around entry point
         double entry_burr_size = 8.0 * m_ambf_scale_to_mm;
-        const std::string filename = "/home/henry/bigss/catkin_ws/src/continuum-manip-volumetric-drilling-plugin/resources/axis.csv";
         std::vector<cVector3d> trace_points;
-        fillGoalPointsFromCSV(filename, trace_points);
+        fillGoalPointsFromCSV(debug_traj_file, trace_points);
         auto T_inv = m_volumeObject->getLocalTransform();
         T_inv.invert();
         for (size_t v = 0; v < 40; v++)
@@ -268,6 +270,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
             }
         }
     }
+    // end experimental behavior
 
     // Set up cable pull subscriber
     m_cablePullSub = new CablePullSubscriber("ambf", "volumetric_drilling");
