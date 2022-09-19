@@ -12,36 +12,28 @@ This pairs well with another plugin I wrote (https://github.com/htp2/ambf_trace_
 
 ## 1. Installation Instructions:
 
-Lets call the absolute location of this package as **<volumetric_plugin_path>**. E.g. if you cloned this repo in your home folder, **<volumetric_plugin_path>** = `~/volumetric_drilling/` OR `/home/<username>/volumetric_plugin`
 ### 1.1 Install and Source AMBF 2.0
 
-Clone and build `ambf-2.0` branch.
-```bash
-git clone https://github.com/WPI-AIM/ambf.git
-cd ambf
-git checkout -b ambf-2.0 origin/ambf-2.0
-git pull
-```
-Note that depth and image recording are enabled by default (in camera ADFs) and these features only work on Linux with ROS installed. Additionally, the following packages must be installed prior to building to AMBF:
+Build and source ambf (make sure you're on branch ambf-2.0 before building) as per the instructions on AMBFs wiki: https://github.com/WPI-AIM/ambf/wiki/Installing-AMBF.
+
+#### Functionality supported by volumetric-drilling
+I (Henry) haven't used this, but it should work just fine, so I'm copying the relevant instructions from ```volumetric_drilling``` below:
+
+>Note that depth and image recording are enabled by default (in camera ADFs) and these features only work on Linux with ROS installed. Additionally, the following packages must be installed prior to building to AMBF:
 
 ```bash
 cv-bridge # Can be installed via apt install ros-<version>-cv-bridge
 image-transport # Can be installed via apt install ros-<version>-image-transport
 ```
 
-Build and source ambf (make sure you're on branch ambf-2.0 before building) as per the instructions on AMBFs wiki: https://github.com/WPI-AIM/ambf/wiki/Installing-AMBF.
-
 ### 1.2 Clone and Build Simulator
 
-#### [Recommended] build with catkin
+#### [Recommended] Build with catkin
+These are instructions to build in an existing catkin workspace. If you do not have one yet, take a look at: http://wiki.ros.org/catkin/Tutorials/create_a_workspace
 
-##### [Recommended] Set catkin_ws environment variable for convenience
-For convenince in setting default filepaths in the code, we suggest users set an environment variable ```CATKIN_WS``` 
+For convenince in setting default filepaths in the code (and in writing these instructions), we suggest users set an environment variable ```CATKIN_WS``` 
 
-If you have not set CATKIN_WS as an environment variable, do:
-
-```export $CATKIN_WS=<catkin_ws_dir>```
-It is recommended to put this directly into your .bashrc so it is set automatically. You only need to do this once
+If you have not set CATKIN_WS as an environment variable, do so now. You can check using ``` printenv|grep CATKIN_WS ```. It is recommended to put this directly into your .bashrc so it is set automatically. You only need to do this once!
 ```bash
 echo 'export CATKIN_WS=/home/henry/bigss/catkin_ws' >> ~/.bashrc
 ```
@@ -62,10 +54,8 @@ cmake ..
 make
 ```
 
-If everything went smoothly, we are good to go.
-
 ## 2 Running the Plugin with ambf_simulator:
-The volumetric drilling simulator is a plugin that is launched on top of the AMBF simulator along with other AMBF bodies, described by AMBF Description Format files (ADFs), as will be demonstrated below. The `libvolumetric_drilling.so` plugin is initialized in the `launch.yaml` file and can be commented out for the purpose of debugging the ADF files.   
+The volumetric drilling simulator is a plugin that is launched on top of the AMBF simulator along with other AMBF bodies, described by AMBF Description Format files (ADFs), as will be demonstrated below. The `libcontinuum_manip_volumetric_drilling_plugin.so` plugin is initialized in the `launch.yaml` file and can be commented out for the purpose of debugging the ADF files.   
 
 Below are instructions as to how to load different volume and camera options. The -l tag used below allows user to run indexed multibodies that can also be found in the `launch.yaml` under the `multibody configs:` data block. More info on launching the simulator can be found in the AMBF Wiki:  
 
@@ -73,7 +63,7 @@ https://github.com/WPI-AIM/ambf/wiki/Launching-the-Simulator
 https://github.com/WPI-AIM/ambf/wiki/Selecting-Robots  
 https://github.com/WPI-AIM/ambf/wiki/Command-Line-Arguments  
 
-Note that the executable binary,`ambf_simulator`, is located in `ambf/bin/lin-x86_64` and you must be in that folder to run the simulator.
+Note that the executable binary,`ambf_simulator`, is located in `ambf/bin/lin-x86_64` if you are using Linux. Throughout, some bash scripts may assume you have ```ambf``` installed in ```/home/$USER/```. If you do not, you might need to make a few changes there.
 
 ### Running with the continuum manipulator
 To startup with a simple block volume you can drill into, you can use:
@@ -94,10 +84,26 @@ e.g.,
 
 3. Control the bend of the CM by pressing the Ctrl+; and Ctrl+' keys to increase or decrease a 'cable tension' setpoint
 
+#### Several Settings and Options Available to use as ROS Topics
+Several of the keyboard commands have been supplemented with ros topics that will carry out the same features. 
+
+A list is below. All topics accept std_msgs::Bool. The namespace is ```/ambf/volumetric_drilling/```
+
+| # | Topic Name | Description                                  |
+|---|-----------------------|----------------------------------------------|
+| 1 | setShowToolCursors         | Sets whether tool cursors will be rendered as sphere (true=rendered)   |
+| 2 | setDrillControlMode             | Sets drill's control mode between Haptic Device / Keyboard and ROS Comm (true=ROS)    |
+| 3 | setVolumeCollisionsEnabled              | Sets if volume collision occurs (true=collision)         |
+| 4 | setCableControlMode              | Sets cables's control mode between keyboard and ROS Comm (true=Keyboard)      |
+| 5 | setPhysicsPaused              | Sets if simulator is paused (true=pause)  |
+| 6 | initToolCursors              | Resets collision spheres with mesh locations (true or false will trigger this) |
+| 7 | resetVoxels | Resets volume, any removed voxels are returned (true or false will trigger this)
+| 8 | setBurrOn | Sets if burr is on, i.e. if burr collision removes voxels (true=on)
+
 #### Option 4: User-provided volume
 Patient specific anatomy may also be used in the simulator. The volumes are an array of images (JPG or PNG) that are rendered via texture-based volume rendering. With images and an ADF for the volume, user specified anatomy can easily be used in the simulator. We provide utility scripts (located in the `scripts` folder) that can convert both segmented and non-segmented data from the NRRD format to an array of images.
 
-```
+
 ### 2.3 Changing Scene Parameters
 All the relevant ADF scene objects are in the ADF folder and can be modified as needed. For example, camera intrinsics can be adjusted via the field view angle and image resolution parameters of Camera ADFs.
 
@@ -148,11 +154,12 @@ Note that only one instance of the AMBF python client can be opened at a time. T
 #### 2.5.2 Mouse Movement
 Navigation using mouse shortcuts in AMBF is described here: https://github.com/WPI-AIM/ambf/wiki/Keyboard-and-Mouse-Shortcuts
 
-#### 2.5.3 HMDs
-
 
 ### 2.6 Data Recording
-A python script (`scripts/data_record.py`) is provided to record data based on the user's configuration. By default, the left and right stereo images, depth point cloud, segmentation mask,drill/camera poses, removed voxels and drill burr changes are recorded. The data is stored as a convenient and well-organized hdf5 file.
+
+A note from Henry: I don't use this, but I am leaving the instructions below!
+
+>A python script (`scripts/data_record.py`) is provided to record data based on the user's configuration. By default, the left and right stereo images, depth point cloud, segmentation mask,drill/camera poses, removed voxels and drill burr changes are recorded. The data is stored as a convenient and well-organized hdf5 file.
 NOTE: 
 - Source the ambf and vdrilling_msgs environment in terminal before running the script.
 - By default, data recording should be launched after the simulator. We perform sanity check on this to make sure topics subscribed are meaningful.
