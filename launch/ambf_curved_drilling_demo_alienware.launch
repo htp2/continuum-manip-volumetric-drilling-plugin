@@ -11,10 +11,16 @@
 
   <include file="$(find snake_estimator)/launch/snake_estimator_kalman.launch"/> 
   
-  <!-- <include file="$(find spine_robot_control)/launch/URWithSnakeAMBF.launch"/>  -->
+  <include file="$(find spine_robot_control)/launch/URWithSnakeAMBF.launch"/> 
 
   <node pkg="rqt_image_view" type="rqt_image_view" name="image_view" args="/snake_imager/image"/>
 
+
+  <arg name="node_start_delay" default="5.0" />  
+  <!-- <node name="listener" pkg="roscpp_tutorials" type="listener" /> -->
+
+  <node pkg="spine_python" type="ambf_highlevel_necrosis_script_py2.py" name="ambf_highlevel_necrosis_script" 
+    launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " />    <!-- This delays the high-level script for a bit to give everything a chance to start up -->
 
   <!-- Just for gt comparison -->
   <!-- <node pkg="snake_estimator" name="snake_kinematics_estimator_py" type="snake_kinematics_estimator.py" output="screen"/>  -->
