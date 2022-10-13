@@ -1,6 +1,8 @@
 #include "cmvd_settings_rossub.h"
 #include <ambf_server/RosComBase.h>
 #include <std_msgs/Bool.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <eigen3/Eigen/Geometry>
 
 using namespace std;
 
@@ -20,7 +22,7 @@ CMVDSettingsSub::CMVDSettingsSub(string a_namespace, string a_plugin)
     sub_initToolCursors = m_rosNode->subscribe<std_msgs::Bool>(a_namespace + "/" + a_plugin + "/initToolCursors", 1, &CMVDSettingsSub::callback_initToolCursors, this);
     sub_resetVoxels = m_rosNode->subscribe<std_msgs::Bool>(a_namespace + "/" + a_plugin + "/resetVoxels", 1, &CMVDSettingsSub::callback_resetVoxels, this);
     sub_setBurrOn = m_rosNode->subscribe<std_msgs::Bool>(a_namespace + "/" + a_plugin + "/setBurrOn", 1, &CMVDSettingsSub::callback_setBurrOn, this);
-
+    pub_anatomy_pose = m_rosNode->advertise<geometry_msgs::PoseStamped>(a_namespace + "/" + a_plugin + "/anatomy_pose", 1, true);
 }
 
 CMVDSettingsSub::~CMVDSettingsSub()
@@ -79,4 +81,20 @@ void CMVDSettingsSub::callback_setBurrOn(std_msgs::Bool msg)
 {
     resetVoxels_changed = true;
     setBurrOn_changed = msg.data;
+}
+
+void CMVDSettingsSub::publish_anatomy_pose(chai3d::cTransform transform, double m_to_ambf_unit)
+{
+    geometry_msgs::PoseStamped msg;
+    msg.header.stamp = ros::Time::now();
+    msg.pose.position.x = transform.getLocalPos().x() / m_to_ambf_unit;
+    msg.pose.position.y = transform.getLocalPos().y() / m_to_ambf_unit;
+    msg.pose.position.z = transform.getLocalPos().z() / m_to_ambf_unit;
+    chai3d::cQuaternion q;
+    q.fromRotMat(transform.getLocalRot());
+    msg.pose.orientation.w = q.w;
+    msg.pose.orientation.x = q.x;
+    msg.pose.orientation.y = q.y;
+    msg.pose.orientation.z = q.z;
+    pub_anatomy_pose.publish(msg);
 }

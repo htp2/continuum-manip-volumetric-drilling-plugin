@@ -21,6 +21,7 @@ public:
     void callback_initToolCursors(std_msgs::Bool msg);
     void callback_resetVoxels(std_msgs::Bool msg);
     void callback_setBurrOn(std_msgs::Bool msg);
+    void publish_anatomy_pose(chai3d::cTransform transform, double m_to_ambf_unit=1.0);
 
     bool setShowToolCursors_changed = false;
     bool setDrillControlMode_changed = false;
@@ -47,6 +48,7 @@ private:
     ros::Subscriber sub_initToolCursors;
     ros::Subscriber sub_resetVoxels;
     ros::Subscriber sub_setBurrOn;
+    ros::Publisher pub_anatomy_pose;
 
 };
 

@@ -148,8 +148,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_textureCoordScale(2) = (m_maxTexCoord.z() - m_minTexCoord.z()) / (m_maxVolCorner.z() - m_minVolCorner.z());
 
     // Various scalars needed for other calculation
-    m_ambf_scale_to_mm = 0.01;
-    double burr_r = m_ambf_scale_to_mm * 6.5 / 2;
+    m_to_ambf_unit = 10.0;
+    mm_to_ambf_unit = m_to_ambf_unit/1000.0;
+    double burr_r = mm_to_ambf_unit * 6.5 / 2;
 
     // create a haptic device handler
     m_deviceHandler = new cHapticDeviceHandler();
@@ -209,6 +210,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     //Set up settings ros pub
     m_settingsPub = new CMVDSettingsSub("ambf", "volumetric_drilling"); 
+    m_settingsPub->publish_anatomy_pose( m_volumeObject->getLocalTransform(), m_to_ambf_unit);
 
     // Volume Properties
     float dim[3];
@@ -238,7 +240,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         m_force_to_drill_voxel = forces;
 
         // remove from ball around entry point
-        double entry_burr_size = 8.0 * m_ambf_scale_to_mm;
+        double entry_burr_size = 8.0 * mm_to_ambf_unit;
         std::vector<cVector3d> trace_points;
         fillGoalPointsFromCSV(debug_traj_file, trace_points);
         auto T_inv = m_volumeObject->getLocalTransform();
@@ -538,7 +540,7 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
 
         // if the haptic device has a gripper, enable it as a user switch
         m_hapticDevice->setEnableGripperUserSwitch(true);
-        shaft_cursor->setRadius(m_ambf_scale_to_mm * 6 / 2);
+        shaft_cursor->setRadius(mm_to_ambf_unit * 6 / 2);
     }
 
     for (auto &burr_cursor : m_burrToolCursorList)
@@ -546,7 +548,7 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
         burr_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
         burr_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
         burr_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
-        burr_cursor->setRadius(m_ambf_scale_to_mm * 6.5 / 2);
+        burr_cursor->setRadius(mm_to_ambf_unit * 6.5 / 2);
     }
 
     for (auto &seg_cursor : m_segmentToolCursorList)
@@ -554,7 +556,7 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
         seg_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
         seg_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
         seg_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
-        seg_cursor->setRadius(m_ambf_scale_to_mm * 6 / 2);
+        seg_cursor->setRadius(mm_to_ambf_unit * 6 / 2);
     }
     // Initialize the start pose of the tool cursors
     toolCursorsPosUpdate(T_contmanip_base);
@@ -1066,7 +1068,7 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
     m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
     last_seg_ptr->applyTorque(10.0 * m_cable_pull_mag * last_seg_ptr->getLocalRot().getCol2());
-    // last_seg_ptr->applyForce(cVector3d(-10.0*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol1()), last_seg_ptr->getLocalRot()*cVector3d( 2 *m_ambf_scale_to_mm,0.0,0.0) );
+    // last_seg_ptr->applyForce(cVector3d(-10.0*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol1()), last_seg_ptr->getLocalRot()*cVector3d( 2 *mm_to_ambf_unit,0.0,0.0) );
 }
 
 cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform &in)

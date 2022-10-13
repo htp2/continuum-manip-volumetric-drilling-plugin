@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="spine_robot_control" type="DevSnakeCal" name="DevSnakeCal" output="screen"/>
+
+    <node pkg="spine_python" type="dev_snake_cal.py" name="dev_snake_cal" output="screen"/>
+    <node pkg="ndi_tracker_ros" type="ndi_tracker" name="ndi_tracker" output="screen" args=
+       "-j /home/bigss/bigss/catkin_ws/src/bigss_spine/spine_robot_control/config/homewood_ur5/saw_ndi_tracker_config.json
+       -s /dev/ttyUSB0">
+    </node>
+</launch>

@@ -1,0 +1,28 @@
+# AMBF Version: (0.1)
+bodies: []
+joints: []
+volumes: [VOLUME spine_seg]
+high resolution path: ../meshes/high_res/
+low resolution path: ../meshes/low_res/
+ignore inter-collision: true
+namespace: /ambf/env/
+
+VOLUME spine_seg:
+  name: spine_seg
+  location:
+    # position: {x: 0.4085090637207031, y: 0.20975997924804687, z: -10.755}
+    # orientation: {r: 0.0, p: 0.0, y: 1.5707963267948966}
+    # position: {x: 5.4, y: 4.5, z: 3.35} 
+    position: {x: 0.0, y: 0.0, z: 5.8} 
+    orientation: {r: 0.0, p: -1.57, y: 0.0}
+  scale: 10.0
+  dimensions: {x: 0.199, y: 0.381, z: 0.433}
+  images:
+    path: ../../resources/volumes/spine_seg/
+    prefix: plane00
+    format: png
+    count: 433
+  shaders:
+    path: ../shaders/volume/
+    vertex: shader.vs
+    fragment: shader.fs

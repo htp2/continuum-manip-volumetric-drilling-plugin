@@ -51,7 +51,7 @@ multibody configs:
   - "ADF/table.yaml" #32
   - "ADF/spine_seg_at_origin.yaml" #33
   - "ADF/bigss_snake_burr_at_spine_seg_femur.yaml" #34
-
+  - "ADF/surgical_table.yaml" #35
 
 
 

@@ -1,0 +1,67 @@
+adf version: 1.0
+world config: ADF/world/world_with_skybox.yaml
+color config: ADF/color/colors.yaml
+input devices config: ADF/input_devices/input_devices.yaml
+plugins: [
+  {
+    name: DRILLING_SIMULATOR,
+    filename: libcontinuum_manip_volumetric_drilling_plugin.so,
+    path: ../../build/continuum_manip_volumetric_drilling_plugin/, # This is to use if catkin-built
+    #  path: ../../build/continuum-manip-volumetric-drilling-plugin/  # This is to use if built directly using cmake
+  },
+  {
+    name: TRACE_PLUGIN,
+    filename: libambf_trace_plugin.so,
+    path: ../../build/ambf_trace_plugin/, # This is to use if catkin-built
+  }
+]
+multibody configs:
+  - "ADF/drill.yaml" #0
+  - "ADF/volume_171.yaml" #1
+  - "ADF/volume_256.yaml" #2
+  - "ADF/volume_512.yaml" #3
+  - "ADF/segmentation_camera.yaml" #4
+  - "ADF/stereo_cameras.yaml" #5
+  - "ADF/single_stereo_camera.yaml" #6
+  - "ADF/bigss_snake_centered.yaml" #7
+  - "ADF/volume_spine_test.yaml" #8
+  - "ADF/volume_spine_full.yaml" #9
+  - "ADF/spine_cropped_highres.yaml" #10
+  - "ADF/carm.yaml" #11
+  - "ADF/femur_hip_cong.yaml" #12
+  - "ADF/spine_volume.yaml" #13
+  - "ADF/built_model.yaml" #14
+  - "ADF/spine_seg.yaml" #15
+  - "ADF/bigss_snake_centered_onetenth.yaml" #16
+  - "ADF/bigss_snake_centered_m.yaml" #17
+  - "ADF/anatomy_tracker.yaml" #18
+  - "ADF/debug_xform.yaml" #19
+  - "ADF/debug2_xform.yaml" #20
+  - "ADF/pixel.yaml"  #21
+  - "ADF/R1_sphere.yaml"  #22
+  - "ADF/bigss_snake_centered_collision_meshes.yaml" #23
+  - "ADF/cube.yaml" #24
+  - "ADF/bigss_snake_centered_collision_meshes_burr.yaml" #25
+  - "ADF/spine_seg_cropped.yaml" #26
+  - "ADF/spine_seg_crop_test.yaml" #27
+  - "ADF/test220720.yaml" #28
+  - "ADF/ur5.yaml" #29
+  - "ADF/connect_test.yaml" #30
+  - "ADF/bigss_snake_centered_collision_meshes_burr_massless.yaml" #31
+  - "ADF/table.yaml" #32
+  - "ADF/spine_seg_at_origin.yaml" #33
+  - "ADF/bigss_snake_burr_at_spine_seg_femur.yaml" #34
+  - "ADF/surgical_table.yaml" #35
+  - "ADF/spine/surgical_table.yaml" #36
+  - "ADF/spine/spine_seg.yaml" #37
+  - "ADF/spine/ur5.yaml" #38
+  - "ADF/surgical_room.yaml" #39
+  - "ADF/spine/slicer_render_test.yaml" #40
+  - "ADF/drape.yaml" #41
+
+
+
+
+
+
+  

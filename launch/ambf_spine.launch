@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_with_CM_plugin" type="show_scene.sh"
+      output="screen"/>
+
+  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_ros_ur5" type="ur5_ambf.py" output="screen"/> 
+
+    <node pkg="continuum_manip_volumetric_drilling_plugin" name="xreg_imager" type="start_xreg_imager_from_roslaunch.sh"
+        args="/home/$(env USER)/snake_registration/simulation/JustinSnakeModel_huatt/ /home/$(env USER)/snake_registration/simulation/output/ /home/$(env USER)/snake_registration/simulation/anatomy/"
+        output="screen"/>
+
+  <include file="$(find snake_estimator)/launch/snake_estimator_kalman.launch"/> 
+  
+  <include file="$(find spine_robot_control)/launch/URWithSnakeAMBF.launch"/> 
+
+  <node pkg="rqt_image_view" type="rqt_image_view" name="image_view" args="/snake_imager/image"/>
+
+  <!-- <arg name="node_start_delay" default="5.0" />  
+  <node name="listener" pkg="roscpp_tutorials" type="listener" /> -->
+
+  <!-- <node pkg="spine_python" type="ambf_highlevel_necrosis_script.py" name="ambf_highlevel_necrosis_script" 
+    args="-c $(find spine_robot_control)/config/sim_ur5/points.txt -s $(find spine_robot_control)/config/sim_ur5/points_straight.txt"
+    launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " />    This delays the high-level script for a bit to give everything a chance to start up -->
+
+</launch>

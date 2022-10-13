@@ -82,8 +82,8 @@ private:
 
     cTransform T_i; // Input device transform
     cVector3d V_i; // Input device linear velocity
-
-    double m_ambf_scale_to_mm;
+    double m_to_ambf_unit;
+    double mm_to_ambf_unit;
 
     bool m_overrideDrillControl = false;
 
