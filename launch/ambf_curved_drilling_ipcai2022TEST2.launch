@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="config_dir" default="/config/sim_ur5/"/>
+    <arg name="path_to_main_dir" default="$(find spine_robot_control)"/>
+    <arg name="constraint_config"/>
+    <arg name="trace_path"/>
 
-  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_with_CM_plugin" type="curved_drilling_example.sh"
-      output="screen"/>
+  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_with_CM_plugin" type="curved_drilling_exampleTEST.sh"
+      output="screen" args="$(arg trace_path)"/>
 
   <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_ros_ur5" type="ur5_ambf.py" output="screen"/> 
 
@@ -12,13 +16,16 @@
 
   <include file="$(find snake_estimator)/launch/snake_estimator_kalman.launch"/> 
   
-  <include file="$(find spine_robot_control)/launch/URWithSnakeAMBF.launch"/> 
+    <node pkg="spine_robot_control" type="AMBFURWithSnake" name="AMBFURWithSnake" output="screen" args=
+        "-c $(arg config_dir) 
+        -m $(arg path_to_main_dir)
+        -x $(arg constraint_config)"/>
 
   <node pkg="rqt_image_view" type="rqt_image_view" name="image_view" args="/snake_imager/image"/>
 
-  <arg name="node_start_delay" default="5.0" />  
+  <!-- <arg name="node_start_delay" default="5.0" />  
   <node pkg="spine_python" type="ambf_highlevel_ipcai2022_script.py" name="ambf_highlevel_ipcai2022_script"  output="screen"
     args="-t $(find spine_robot_control)/config/sim_ur5/points.txt -o /home/henry/exps/20221102_ipcai22_firstpass -e 0 -s 0"
-    launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " />    <!-- This delays the high-level script for a bit to give everything a chance to start up -->
+    launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " />    This delays the high-level script for a bit to give everything a chance to start up -->
 
 </launch>

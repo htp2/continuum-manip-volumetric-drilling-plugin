@@ -14,4 +14,4 @@
     --name_body_to_trace seg27 \
     --anatomy_volume_name spine_seg \
     --csv_filename_static_traces $CATKIN_WS/src/continuum-manip-volumetric-drilling-plugin/resources/axis.csv \
-    --vary_drilling_behavior 0
+    --vary_drilling_behavior 1

@@ -19,7 +19,8 @@ JOINT wrist_3_link_to_snake_stick:
   parent pivot:
     x: 0.0
     # y: 0.0823   # this is puts connection right at the end effector of ur5
-    y: 0.0923   # additional offset
+    y: 0.0923   # additional offset 0.01
+    # y: 0.1123     # additional offset 0.03
     z: 0.0
   child axis:
     x: 0.0

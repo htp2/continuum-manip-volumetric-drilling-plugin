@@ -221,6 +221,11 @@ private:
     double m_force_thresh = 1e-4;
     bool m_debug_print = false;
     bool m_vary_drilling_behavior = false;
+    double cable_err_denom = 0.0;
+    
+    std::mt19937 rand_eng;
+    std::uniform_real_distribution<> unif_dist;
+
     bool fillGoalPointsFromCSV(const std::string& filename, std::vector<cVector3d>& trace_points);
 
     void checkForSettingsUpdate(void);

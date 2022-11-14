@@ -226,6 +226,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // Start experimental behavior 
     if (m_vary_drilling_behavior)
     {
+        std::cout << "Starting experimental behavior" << std::endl;
         std::vector<std::vector<std::vector<double>>> forces(voxelCount[0], std::vector<std::vector<double>>(voxelCount[1], std::vector<double>(voxelCount[2], m_force_thresh)));
         for (size_t i = 0; i < voxelCount[0]; i++)
         {
@@ -240,12 +241,21 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         m_force_to_drill_voxel = forces;
 
         // remove from ball around entry point
-        double entry_burr_size = 8.0 * mm_to_ambf_unit;
+        double entry_burr_size = 9.0 * mm_to_ambf_unit;
         std::vector<cVector3d> trace_points;
         fillGoalPointsFromCSV(debug_traj_file, trace_points);
+        //print trace_points.size()
+        std::cout << "trace_points.size()" << trace_points.size() << std::endl;
+        
+        // print trace points
+        for (size_t i = 0; i < trace_points.size(); i++)
+        {
+            std::cout << "Trace point " << i << " = " << trace_points[i] << std::endl;
+        }
         auto T_inv = m_volumeObject->getLocalTransform();
         T_inv.invert();
-        for (size_t v = 0; v < 40; v++)
+        T_inv.identity();
+        for (size_t v = 0; v < 20; v++)
         {
             auto pt = trace_points[v];
             for (size_t i = 0; i <= 10; i++)
@@ -271,11 +281,19 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
                 }
             }
         }
+        // m_vary_drilling_behavior = false;
+        std::cout<< "Done removing burr" << std::endl;
     }
     // end experimental behavior
 
     // Set up cable pull subscriber
     m_cablePullSub = new CablePullSubscriber("ambf", "volumetric_drilling");
+
+    // Rand num gen
+    std::random_device rd;
+    rand_eng = std::mt19937(rd());
+    unif_dist = std::uniform_real_distribution<>(0, 1);
+    
     return 1;
 }
 
@@ -764,7 +782,7 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         else if (a_key == GLFW_KEY_N)
         {
             cout << "INFO! RESETTING THE VOLUME" << endl;
-            m_volumeObject->reset();
+            // m_volumeObject->reset(); //TODO REENABLE
         }
     }
     else
@@ -1064,10 +1082,36 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
 
     m_cable_pull_velocity = cable_pull_mag_change / dt;
     m_cable_pull_mag += cable_pull_mag_change;
+    double cable_pull_force_val = m_cable_pull_mag;
+
+    // Add 'noise' to cable pull commands (simulates cable friction, etc.)
+    bool m_cable_pull_noise = false;
+    if (m_cable_pull_noise)
+    {
+    double cable_err_mult_min = 0.0;
+    double cable_err_mult_max = 1000.0;
+
+    double cable_err_denom_min = 0.0;
+    double cable_err_denom_max = 1000.0;
+
+    cable_err_denom += ( (cable_err_mult_min + unif_dist(rand_eng) * (cable_err_mult_max - cable_err_mult_min)) * cable_pull_mag_change );  
+
+    cable_err_denom = std::min(cable_err_denom, cable_err_denom_max);
+    cable_err_denom = std::max(cable_err_denom, cable_err_denom_min);
+
+    cable_pull_force_val = m_cable_pull_mag / (1.0 + cable_err_denom * m_cable_pull_mag * m_cable_pull_mag);
+    // std::cout << "cable_err_denom: " << cable_err_denom << std::endl;
+    // std::cout << "cable_pull_force_val: " << cable_pull_force_val << std::endl;
+    // std::cout << "m_cable_pull_mag: " << m_cable_pull_mag << std::endl;
+    // std::cout << "cable_pull_force_val - m_cable_pull_mag: " << cable_pull_force_val - m_cable_pull_mag << std::endl;
+
+
+    }
+
 
     m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
-    last_seg_ptr->applyTorque(10.0 * m_cable_pull_mag * last_seg_ptr->getLocalRot().getCol2());
+    last_seg_ptr->applyTorque(10.0 * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2());
     // last_seg_ptr->applyForce(cVector3d(-10.0*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol1()), last_seg_ptr->getLocalRot()*cVector3d( 2 *mm_to_ambf_unit,0.0,0.0) );
 }
 
@@ -1247,7 +1291,7 @@ void afVolmetricDrillingPlugin::checkForSettingsUpdate(void)
     }
     if(m_settingsPub->resetVoxels_changed)
     {
-        m_volumeObject->reset();
+        // m_volumeObject->reset();// TODO: reenable this
         m_settingsPub->resetVoxels_changed = false;
     }
     if(m_settingsPub->setBurrOn_changed)

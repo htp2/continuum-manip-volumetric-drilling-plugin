@@ -12,10 +12,11 @@ from scipy.spatial.transform import Rotation
 
 
 class UR5_AMBF:
-    def __init__(self, client, name):
+    def __init__(self, client, name, use_simul_pos_for_vel=False):
         self.client = client
         self.name = name
         self.base = self.client.get_obj_handle(name + '/base_link')
+        self.use_simul_pos_for_vel = use_simul_pos_for_vel
         time.sleep(0.5)
         self.rate_hz = 120
         self.rate = rospy.Rate(self.rate_hz)
@@ -92,6 +93,15 @@ class UR5_AMBF:
         self.base.set_joint_pos(5, jp[5])
 
     def servo_jv(self, jv):
+        if self.use_simul_pos_for_vel:
+            # js = self.measured_js()
+            # for i in range(6):
+                # print("p: ", js[i])
+                # print("v: ", jv[i])
+                # print("jp: ", js[i] + jv[i]/self.rate_hz)
+            jp = [p + v/self.rate_hz for p,v in zip(self.measured_js(),jv)]
+            self.servo_jp(jp)
+            return
         if (not self.is_present()):
             return
         self.base.set_joint_vel(0, jv[0])

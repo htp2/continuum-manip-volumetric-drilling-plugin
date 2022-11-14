@@ -68,7 +68,7 @@ BODY forearm_link:
   name: forearm_link
   mesh: forearm_link.OBJ
   collision mesh type: CONCAVE_MESH
-  mass: 20.275
+  mass: 200.275
   collision margin: 0.001
   scale: 10.0
   location:
@@ -107,7 +107,7 @@ BODY shoulder_link:
   name: shoulder_link
   mesh: shoulder_link.OBJ
   collision mesh type: CONCAVE_MESH
-  mass: 30.7
+  mass: 300.7
   collision margin: 0.001
   scale: 10.0
   location:
@@ -146,7 +146,7 @@ BODY upper_arm_link:
   name: upper_arm_link
   mesh: upper_arm_link.OBJ
   collision mesh type: CONCAVE_MESH
-  mass: 80.393
+  mass: 800.393
   collision margin: 0.001
   scale: 10.0
   location:
@@ -185,7 +185,7 @@ BODY wrist_1_link:
   name: wrist_1_link
   mesh: wrist_1_link.OBJ
   collision mesh type: CONCAVE_MESH
-  mass: 10.219
+  mass: 100.219
   collision margin: 0.001
   scale: 10.0
   location:
@@ -195,7 +195,7 @@ BODY wrist_1_link:
       z: 0.08916
     orientation:
       r: -0.0
-      p: 3.14159
+      p: 6.0
       y: -0.0
   inertial offset:
     position:
@@ -224,7 +224,7 @@ BODY wrist_2_link:
   name: wrist_2_link
   mesh: wrist_2_link.OBJ
   collision mesh type: CONCAVE_MESH
-  mass: 10.219
+  mass: 100.219
   collision margin: 0.001
   scale: 10.0
   location:
@@ -234,7 +234,7 @@ BODY wrist_2_link:
       z: 0.08916
     orientation:
       r: -0.0
-      p: 3.14159
+      p: 6.0
       y: -0.0
   inertial offset:
     position:
@@ -263,7 +263,7 @@ BODY wrist_3_link:
   name: wrist_3_link
   mesh: wrist_3_link.OBJ
   collision mesh type: CONCAVE_MESH
-  mass: 1.879
+  mass: 10.879
   collision margin: 0.001
   scale: 10.0
   location:
@@ -273,7 +273,7 @@ BODY wrist_3_link:
       z: -0.00549
     orientation:
       r: -0.0
-      p: 3.14159
+      p: 6.0
       y: -0.0
   inertial offset:
     position:
@@ -319,8 +319,8 @@ JOINT elbow_joint:
     y: 0.0
     z: 0.0
   joint limits:
-    high: 3.14159
-    low: -3.14159
+    high: 6.0
+    low: -6.0
   enable feedback: false
   passive: false
   controller:
@@ -352,8 +352,8 @@ JOINT shoulder_lift_joint:
     y: 0.0
     z: 0.0
   joint limits:
-    high: 3.14159
-    low: -3.14159
+    high: 6.0
+    low: -6.0
   enable feedback: false
   passive: false
   controller:
@@ -386,8 +386,8 @@ JOINT shoulder_pan_joint:
     y: 0.0
     z: 0.0
   joint limits:
-    high: 3.14159
-    low: -3.14159
+    high: 6.0
+    low: -6.0
   enable feedback: false
   passive: false
   controller:
@@ -419,8 +419,8 @@ JOINT wrist_1_joint:
     y: 0.0
     z: -0.0
   joint limits:
-    high: 3.14159
-    low: -3.14159
+    high: 6.0
+    low: -6.0
   enable feedback: false
   passive: false
   controller:
@@ -453,8 +453,8 @@ JOINT wrist_2_joint:
     y: 0.0
     z: -0.0
   joint limits:
-    high: 3.14159
-    low: -3.14159
+    high: 6.0
+    low: -6.0
   enable feedback: false
   passive: false
   controller:
@@ -486,8 +486,8 @@ JOINT wrist_3_joint:
     y: 0.0
     z: 0.0
   joint limits:
-    high: 3.14159
-    low: -3.14159
+    high: 6.0
+    low: -6.0
   enable feedback: false
   passive: false
   controller:
