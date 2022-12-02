@@ -42,6 +42,9 @@ project(ambf_cm_simulator)
 
 set(CMAKE_CXX_STANDARD 11)
 
+add_subdirectory(plugins/continuum_manip_plugin)
+add_subdirectory(plugins/continuum_manip_volumetric_drilling_plugin)
+
 find_package(catkin COMPONENTS ambf_msgs ambf_client volumetric_drilling_msgs)
 
 catkin_package(
