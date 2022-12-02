@@ -27,7 +27,7 @@
 
   <arg name="node_start_delay" default="5.0" />  
   <node pkg="spine_python" type="ambf_highlevel_ipcai2022_script.py" name="ambf_highlevel_ipcai2022_script"  output="screen"
-    args="-t $(find spine_robot_control)/config/sim_ur5/points.txt -o /home/henry/exps/20221102_ipcai22_firstpass -e 0 -s 0 --fluoro"
+    args="-t $(find spine_robot_control)/config/sim_ur5/points.txt -e 0 -s 0 --fluoro"
     launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " />    <!-- This delays the high-level script for a bit to give everything a chance to start up -->
 
 </launch>

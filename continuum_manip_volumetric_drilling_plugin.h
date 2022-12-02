@@ -223,6 +223,9 @@ private:
     bool m_vary_drilling_behavior = false;
     double cable_err_denom = 0.0;
     
+    bool m_enableVolumeSmoothing = true;
+    int m_volumeSmoothingLevel = 3;
+    
     std::mt19937 rand_eng;
     std::uniform_real_distribution<> unif_dist;
 

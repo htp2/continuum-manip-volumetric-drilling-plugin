@@ -73,6 +73,8 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     cmd_opts.add_options()("body_base_attached_to_name", p_opt::value<std::string>()->default_value(""), "Name of body given in yaml. Default empty");
     cmd_opts.add_options()("vary_drilling_behavior", p_opt::value<std::string>()->default_value("0"), ". Turn on [experimental] features to vary drilling behavior Default false");
     cmd_opts.add_options()("debug_traj_file", p_opt::value<std::string>()->default_value(""), ". Input needed for [experimental] features Default empty");
+    cmd_opts.add_options()("vm", p_opt::value<string>()->default_value("00ShinyWhite.jpg"), "Volume's Matcap Filename (Should be placed in the ./resources/matcap/ folder)");
+    // cmd_opts.add_options()("dm", p_opt::value<string>()->default_value("dark_metal_brushed.jpg"), "Drill's Matcap Filename (Should be placed in ./resources/matcap/ folder)");
 
     p_opt::variables_map var_map;
     p_opt::store(p_opt::command_line_parser(argc, argv).options(cmd_opts).allow_unregistered().run(), var_map);
@@ -85,7 +87,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     }
 
     string file_path = __FILE__;
-    string cur_path = file_path.substr(0, file_path.rfind("/"));
+    string current_filepath = file_path.substr(0, file_path.rfind("/"));
 
     std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
     std::string base_body_name = var_map["base_body_name"].as<std::string>();
@@ -94,6 +96,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     std::string vary_drilling_behavior = var_map["vary_drilling_behavior"].as<std::string>();
     m_vary_drilling_behavior = boost::lexical_cast<bool>(vary_drilling_behavior);
     std::string debug_traj_file = var_map["debug_traj_file"].as<std::string>();
+    std::string volume_matcap = var_map["vm"].as<std::string>();
 
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
     m_worldPtr = a_afWorld;
@@ -177,8 +180,20 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // m_voxelObj->m_material->setStaticFriction(0.0); //
     // m_voxelObj->m_material->setStickSlipStiffness(0.001); //
     // m_voxelObj->m_material->setStickSlipForceMax(0.00001); //
-
     m_voxelObj->setUseMaterial(true);
+
+    // setup matcap for volume
+    string volumeMatcapFilepath = current_filepath + "/../../resources/matcap/" + volume_matcap;
+    cTexture2dPtr volMatCap = cTexture2d::create();
+    if(volMatCap->loadFromFile(volumeMatcapFilepath)){
+        m_volumeObject->getInternalVolume()->m_aoTexture = volMatCap;
+        m_volumeObject->getInternalVolume()->m_aoTexture->setTextureUnit(GL_TEXTURE5);
+        cerr << "SUCCESFULLY LOADED VOLUME'S MATCAP TEXTURE" << endl;
+    }
+    else{
+        cerr << "FAILED TO LOAD VOLUME'S MATCAP TEXTURE" << endl;
+    }
+
     // create a font
     cFontPtr font = NEW_CFONTCALIBRI40();
     m_cablePullMagText = new cLabel(font);
@@ -311,6 +326,8 @@ void afVolmetricDrillingPlugin::graphicsUpdate()
         ((cTexture3d *)m_voxelObj->m_texture.get())->markForPartialUpdate(min, max);
         m_flagMarkVolumeForUpdate = false;
     }
+    m_volumeObject->getShaderProgram()->setUniformi("uMatcapMap", C_TU_AO);
+    m_volumeObject->getShaderProgram()->setUniformi("shadowMap", C_TU_SHADOWMAP);
 }
 
 void afVolmetricDrillingPlugin::physicsUpdate(double dt)
@@ -760,9 +777,16 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
             setCableControlMode(!m_cableKeyboardControl);
         }
 
-        else if (a_key == GLFW_KEY_E)
-        {
-            setPhysicsPaused(!m_worldPtr->isPhysicsPaused());
+        // else if (a_key == GLFW_KEY_E)
+        // {
+        //     setPhysicsPaused(!m_worldPtr->isPhysicsPaused());
+        // }
+
+        else if (a_key == GLFW_KEY_E){
+            static int enableShadow = 0;
+            enableShadow = ! enableShadow;
+            cerr << "INFO! TOGGLING SHADOW MAP " << enableShadow << endl;
+            m_volumeObject->getShaderProgram()->setUniformi("uEnableShadow", enableShadow);
         }
 
         // option - polygonize model and save to file
@@ -783,6 +807,26 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         {
             cout << "INFO! RESETTING THE VOLUME" << endl;
             // m_volumeObject->reset(); //TODO REENABLE
+        }
+    }
+    else if(a_mods == GLFW_MOD_ALT){
+        // Toggle Volume Smoothing
+        if (a_key == GLFW_KEY_S){
+            m_enableVolumeSmoothing = !m_enableVolumeSmoothing;
+            cerr << "INFO! ENABLE VOLUME SMOOTHING: " << m_enableVolumeSmoothing << endl;
+            m_volumeObject->getShaderProgram()->setUniformi("uSmoothVolume", m_enableVolumeSmoothing);
+            m_volumeObject->getShaderProgram()->setUniformi("uSmoothingLevel", m_volumeSmoothingLevel);
+
+        }
+        else if(a_key == GLFW_KEY_UP){
+            m_volumeSmoothingLevel = cClamp(m_volumeSmoothingLevel+1, 1, 10);
+            cerr << "INFO! SETTING SMOOTHING LEVEL " << m_volumeSmoothingLevel << endl;
+            m_volumeObject->getShaderProgram()->setUniformi("uSmoothingLevel", m_volumeSmoothingLevel);
+        }
+        else if(a_key == GLFW_KEY_DOWN){
+            m_volumeSmoothingLevel = cClamp(m_volumeSmoothingLevel-1, 1, 10);
+            cerr << "INFO! SETTING SMOOTHING LEVEL " << m_volumeSmoothingLevel << endl;
+            m_volumeObject->getShaderProgram()->setUniformi("uSmoothingLevel", m_volumeSmoothingLevel);
         }
     }
     else

@@ -10,6 +10,7 @@ uniform float uResolution;
 varying vec4 vPosition;
 uniform bool uSmoothVolume;
 uniform int uSmoothingLevel;
+uniform sampler2D uMatcapMap;
 uniform int uEnableShadow;
 
 vec3 dx = vec3(uGradientDelta.x, 0.0, 0.0);
@@ -151,12 +152,20 @@ void main(void)
             vec3 position = vPosition.xyz + (t - dt * t_step) * raydir;
             vec3 normal = -normalize(nabla);
             vec3 view = -raydir;
-            vec3 colour = shade(position, view, normal) * texture3D(uVolume, tcr).rgb / uIsosurface;
-            sum = vec4(colour, 1.0);
 
-            vec3 lp = gl_LightSource[0].spotDirection;
+            vec3 lp = vec3(gl_LightSource[0].spotDirection);
             float bias = max(0.01 * (1.0 - dot(normal, lp)), 0.001);
             dpos.xyz = vPosition.xyz + (t - bias - dt * t_step) * raydir;
+
+            // vec3 colour = shade(position, view, normal) * texture3D(uVolume, tcr).rgb / uIsosurface;
+            vec3 e = normalize(vec3(gl_ModelViewMatrix * vec4(view, 1.0)));
+            vec3 n = normalize(gl_NormalMatrix * nabla);
+            vec3 r = reflect(e, n);
+            float m = 2. * sqrt( pow( r.x, 2. ) + pow( r.y, 2. ) + pow( r.z + 1., 2. ) );
+            vec2 vN = r.xy / m + .5;
+            vec3 matcap = texture2D(uMatcapMap, vN).rgb;
+            vec3 colour = matcap * texture3D(uVolume, tcr).rgb / uIsosurface;
+            sum = vec4(colour, 1.0);
 
             // calculate fragment depth
             vec4 clip = gl_ModelViewProjectionMatrix * vec4(position, 1.0);
@@ -181,5 +190,4 @@ void main(void)
     else{
       gl_FragColor = sum;
     }
-
 }
