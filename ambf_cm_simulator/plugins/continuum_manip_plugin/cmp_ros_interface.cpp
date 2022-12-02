@@ -1,4 +1,4 @@
-#include "cable_pull_subscriber.h"
+#include "cmp_ros_interface.h"
 #include <ambf_server/RosComBase.h>
 #include <sensor_msgs/JointState.h>
 
