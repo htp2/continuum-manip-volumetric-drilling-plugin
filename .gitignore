@@ -4,8 +4,5 @@
 build/
 .idea/
 *.vscode/**
-
-
 **/output/**
-
 *.pyc

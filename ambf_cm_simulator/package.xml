@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>continuum_manip_volumetric_drilling_plugin</name>
+  <version>0.0.0</version>
+  <description>AMBF plugin for volumetric drilling using continuum manipulator</description>
+
+  <maintainer email="henry.phalen@jhu.edu">Henry Phalen</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>ambf_msgs</build_depend>
+  <build_depend>volumetric_drilling_msgs</build_depend>
+  <build_depend>ambf_client</build_depend>
+
+  <build_export_depend>ambf_msgs</build_export_depend>
+  <build_export_depend>volumetric_drilling_msgs</build_export_depend>
+  <build_export_depend>ambf_client</build_export_depend>
+
+  <exec_depend>ambf_msgs</exec_depend>
+  <exec_depend>volumetric_drilling_msgs</exec_depend>
+  <exec_depend>ambf_client</exec_depend>
+
+  <export>
+  </export>
+
+</package>
