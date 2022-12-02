@@ -5,7 +5,7 @@ build/
 .idea/
 *.vscode/**
 
-*/volumes/**
+
 **/output/**
 
 *.pyc
