@@ -1,5 +1,5 @@
-#ifndef CABLE_PULL_SUBSCRIBER_H
-#define CABLE_PULL_SUBSCRIBER_H
+#ifndef CMP_ROS_INTERFACE_H
+#define CMP_ROS_INTERFACE_H
 
 #include "ros/ros.h"
 #include <string>
@@ -9,10 +9,10 @@
 
 enum cable_pull_command_type {POSITION, VELOCITY};
 
-class CablePullSubscriber{
+class CMPRosInterface{
 public:
-    CablePullSubscriber(std::string a_namespace, std::string a_plugin);
-    ~CablePullSubscriber();
+    CMPRosInterface(std::string a_namespace, std::string a_plugin);
+    ~CMPRosInterface();
     void init(std::string a_namespace, std::string a_plugin);
     ros::NodeHandle* m_rosNode;
     double cable_pull_position_target;
@@ -32,4 +32,4 @@ private:
 
 };
 
-#endif // CABLE_PULL_SUBSCRIBER_H
+#endif // CMP_ROS_INTERFACE_H

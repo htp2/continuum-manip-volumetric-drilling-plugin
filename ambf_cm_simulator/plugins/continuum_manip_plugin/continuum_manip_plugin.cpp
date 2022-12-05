@@ -46,8 +46,8 @@
 */
 //==============================================================================
 
-#include "continuum_manip_volumetric_drilling_plugin.h"
-#include "cmvd_settings_rossub.h"
+#include "continuum_manip_plugin.h"
+#include "cmp_ros_interface.h"
 
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -302,7 +302,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     // end experimental behavior
 
     // Set up cable pull subscriber
-    m_cablePullSub = new CablePullSubscriber("ambf", "volumetric_drilling");
+    m_cablePullSub = new CMPRosInterface("ambf", "volumetric_drilling");
 
     // Rand num gen
     std::random_device rd;
