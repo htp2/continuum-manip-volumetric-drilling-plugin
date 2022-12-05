@@ -325,15 +325,17 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
     {
         T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
     }
-    else if (m_hapticDevice->isDeviceAvailable())
-    {
-        m_hapticDevice->getTransform(T_i);
-        m_hapticDevice->getLinearVelocity(V_i);
-        m_hapticDevice->getUserSwitch(0, clutch);
-        V_i = m_mainCamera->getLocalRot() * (V_i * !clutch / m_shaftToolCursorList[0]->getWorkspaceScaleFactor());
-        T_contmanip_base.setLocalPos(T_contmanip_base.getLocalPos() + V_i);
-        T_contmanip_base.setLocalRot(m_mainCamera->getLocalRot() * T_i.getLocalRot());
-    }
+    std::cout << "override drill control: " << getOverrideDrillControl() << std::endl;
+
+    // else if (m_hapticDevice->isDeviceAvailable())
+    // {
+    //     m_hapticDevice->getTransform(T_i);
+    //     m_hapticDevice->getLinearVelocity(V_i);
+    //     m_hapticDevice->getUserSwitch(0, clutch);
+    //     V_i = m_mainCamera->getLocalRot() * (V_i * !clutch / m_shaftToolCursorList[0]->getWorkspaceScaleFactor());
+    //     T_contmanip_base.setLocalPos(T_contmanip_base.getLocalPos() + V_i);
+    //     T_contmanip_base.setLocalRot(m_mainCamera->getLocalRot() * T_i.getLocalRot());
+    // }
 
     toolCursorsPosUpdate(T_contmanip_base);
 
@@ -415,95 +417,95 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
 
     applyCablePull(dt);
 
-    /////////////////////////////////////////////////////////////////////////
-    // MANIPULATION
-    /////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////
+    // // MANIPULATION
+    // /////////////////////////////////////////////////////////////////////////
 
-    // compute transformation from world to tool (haptic device)
-    cToolCursor *shaft_cursor = m_shaftToolCursorList.front();
+    // // compute transformation from world to tool (haptic device)
+    // cToolCursor *shaft_cursor = m_shaftToolCursorList.front();
 
-    cTransform world_T_tool = shaft_cursor->getDeviceLocalTransform();
-    // std::cout << "WORLD_T_TOOL: " << world_T_tool.getLocalPos() << std::endl;
-    // get status of user switch
-    bool button = shaft_cursor->getUserSwitch(1);
-    //
-    // STATE 1:
-    // Idle mode - user presses the user switch
-    //
-    if ((m_controlMode == HAPTIC_IDLE) && (button == true))
-    {
-        // check if at least one contact has occurred
-        if (shaft_cursor->m_hapticPoint->getNumCollisionEvents() > 0)
-        {
-            // get contact event
-            cCollisionEvent *collisionEvent = shaft_cursor->m_hapticPoint->getCollisionEvent(0);
+    // cTransform world_T_tool = shaft_cursor->getDeviceLocalTransform();
+    // // std::cout << "WORLD_T_TOOL: " << world_T_tool.getLocalPos() << std::endl;
+    // // get status of user switch
+    // bool button = shaft_cursor->getUserSwitch(1);
+    // //
+    // // STATE 1:
+    // // Idle mode - user presses the user switch
+    // //
+    // if ((m_controlMode == HAPTIC_IDLE) && (button == true))
+    // {
+    //     // check if at least one contact has occurred
+    //     if (shaft_cursor->m_hapticPoint->getNumCollisionEvents() > 0)
+    //     {
+    //         // get contact event
+    //         cCollisionEvent *collisionEvent = shaft_cursor->m_hapticPoint->getCollisionEvent(0);
 
-            // get object from contact event
-            m_selectedObject = collisionEvent->m_object;
-        }
-        else
-        {
-            m_selectedObject = m_voxelObj;
-        }
+    //         // get object from contact event
+    //         m_selectedObject = collisionEvent->m_object;
+    //     }
+    //     else
+    //     {
+    //         m_selectedObject = m_voxelObj;
+    //     }
 
-        // get transformation from object
-        cTransform world_T_object = m_selectedObject->getLocalTransform();
+    //     // get transformation from object
+    //     cTransform world_T_object = m_selectedObject->getLocalTransform();
 
-        // compute inverse transformation from contact point to object
-        cTransform tool_T_world = world_T_tool;
-        tool_T_world.invert();
+    //     // compute inverse transformation from contact point to object
+    //     cTransform tool_T_world = world_T_tool;
+    //     tool_T_world.invert();
 
-        // store current transformation tool
-        m_tool_T_object = tool_T_world * world_T_object;
+    //     // store current transformation tool
+    //     m_tool_T_object = tool_T_world * world_T_object;
 
-        // update state
-        m_controlMode = HAPTIC_SELECTION;
-    }
+    //     // update state
+    //     m_controlMode = HAPTIC_SELECTION;
+    // }
 
-    //
-    // STATE 2:
-    // Selection mode - operator maintains user switch enabled and moves object
-    //
-    else if ((m_controlMode == HAPTIC_SELECTION) && (button == true))
-    {
-        // compute new transformation of object in global coordinates
-        cTransform world_T_object = world_T_tool * m_tool_T_object;
+    // //
+    // // STATE 2:
+    // // Selection mode - operator maintains user switch enabled and moves object
+    // //
+    // else if ((m_controlMode == HAPTIC_SELECTION) && (button == true))
+    // {
+    //     // compute new transformation of object in global coordinates
+    //     cTransform world_T_object = world_T_tool * m_tool_T_object;
 
-        // compute new transformation of object in local coordinates
-        cTransform parent_T_world = m_selectedObject->getParent()->getLocalTransform();
-        parent_T_world.invert();
-        cTransform parent_T_object = parent_T_world * world_T_object;
+    //     // compute new transformation of object in local coordinates
+    //     cTransform parent_T_world = m_selectedObject->getParent()->getLocalTransform();
+    //     parent_T_world.invert();
+    //     cTransform parent_T_object = parent_T_world * world_T_object;
 
-        // assign new local transformation to object
-        if (m_selectedObject == m_voxelObj)
-        {
-            m_volumeObject->setLocalTransform(parent_T_object);
-        }
+    //     // assign new local transformation to object
+    //     if (m_selectedObject == m_voxelObj)
+    //     {
+    //         m_volumeObject->setLocalTransform(parent_T_object);
+    //     }
 
-        // set zero forces when manipulating objects
-        shaft_cursor->setDeviceLocalForce(0.0, 0.0, 0.0);
+    //     // set zero forces when manipulating objects
+    //     shaft_cursor->setDeviceLocalForce(0.0, 0.0, 0.0);
 
-        shaft_cursor->initialize();
-    }
+    //     shaft_cursor->initialize();
+    // }
 
-    //
-    // STATE 3:
-    // Finalize Selection mode - operator releases user switch.
-    //
-    else
-    {
-        m_controlMode = HAPTIC_IDLE;
-    }
+    // //
+    // // STATE 3:
+    // // Finalize Selection mode - operator releases user switch.
+    // //
+    // else
+    // {
+    //     m_controlMode = HAPTIC_IDLE;
+    // }
 
-    /////////////////////////////////////////////////////////////////////////
-    // FINALIZE
-    /////////////////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////////////////
+    // // FINALIZE
+    // /////////////////////////////////////////////////////////////////////////
 
-    // send forces to haptic device
-    if (getOverrideDrillControl() == false)
-    {
-        shaft_cursor->applyToDevice();
-    }
+    // // send forces to haptic device
+    // if (getOverrideDrillControl() == false)
+    // {
+    //     shaft_cursor->applyToDevice();
+    // }
 }
 
 ///
