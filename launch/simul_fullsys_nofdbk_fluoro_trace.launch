@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="config_dir" default="/config/sim_ur5/"/>
+    <arg name="path_to_main_dir" default="$(find spine_robot_control)"/>
+
+    <include file="$(find continuum_manip_volumetric_drilling_plugin)/launch/run_cm_vol_drill_simul.launch">
+        <arg name="ambf_args" value=" \
+          -l 11,15,25,29,30 \
+          --anatomy_volume_name spine_seg \
+          --debug_traj_file $(find continuum_manip_volumetric_drilling_plugin)/resources/axis.csv \
+          --name_body_to_trace seg27 \
+          --csv_filename_static_traces $(find continuum_manip_volumetric_drilling_plugin)/resources/axis.csv \
+          --static_trace_rel_body_name spine_seg \
+          --experimental_behavior 1"/>
+    </include>
+
+  <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_ros_ur5" type="ur5_ambf.py" output="screen"/> 
+
+    <node pkg="continuum_manip_volumetric_drilling_plugin" name="xreg_imager" type="start_xreg_imager_from_roslaunch.sh"
+        args="/home/$(env USER)/snake_registration/simulation/JustinSnakeModel_huatt/ /home/$(env USER)/snake_registration/simulation/output/ /home/$(env USER)/snake_registration/simulation/anatomy/"
+        output="screen"/>
+
+  <include file="$(find snake_estimator)/launch/snake_estimator_kalman.launch"/> 
+  
+    <node pkg="spine_robot_control" type="AMBFURWithSnake" name="AMBFURWithSnake" output="screen" args=
+        "-c $(arg config_dir) 
+        -m $(arg path_to_main_dir)
+        -x /home/henry/bigss/catkin_ws/src/bigss_spine/spine_robot_control/config/ambf_spine/ambf_constraints_config.json" />
+
+  <node pkg="rqt_image_view" type="rqt_image_view" name="image_view" args="/snake_imager/image"/>
+
+  <arg name="node_start_delay" default="5.0" />  
+  <node pkg="spine_python" type="ambf_highlevel_ipcai2022_script.py" name="ambf_highlevel_ipcai2022_script"  output="screen"
+    args="-t $(find spine_robot_control)/config/sim_ur5/points.txt -e 0 -s 0 --no-fluoro"
+    launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " />    <!-- This delays the high-level script for a bit to give everything a chance to start up -->
+
+</launch>

@@ -52,15 +52,13 @@ protected:
     // toggles size of the drill burr
     void changeDrillSize(void);
 
-    bool getOverrideDrillControl(){return m_overrideDrillControl;}
-
-    void setOverrideDrillControl(bool val){m_overrideDrillControl = val;}
-
     void applyCablePull(double dt);
 
     void UpdateCablePullText();
 
     cTransform btTransformTocTransform(const btTransform& in);
+
+    bool cTransformEqual(const cTransform& a, const cTransform& b);
 
     void sliceVolume(int axisIdx, double delta);
 
@@ -74,6 +72,8 @@ protected:
 
     void setPhysicsPaused(bool bool_set);
 
+    void volumeInit(const afWorldPtr a_afWorld);
+
 private:
     cTransform T_contmanip_base; // Drills target pose
     cTransform T_carm; // Carm pose
@@ -85,7 +85,7 @@ private:
     double m_to_ambf_unit;
     double mm_to_ambf_unit;
 
-    bool m_overrideDrillControl = false;
+    bool m_CM_moved_by_other = false;
 
     cVoxelObject* m_voxelObj;
 
@@ -208,6 +208,7 @@ private:
     double m_cable_pull_mag = 0.0;
     double m_cable_pull_velocity = 0.0;
 
+    int m_removalCount = 150;
 
     cVector3d m_maxVolCorner, m_minVolCorner;
     cVector3d m_maxTexCoord, m_minTexCoord;
@@ -220,7 +221,7 @@ private:
     // double m_force_thresh = 5e-6;
     double m_force_thresh = 1e-4;
     bool m_debug_print = false;
-    bool m_vary_drilling_behavior = false;
+    bool m_experimental_behavior = false;
     double cable_err_denom = 0.0;
     
     std::mt19937 rand_eng;
@@ -230,7 +231,13 @@ private:
 
     void checkForSettingsUpdate(void);
 
+    void visualInit(const afWorldPtr a_afWorld);
+
+    void experimentalBehaviorInit(const std::string& debug_traj_file);
+
 };
+
+int init(int argc, char **argv, const afWorldPtr a_afWorld);
 
 
 
