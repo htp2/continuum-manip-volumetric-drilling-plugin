@@ -1743,7 +1743,7 @@ JOINT joint1:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 7840.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint10:
@@ -1774,7 +1774,7 @@ JOINT joint10:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 3610.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint11:
@@ -1805,7 +1805,7 @@ JOINT joint11:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 3240.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint12:
@@ -1836,7 +1836,7 @@ JOINT joint12:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 2890.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint13:
@@ -1867,7 +1867,7 @@ JOINT joint13:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 2560.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint14:
@@ -1898,7 +1898,7 @@ JOINT joint14:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 2250.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint15:
@@ -1929,7 +1929,7 @@ JOINT joint15:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 1960.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint16:
@@ -1960,7 +1960,7 @@ JOINT joint16:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 1690.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint17:
@@ -1991,7 +1991,7 @@ JOINT joint17:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 1440.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint18:
@@ -2022,7 +2022,7 @@ JOINT joint18:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 1210.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint19:
@@ -2053,7 +2053,7 @@ JOINT joint19:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 1000.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint2:
@@ -2084,7 +2084,7 @@ JOINT joint2:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 7290.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint20:
@@ -2115,7 +2115,7 @@ JOINT joint20:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 810.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint21:
@@ -2146,7 +2146,7 @@ JOINT joint21:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 640.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint22:
@@ -2177,7 +2177,7 @@ JOINT joint22:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 490.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint23:
@@ -2208,7 +2208,7 @@ JOINT joint23:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 360.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint24:
@@ -2239,7 +2239,7 @@ JOINT joint24:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 250.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint25:
@@ -2270,7 +2270,7 @@ JOINT joint25:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 160.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint26:
@@ -2301,7 +2301,7 @@ JOINT joint26:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 90.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint27:
@@ -2332,7 +2332,7 @@ JOINT joint27:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 40.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint3:
@@ -2363,7 +2363,7 @@ JOINT joint3:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 6760.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint4:
@@ -2394,7 +2394,7 @@ JOINT joint4:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 6250.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint5:
@@ -2425,7 +2425,7 @@ JOINT joint5:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 5760.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint6:
@@ -2456,7 +2456,7 @@ JOINT joint6:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 5290.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint7:
@@ -2487,7 +2487,7 @@ JOINT joint7:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 4840.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint8:
@@ -2518,7 +2518,7 @@ JOINT joint8:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 4410.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT joint9:
@@ -2549,7 +2549,7 @@ JOINT joint9:
   controller output type: VELOCITY
   type: angular spring
   max motor impulse: 0.05000000074505806
-  stiffness: 4000.0
+  stiffness: 600.0
   equilibrium point: 0.0
   damping: 1.0
 JOINT seg27-Burr:

@@ -168,9 +168,13 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
             m_segmentBodyList[i]->applyForce(100000.0 * m_segmentToolCursorList[i]->getDeviceLocalForce());
         }
         // apply force from burr
-        m_burrBody->applyForce(100000.0 * m_burrToolCursorList[0]->getDeviceLocalForce());
-    }
+        m_burrBody->applyForce(1000000.0 * m_burrToolCursorList[0]->getDeviceLocalForce());
 
+        for (int i = 0; i < m_shaftToolCursorList .size(); i++)
+        {
+            m_contManipBaseRigidBody->applyForceAtPointOnBody(100000.0 * m_shaftToolCursorList[i]->getDeviceLocalForce(), m_shaftToolCursorList[i]->getDeviceLocalPos());
+        }        
+    }
     applyCablePull(dt);
 }
 
@@ -336,9 +340,9 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
 {
     cWorld *chai_world = a_afWorld->getChaiWorld();
     int num_segs = 27;
-    int num_shaft_cursor = 1;
+    int num_shaft_cursor = 6;
     int num_burr_cursor = 1;
-
+    
     for (int i = 1; i <= num_segs; i++)
     {
         m_segmentBodyList.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY seg" + to_string(i)));
@@ -420,9 +424,12 @@ void afVolmetricDrillingPlugin::incrementDeviceRot(cVector3d a_rot)
 ///
 void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose)
 {
-    for (auto &shaft_cursor : m_shaftToolCursorList)
+    for (int i = 0; i < m_shaftToolCursorList.size(); i++)
     {
-        shaft_cursor->setDeviceLocalTransform(a_targetPose);
+        // static cast i to double
+        double offset = static_cast<double>(i) / (m_shaftToolCursorList.size() - 1) * 35.0 * mm_to_ambf_unit;
+        auto T_offset = cTransform(cVector3d(0, offset , 0), cMatrix3d(1, 0, 0, 0, 1, 0, 0, 0, 1));
+        m_shaftToolCursorList[i]->setDeviceLocalTransform(a_targetPose*T_offset);
     }
 
     for (auto &burr_cursor : m_burrToolCursorList)
@@ -524,7 +531,7 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         }
         else if (a_key == GLFW_KEY_RIGHT_BRACKET)
         {
-            toolCursorInit(m_worldPtr);
+            // toolCursorInit(m_worldPtr);
         }
         else if (a_key == GLFW_KEY_EQUAL)
         {
@@ -1074,7 +1081,7 @@ void afVolmetricDrillingPlugin::checkForSettingsUpdate(void)
     }
     if (m_settingsPub->initToolCursors_changed)
     {
-        toolCursorInit(m_worldPtr);
+        // toolCursorInit(m_worldPtr);
         m_settingsPub->initToolCursors_changed = false;
     }
     if (m_settingsPub->resetVoxels_changed)
