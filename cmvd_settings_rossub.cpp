@@ -79,8 +79,8 @@ void CMVDSettingsSub::callback_resetVoxels(std_msgs::Bool msg)
 
 void CMVDSettingsSub::callback_setBurrOn(std_msgs::Bool msg)
 {
-    resetVoxels_changed = true;
-    setBurrOn_changed = msg.data;
+    setBurrOn_changed = true;
+    setBurrOn_last_val = msg.data;
 }
 
 void CMVDSettingsSub::publish_anatomy_pose(chai3d::cTransform transform, double m_to_ambf_unit)

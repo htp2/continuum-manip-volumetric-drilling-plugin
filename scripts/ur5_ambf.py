@@ -284,6 +284,8 @@ if __name__ == "__main__":
 
     while (not rospy.is_shutdown()):
         while (ur5.base.get_num_joints() < 6):
+            if rospy.is_shutdown():
+                quit()
             print("Waiting for ur5 model to load...")
             time.sleep(0.5)
         print("UR5_AMBF loaded")

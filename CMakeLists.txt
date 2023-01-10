@@ -46,7 +46,7 @@ find_package(AMBF)
 find_package(Boost COMPONENTS program_options filesystem)
 
 # add_subdirectory(vdrilling_msgs)
-find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs ambf_client)
+find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs ambf_client rospy)
 
 include_directories(${AMBF_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
@@ -56,8 +56,8 @@ link_directories(${AMBF_LIBRARY_DIRS})
 
 add_definitions(${AMBF_DEFINITIONS})
 
-message("---> LIBS " ${catkin_INCLUDE_DIRS})
-message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
+# message("---> LIBS " ${catkin_INCLUDE_DIRS})
+# message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
 
 add_library(continuum_manip_volumetric_drilling_plugin SHARED 
     continuum_manip_volumetric_drilling_plugin.cpp 
@@ -73,6 +73,8 @@ add_library(continuum_manip_volumetric_drilling_plugin SHARED
 add_dependencies(continuum_manip_volumetric_drilling_plugin ${catkin_EXPORTED_TARGETS})
 target_link_libraries (continuum_manip_volumetric_drilling_plugin ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
 set_property(TARGET continuum_manip_volumetric_drilling_plugin PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
+catkin_python_setup()
 
 catkin_package(
  INCLUDE_DIRS .

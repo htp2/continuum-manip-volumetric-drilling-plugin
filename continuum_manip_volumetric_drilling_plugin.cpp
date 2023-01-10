@@ -1106,38 +1106,82 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
     {
         std::cout << "Starting experimental behavior" << std::endl;
         std::vector<std::vector<std::vector<double>>> forces(m_volumeObject->getVoxelCount().get(0), std::vector<std::vector<double>>(m_volumeObject->getVoxelCount().get(1), std::vector<double>(m_volumeObject->getVoxelCount().get(2), 1.0)));
-        // for (size_t i = 0; i < voxelCount[0]; i++)
-        // {
-        //     for (size_t j = 0; j < voxelCount[1]; j++)
-        //     {
-        //         for (size_t k = 0; k < voxelCount[2]; k++)
-        //         {
-        //             forces[i][j][k] *= static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-        //         }
-        //     }
-        // }
+        // load forces from file /home/henry/snake_registration/simulation/anatomy/CT_HU_masked.csv
+
+        std::string debug_vol_file = "/home/henry/snake_registration/simulation/anatomy/CT_HU_masked.csv";
+        std::ifstream file(debug_vol_file);
+        if (!file)
+        {
+            std::cout << "Error reading: " << debug_vol_file << std::endl;
+            return;
+        }
+
+        // read first line
+        std::string s;
+        if (!std::getline(file, s))
+            return;
+        std::istringstream ss(s);
+        std::vector<std::string> record;
+        while (ss)
+        {
+            std::string s;
+            if (!getline(ss, s, ','))
+                break;
+            record.push_back(s);
+        }
+        // see if first line is m_volumeObject->getVoxelCount().get(0), m_volumeObject->getVoxelCount().get(1), m_volumeObject->getVoxelCount().get(2)
+        if (record.size() != 3)
+        {
+            std::cout << "Error reading: " << debug_vol_file << std::endl;
+            return;
+        }
+        if (std::stoi(record[0]) != m_volumeObject->getVoxelCount().get(0) || std::stoi(record[1]) != m_volumeObject->getVoxelCount().get(1) || std::stoi(record[2]) != m_volumeObject->getVoxelCount().get(2))
+        {
+            std::cout << "Error reading: " << debug_vol_file << std::endl;
+            return;
+        }
+
+        // rest of the file is one number per line which is the force, loop through each dimension of forces
+        for (size_t i = 0; i < m_volumeObject->getVoxelCount().get(0); i++)
+        {
+            for (size_t j = 0; j < m_volumeObject->getVoxelCount().get(1); j++)
+            {
+                for (size_t k = 0; k < m_volumeObject->getVoxelCount().get(2); k++)
+                {
+                    if (!std::getline(file, s))
+                        return;
+                    forces[i][j][k] = std::stod(s)+0.5;
+                }
+            }
+        }
+
+        file.close();
+
         m_force_to_drill_voxel = forces;
 
         // remove from ball around entry point
         double entry_burr_size = 9.0 * mm_to_ambf_unit;
+        double entry_depth = 5.0 * mm_to_ambf_unit;
+        size_t entry_cut_points_size = 60;
+
         std::vector<cVector3d> trace_points;
         fillGoalPointsFromCSV(debug_traj_file, trace_points);
         std::vector<cVector3d> entry_cut_points;
-        // make 10 goal points that move backward from the first point in the trajectory
-        for (size_t i = 35; i>0; i--)
-        {
-            entry_cut_points.push_back(trace_points[0] - i * (trace_points[1] - trace_points[0]));
+        // assume we start with straight path which is parallel to trace_points[1] - trace_points[0]
+        auto entry_direction = cNormalize(trace_points[1] - trace_points[0]);
+        // make entry_cut_points go from -entry_depth mm to entry_depth mm in entry_direction relative to trace_points[0] and it will have length of 60 points
+        for (size_t i = 0; i < entry_cut_points_size; i++)
+        {   
+            entry_cut_points.push_back(trace_points[0] + entry_direction * entry_depth * (2* (static_cast<double>(i)/static_cast<double>(entry_cut_points_size)) - 1));
         }
-        // add first ten trace points to entry_cut_points
-        for (size_t i = 0; i < 35; i++)
-        {
-            entry_cut_points.push_back(trace_points[i]);
-        }
+
+
+
         // print trace_points.size()
         // std::cout << "trace_points.size()" << trace_points.size() << std::endl;
         // std::cout << "entry_cut_points.size()" << entry_cut_points.size() << std::endl;
 
-        // // print trace points
+        // print trace points
         // for (size_t i = 0; i < trace_points.size(); i++)
         // {
         // std::cout << "Trace point " << i << " = " << trace_points[i] << std::endl;
@@ -1147,8 +1191,8 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
         // std::cout << "entry_cut_points " << i << " = " << entry_cut_points[i] << std::endl;
         // }
         auto T_inv = m_volumeObject->getLocalTransform();
-        T_inv.invert();
-        // T_inv.identity();
+        // T_inv.invert();
+        T_inv.identity();
         int resol = 20;
         m_mutexVoxel.acquire();
         for (auto& pt : entry_cut_points)
@@ -1167,6 +1211,7 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
 
                         cVector3d idx;
                         auto new_pt = T_inv * pt + offset;
+                        // std::cout << "actual point " << new_pt << std::endl;
                         m_volumeObject->localPosToVoxelIndex(new_pt, idx);
                         m_voxelObj->m_texture->m_image->setVoxelColor(uint(idx.x()), uint(idx.y()), uint(idx.z()), m_zeroColor);
                         m_volumeUpdate.enclose(cVector3d(uint(idx.x()), uint(idx.y()), uint(idx.z())));

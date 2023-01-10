@@ -21,6 +21,7 @@
   <exec_depend>ambf_msgs</exec_depend>
   <exec_depend>vdrilling_msgs</exec_depend>
   <exec_depend>ambf_client</exec_depend>
+  <exec_depend>rospy</exec_depend>
 
   <export>
   </export>
