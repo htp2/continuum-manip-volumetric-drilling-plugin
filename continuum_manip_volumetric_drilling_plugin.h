@@ -74,6 +74,8 @@ protected:
 
     void volumeInit(const afWorldPtr a_afWorld);
 
+    cVector3d calculate_force_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt);
+
 private:
     cTransform T_contmanip_base; // Drills target pose
     cTransform T_carm; // Carm pose
@@ -208,6 +210,14 @@ private:
     double m_cable_pull_mag = 0.0;
     double m_cable_pull_velocity = 0.0;
 
+    std::vector<cVector3d> e_int;
+    std::vector<cVector3d> e_prev;
+    double m_P = 200.0;
+    double m_I = 0.0;
+    double m_D = 0.0;
+    int f_i = 0;
+    int m_pid = 0;
+
     int m_removalCount = 150;
 
     cVector3d m_maxVolCorner, m_minVolCorner;
@@ -218,8 +228,7 @@ private:
 
     int m_col_count = 0;
     std::vector<std::vector<std::vector<double>>> m_force_to_drill_voxel;
-    // double m_force_thresh = 5e-6;
-    double m_force_thresh = 1e-4;
+    double m_debug_value = 0.0;
     bool m_debug_print = false;
     bool m_experimental_behavior = false;
     double cable_err_denom = 0.0;

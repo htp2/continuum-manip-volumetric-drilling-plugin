@@ -49,6 +49,7 @@
 
 #include "continuum_manip_volumetric_drilling_plugin.h"
 #include "cmvd_settings_rossub.h"
+#include "sequential_impulse_solver.h"
 
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -82,22 +83,25 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
 
     m_worldPtr->getChaiWorld()->computeGlobalPositions(true);
 
-    if(m_CM_moved_by_other) // i.e. if the CM is not being moved by keyboard / device, but driven by a ROS node
+    if (m_CM_moved_by_other) // i.e. if the CM is not being moved by keyboard / device, but driven by a ROS node
     {
         T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform(); // let's find out where it is now
     }
-    else{ // i.e. if the CM is being moved 'manually' using this plugin e.g. by keyboard / device
+    else
+    {                                                                                          // i.e. if the CM is being moved 'manually' using this plugin e.g. by keyboard / device
         if (!cTransformEqual(m_contManipBaseRigidBody->getLocalTransform(), T_contmanip_base)) // update CM for commanded movements
-            {
-                cTransform T_newContManipBase;
-                T_newContManipBase.setLocalPos(T_contmanip_base.getLocalPos());
-                T_newContManipBase.setLocalRot(T_contmanip_base.getLocalRot());
-                T_newContManipBase = T_newContManipBase * btTransformTocTransform(m_contManipBaseRigidBody->getInertialOffsetTransform()); // handle offset due to fact that origin is not at center of body
-                m_contManipBaseRigidBody->setLocalTransform(T_newContManipBase);
-            }
+        {
+            cTransform T_newContManipBase;
+            T_newContManipBase.setLocalPos(T_contmanip_base.getLocalPos());
+            T_newContManipBase.setLocalRot(T_contmanip_base.getLocalRot());
+            T_newContManipBase = T_newContManipBase * btTransformTocTransform(m_contManipBaseRigidBody->getInertialOffsetTransform()); // handle offset due to fact that origin is not at center of body
+            m_contManipBaseRigidBody->setLocalTransform(T_newContManipBase);
         }
-    
+    }
+
     toolCursorsPosUpdate(T_contmanip_base);
+
+    f_i = 0;
 
     if (m_volume_collisions_enabled)
     {
@@ -161,20 +165,22 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
                 cursor->computeInteractionForces();
             }
         }
-
-        // apply forces to segments
-        for (int i = 0; i < m_segmentBodyList.size(); i++)
+        for (int i = 0; i < m_segmentToolCursorList.size(); i++)
         {
-            m_segmentBodyList[i]->applyForce(100000.0 * m_segmentToolCursorList[i]->getDeviceLocalForce());
+            auto seg_force = calculate_force_from_tool_cursor_collision(m_segmentToolCursorList[i], m_segmentBodyList[i], dt);
+            m_segmentBodyList[i]->applyForce(seg_force);
+            // m_segmentBodyList[i]->applyForce(m_debug_value * cVector3d(F(0), F(1), F(2)));
         }
         // apply force from burr
-        m_burrBody->applyForce(1000000.0 * m_burrToolCursorList[0]->getDeviceLocalForce());
-
-        for (int i = 0; i < m_shaftToolCursorList .size(); i++)
-        {
-            m_contManipBaseRigidBody->applyForceAtPointOnBody(100000.0 * m_shaftToolCursorList[i]->getDeviceLocalForce(), m_shaftToolCursorList[i]->getDeviceLocalPos());
-        }        
+        auto burr_force = calculate_force_from_tool_cursor_collision(m_burrToolCursorList[0], m_burrBody, dt);
+        m_burrBody->applyForce(burr_force);
     }
+
+    for (int i = 0; i < m_shaftToolCursorList.size(); i++)
+    {
+        // m_contManipBaseRigidBody->applyForceAtPointOnBody(100000.0 * m_shaftToolCursorList[i]->getDeviceLocalForce(), m_shaftToolCursorList[i]->getDeviceLocalPos());
+    }
+
     applyCablePull(dt);
 }
 
@@ -342,7 +348,7 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
     int num_segs = 27;
     int num_shaft_cursor = 6;
     int num_burr_cursor = 1;
-    
+
     for (int i = 1; i <= num_segs; i++)
     {
         m_segmentBodyList.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY seg" + to_string(i)));
@@ -395,6 +401,15 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
             m_worldPtr->addSceneObjectToWorld(cursor);
         }
     }
+
+    for (auto &cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList})
+    {
+        for (auto &cursor : cursor_list)
+        {
+            e_int.push_back(cVector3d(0.0, 0.0, 0.0));
+            e_prev.push_back(cVector3d(0.0, 0.0, 0.0));
+        }
+    }
 }
 
 ///
@@ -428,8 +443,8 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose)
     {
         // static cast i to double
         double offset = static_cast<double>(i) / (m_shaftToolCursorList.size() - 1) * 35.0 * mm_to_ambf_unit;
-        auto T_offset = cTransform(cVector3d(0, offset , 0), cMatrix3d(1, 0, 0, 0, 1, 0, 0, 0, 1));
-        m_shaftToolCursorList[i]->setDeviceLocalTransform(a_targetPose*T_offset);
+        auto T_offset = cTransform(cVector3d(0, offset, 0), cMatrix3d(1, 0, 0, 0, 1, 0, 0, 0, 1));
+        m_shaftToolCursorList[i]->setDeviceLocalTransform(a_targetPose * T_offset);
     }
 
     for (auto &burr_cursor : m_burrToolCursorList)
@@ -774,14 +789,47 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         }
         else if (a_key == GLFW_KEY_KP_7)
         {
-
-            m_force_thresh -= 0.000001;
-            std::cout << "m_force_thresh: " << m_force_thresh << std::endl;
+            if (m_pid == 0)
+            {
+                m_P -= 0.1;
+                std::cout << "m_P: " << m_P << std::endl;
+            }
+            else if (m_pid == 1)
+            {
+                m_I -= 0.1;
+                std::cout << "m_I: " << m_I << std::endl;
+            }
+            else if (m_pid == 2)
+            {
+                m_D -= 0.1;
+                std::cout << "m_D: " << m_D << std::endl;
+            }
         }
         else if (a_key == GLFW_KEY_KP_9)
         {
-            m_force_thresh += 0.000001;
-            std::cout << "m_force_thresh: " << m_force_thresh << std::endl;
+            if (m_pid == 0)
+            {
+                m_P += 0.1;
+                std::cout << "m_P: " << m_P << std::endl;
+            }
+            else if (m_pid == 1)
+            {
+                m_I += 0.001;
+                std::cout << "m_I: " << m_I << std::endl;
+            }
+            else if (m_pid == 2)
+            {
+                m_D += 0.1;
+                std::cout << "m_D: " << m_D << std::endl;
+            }
+        }
+        else if (a_key == GLFW_KEY_KP_0)
+        {
+            m_pid = m_pid + 1;
+            if (m_pid > 2)
+            {
+                m_pid = 0;
+            }
         }
         else if (a_key == GLFW_KEY_KP_DECIMAL)
         {
@@ -1150,7 +1198,7 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
                 {
                     if (!std::getline(file, s))
                         return;
-                    forces[i][j][k] = std::stod(s)+0.5;
+                    forces[i][j][k] = std::stod(s) + 0.5;
                 }
             }
         }
@@ -1171,32 +1219,16 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
         auto entry_direction = cNormalize(trace_points[1] - trace_points[0]);
         // make entry_cut_points go from -entry_depth mm to entry_depth mm in entry_direction relative to trace_points[0] and it will have length of 60 points
         for (size_t i = 0; i < entry_cut_points_size; i++)
-        {   
-            entry_cut_points.push_back(trace_points[0] + entry_direction * entry_depth * (2* (static_cast<double>(i)/static_cast<double>(entry_cut_points_size)) - 1));
+        {
+            entry_cut_points.push_back(trace_points[0] + entry_direction * entry_depth * (2 * (static_cast<double>(i) / static_cast<double>(entry_cut_points_size)) - 1));
         }
 
-
-
-        // print trace_points.size()
-        // std::cout << "trace_points.size()" << trace_points.size() << std::endl;
-        // std::cout << "entry_cut_points.size()" << entry_cut_points.size() << std::endl;
-
-        // print trace points
-        // for (size_t i = 0; i < trace_points.size(); i++)
-        // {
-        // std::cout << "Trace point " << i << " = " << trace_points[i] << std::endl;
-        // }
-        // for (size_t i = 0; i < entry_cut_points.size(); i++)
-        // {
-        // std::cout << "entry_cut_points " << i << " = " << entry_cut_points[i] << std::endl;
-        // }
         auto T_inv = m_volumeObject->getLocalTransform();
-        // T_inv.invert();
         T_inv.identity();
         int resol = 20;
         m_mutexVoxel.acquire();
-        for (auto& pt : entry_cut_points)
-        {   
+        for (auto &pt : entry_cut_points)
+        {
             for (size_t i = 0; i <= resol; i++)
             {
                 for (size_t j = 0; j <= resol; j++)
@@ -1215,7 +1247,6 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
                         m_volumeObject->localPosToVoxelIndex(new_pt, idx);
                         m_voxelObj->m_texture->m_image->setVoxelColor(uint(idx.x()), uint(idx.y()), uint(idx.z()), m_zeroColor);
                         m_volumeUpdate.enclose(cVector3d(uint(idx.x()), uint(idx.y()), uint(idx.z())));
-
                     }
                 }
             }
@@ -1237,4 +1268,90 @@ bool afVolmetricDrillingPlugin::cTransformEqual(const cTransform &a, const cTran
         }
     }
     return true;
+}
+
+cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt)
+{
+    // ouput force from collision (default zero)
+    cVector3d force_out(0.0, 0.0, 0.0);
+    
+    // voxel collision properties
+    double m2 = 0.;
+    auto dim = m_volumeObject->getDimensions();
+    auto num_voxels = m_volumeObject->getVoxelCount();
+    // get max of dim[i]/num_voxels[i] for i = 0,1,2
+    double r2 = 0.0;
+    for (size_t i = 0; i < 3; i++)
+    {
+        r2 = cMax(r2, dim(i) / num_voxels(i));
+    }
+
+    cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
+    cVector3d orig(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
+    m_voxelObj->m_texture->m_image->getVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_storedColor);
+    bool in_collision = m_storedColor != m_zeroColor;
+    if (in_collision)
+    {
+        auto collision_point = contact->m_globalPos;
+        
+        double m1 = body->getMass();
+        auto r1 = tool_cursor->m_hapticPoint->getRadiusContact();
+        auto cx1 = tool_cursor->m_hapticPoint->getGlobalPosGoal();
+        Eigen::Vector3d x1;
+        x1 << cx1.x(), cx1.y(), cx1.z();
+
+        Eigen::Vector3d x2;
+        x2 << collision_point.x(), collision_point.y(), collision_point.z();
+
+        Eigen::Matrix<double, 12, 1> V;
+        V.setZero();
+        V(0) = body->m_bulletRigidBody->getLinearVelocity().x();
+        V(1) = body->m_bulletRigidBody->getLinearVelocity().y();
+        V(2) = body->m_bulletRigidBody->getLinearVelocity().z();
+        V(3) = body->m_bulletRigidBody->getAngularVelocity().x();
+        V(4) = body->m_bulletRigidBody->getAngularVelocity().y();
+        V(5) = body->m_bulletRigidBody->getAngularVelocity().z();
+
+        Eigen::Matrix<double, 12, 1> F_ext;
+        F_ext.setZero();
+        F_ext(0) = body->m_bulletRigidBody->getTotalForce().x();
+        F_ext(1) = body->m_bulletRigidBody->getTotalForce().y();
+        F_ext(2) = body->m_bulletRigidBody->getTotalForce().z();
+        F_ext(3) = body->m_bulletRigidBody->getTotalTorque().x();
+        F_ext(4) = body->m_bulletRigidBody->getTotalTorque().y();
+        F_ext(5) = body->m_bulletRigidBody->getTotalTorque().z();
+        
+        Eigen::Matrix<double, 12, 1> P;
+        P.setZero();
+
+        bool in_contact = compute_impulse_two_sphere_collision(P, x1, x2, r1, r2, m1, m2, dt, V, F_ext, 0.4);
+        if (in_contact)
+        {
+            auto F = P / dt;
+            force_out = cVector3d(F(0), F(1), F(2));
+            std::cout << "force_out: " << force_out << std::endl;
+        }
+        else
+        {
+            std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
+        }
+
+
+        // if(false)
+        // {auto e = tool_cursor->m_hapticPoint->getGlobalPosProxy() - tool_cursor->m_hapticPoint->getGlobalPosGoal();
+        // e_int[f_i] = e_int[f_i] + e;
+        // auto de = e_prev[f_i] - e;
+
+        // force_out = m_P * e + m_I * e_int[f_i] + m_D * de;
+        // e_prev[f_i] = e;
+        // f_i++;
+        // }
+    }
+    else{
+        // e_int[f_i].zero();
+    }
+
+    force_out = force_out * m_P;
+
+    return force_out;
 }
