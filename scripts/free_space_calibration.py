@@ -60,7 +60,7 @@ class free_space_calibration:
             # Automatically run data collection over range specified below
             if user_in == "A":
                 reps = 1
-                motor_max = 0.26
+                motor_max = 0.20
                 motor_min = -motor_max
                 motor_pos = np.linspace(motor_min,motor_max,101)
 

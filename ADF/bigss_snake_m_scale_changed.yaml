@@ -1,0 +1,2461 @@
+BODY Burr:
+  collision geometry:
+    radius: 0.0325
+  collision groups: []
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: -0.0
+      z: 0.0
+  collision shape: SPHERE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.0
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.0
+      y: -0.0
+      z: 0.0
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.07148
+      z: 0.0
+  mass: 0.09126664996138488
+  mesh: Burr.STL
+  name: Burr
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg1:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.0046
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00046
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.03603
+      z: 0.0
+  mass: 0.0087057569780725
+  mesh: seg1.STL
+  name: seg1
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg10:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01627
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01402
+      y: 0.00417
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.0014
+      y: 0.00042
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.04761
+      z: 0.0
+  mass: 0.008505372061903459
+  mesh: seg10.STL
+  name: seg10
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg11:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.00412
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00041
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.04885
+      z: 0.0
+  mass: 0.007897006237289887
+  mesh: seg11.STL
+  name: seg11
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg12:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01622
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01407
+      y: 0.00407
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00141
+      y: 0.00041
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.05008
+      z: 0.0
+  mass: 0.008299137953459806
+  mesh: seg12.STL
+  name: seg12
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg13:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.00402
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.0004
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.0513
+      z: 0.0
+  mass: 0.007733697255290069
+  mesh: seg13.STL
+  name: seg13
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg14:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01617
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01412
+      y: 0.00398
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00141
+      y: 0.0004
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.05251
+      z: 0.0
+  mass: 0.00809574078718127
+  mesh: seg14.STL
+  name: seg14
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg15:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01499
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.01469
+      y: 0.00393
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00039
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.05371
+      z: 0.0
+  mass: 0.007568819673982373
+  mesh: seg15.STL
+  name: seg15
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg16:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01611
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01417
+      y: 0.00387
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00142
+      y: 0.00039
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.0549
+      z: 0.0
+  mass: 0.007896817142869897
+  mesh: seg16.STL
+  name: seg16
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg17:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.00383
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00038
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.05608
+      z: 0.0
+  mass: 0.007395635250988155
+  mesh: seg17.STL
+  name: seg17
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg18:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01607
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0142
+      y: 0.00378
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00142
+      y: 0.00038
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.05725
+      z: 0.0
+  mass: 0.007690031852760997
+  mesh: seg18.STL
+  name: seg18
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg19:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.00373
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00037
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.05841
+      z: 0.0
+  mass: 0.0072264926940670245
+  mesh: seg19.STL
+  name: seg19
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg2:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01646
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01381
+      y: 0.00456
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00138
+      y: 0.00046
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.03736
+      z: 0.0
+  mass: 0.009328254371717061
+  mesh: seg2.STL
+  name: seg2
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg20:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01603
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01426
+      y: 0.00368
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00143
+      y: 0.00037
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.05956
+      z: 0.0
+  mass: 0.007495423041691137
+  mesh: seg20.STL
+  name: seg20
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg21:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.00365
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00036
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.0607
+      z: 0.0
+  mass: 0.007094099914144116
+  mesh: seg21.STL
+  name: seg21
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg22:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01599
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01429
+      y: 0.00365
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00143
+      y: 0.00036
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.06183
+      z: 0.0
+  mass: 0.0073696446168083
+  mesh: seg22.STL
+  name: seg22
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg23:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.00366
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00037
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.06296
+      z: 0.0
+  mass: 0.0070518565546463805
+  mesh: seg23.STL
+  name: seg23
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg24:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01599
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01429
+      y: 0.00366
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00143
+      y: 0.00037
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.06409
+      z: 0.0
+  mass: 0.0073890424754401935
+  mesh: seg24.STL
+  name: seg24
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg25:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.00365
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00036
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.06522
+      z: 0.0
+  mass: 0.007056690056199493
+  mesh: seg25.STL
+  name: seg25
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg26:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01599
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0143
+      y: 0.00364
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00143
+      y: 0.00036
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.06635
+      z: 0.0
+  mass: 0.007376181667653355
+  mesh: seg26.STL
+  name: seg26
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg27:
+  collision geometry:
+    axis: Y
+    height: 0.0313
+    radius: 0.03
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0003
+      y: 0.00965
+      z: 0.0003
+  collision shape: CYLINDER
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 3.0e-05
+      y: 0.00097
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.06748
+      z: 0.0
+  mass: 0.0209421540872359
+  mesh: seg27.STL
+  name: seg27
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg3:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01499
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.01469
+      y: 0.0045
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00045
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.03867
+      z: 0.0
+  mass: 0.008545459293185398
+  mesh: seg3.STL
+  name: seg3
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg4:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01641
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01388
+      y: 0.00446
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00139
+      y: 0.00045
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.03998
+      z: 0.0
+  mass: 0.009114001280594811
+  mesh: seg4.STL
+  name: seg4
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg5:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01499
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.01469
+      y: 0.00441
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00044
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.04128
+      z: 0.0
+  mass: 0.008384022979833913
+  mesh: seg5.STL
+  name: seg5
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg6:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01637
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01392
+      y: 0.00436
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.00139
+      y: 0.00044
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.04257
+      z: 0.0
+  mass: 0.00891249559191055
+  mesh: seg6.STL
+  name: seg6
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg7:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.015
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.0147
+      y: 0.00431
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00043
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.04385
+      z: 0.0
+  mass: 0.008218640711237412
+  mesh: seg7.STL
+  name: seg7
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg8:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01631
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.01397
+      y: 0.00426
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 0.0014
+      y: 0.00043
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.04512
+      z: 0.0
+  mass: 0.008702869310100225
+  mesh: seg8.STL
+  name: seg8
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY seg9:
+  collision geometry:
+    axis: Z
+    height: 0.06
+    radius: 0.01499
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: -0.01469
+      y: 0.00421
+      z: 0.0003
+  collision shape: CAPSULE
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.3
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: -0.00147
+      y: 0.00042
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.04638
+      z: 0.0
+  mass: 0.008053638388486188
+  mesh: seg9.STL
+  name: seg9
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+BODY snake_stick:
+  collision geometry:
+    axis: Y
+    height: 0.3633
+    radius: 0.03
+  collision groups:
+  - 2
+  collision margin: 0.001
+  collision offset:
+    orientation:
+      p: 0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.00031
+      y: 0.18165
+      z: 0.0003
+  collision shape: CYLINDER
+  color: random
+  damping:
+    angular: 0.9
+    linear: 0.4
+  friction:
+    rolling: 0.0
+    static: 0.5
+  inertial offset:
+    orientation:
+      p: 0
+      r: 0
+      y: 0
+    position:
+      x: 3.0e-05
+      y: 0.01816
+      z: 3.0e-05
+  location:
+    orientation:
+      p: -0.0
+      r: 0.0
+      y: 0.0
+    position:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+  mass: 0.3368208021196993
+  mesh: snake_stick.STL
+  name: snake_stick
+  passive: false
+  publish children names: false
+  publish joint names: false
+  publish joint positions: false
+  restitution: 0.1
+  scale: 10.0
+  visible: true
+JOINT joint1:
+  child: BODY seg1
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint1
+  parent: BODY snake_stick
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.03603
+    z: 0.0
+  passive: false
+  stiffness: 78.4098994
+  type: angular spring
+JOINT joint10:
+  child: BODY seg10
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint10
+  parent: BODY seg9
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00123
+    z: 0.0
+  passive: false
+  stiffness: 57.5804401
+  type: angular spring
+JOINT joint11:
+  child: BODY seg11
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint11
+  parent: BODY seg10
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00124
+    z: 0.0
+  passive: false
+  stiffness: 55.266055800000004
+  type: angular spring
+JOINT joint12:
+  child: BODY seg12
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint12
+  parent: BODY seg11
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00123
+    z: 0.0
+  passive: false
+  stiffness: 52.9516714
+  type: angular spring
+JOINT joint13:
+  child: BODY seg13
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint13
+  parent: BODY seg12
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00122
+    z: 0.0
+  passive: false
+  stiffness: 50.637287
+  type: angular spring
+JOINT joint14:
+  child: BODY seg14
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint14
+  parent: BODY seg13
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00121
+    z: 0.0
+  passive: false
+  stiffness: 48.3229027
+  type: angular spring
+JOINT joint15:
+  child: BODY seg15
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint15
+  parent: BODY seg14
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.0012
+    z: 0.0
+  passive: false
+  stiffness: 46.0085183
+  type: angular spring
+JOINT joint16:
+  child: BODY seg16
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint16
+  parent: BODY seg15
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00119
+    z: 0.0
+  passive: false
+  stiffness: 43.6941339
+  type: angular spring
+JOINT joint17:
+  child: BODY seg17
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint17
+  parent: BODY seg16
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00118
+    z: 0.0
+  passive: false
+  stiffness: 41.3797496
+  type: angular spring
+JOINT joint18:
+  child: BODY seg18
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint18
+  parent: BODY seg17
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00117
+    z: 0.0
+  passive: false
+  stiffness: 39.0653652
+  type: angular spring
+JOINT joint19:
+  child: BODY seg19
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint19
+  parent: BODY seg18
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00116
+    z: 0.0
+  passive: false
+  stiffness: 36.7509808
+  type: angular spring
+JOINT joint2:
+  child: BODY seg2
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint2
+  parent: BODY seg1
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00133
+    z: 0.0
+  passive: false
+  stiffness: 76.095515
+  type: angular spring
+JOINT joint20:
+  child: BODY seg20
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint20
+  parent: BODY seg19
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00115
+    z: 0.0
+  passive: false
+  stiffness: 34.4365965
+  type: angular spring
+JOINT joint21:
+  child: BODY seg21
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint21
+  parent: BODY seg20
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00114
+    z: 0.0
+  passive: false
+  stiffness: 32.122212100000006
+  type: angular spring
+JOINT joint22:
+  child: BODY seg22
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint22
+  parent: BODY seg21
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00113
+    z: 0.0
+  passive: false
+  stiffness: 30.5776968
+  type: angular spring
+JOINT joint23:
+  child: BODY seg23
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint23
+  parent: BODY seg22
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00113
+    z: 0.0
+  passive: false
+  stiffness: 30.5776968
+  type: angular spring
+JOINT joint24:
+  child: BODY seg24
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint24
+  parent: BODY seg23
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00113
+    z: 0.0
+  passive: false
+  stiffness: 30.5776968
+  type: angular spring
+JOINT joint25:
+  child: BODY seg25
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint25
+  parent: BODY seg24
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00113
+    z: 0.0
+  passive: false
+  stiffness: 30.5776968
+  type: angular spring
+JOINT joint26:
+  child: BODY seg26
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint26
+  parent: BODY seg25
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00113
+    z: 0.0
+  passive: false
+  stiffness: 30.5776968
+  type: angular spring
+JOINT joint27:
+  child: BODY seg27
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint27
+  parent: BODY seg26
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00113
+    z: 0.0
+  passive: false
+  stiffness: 10.0
+  type: angular spring
+JOINT joint3:
+  child: BODY seg3
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint3
+  parent: BODY seg2
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00131
+    z: 0.0
+  passive: false
+  stiffness: 73.78113069999999
+  type: angular spring
+JOINT joint4:
+  child: BODY seg4
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint4
+  parent: BODY seg3
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00131
+    z: 0.0
+  passive: false
+  stiffness: 71.4667463
+  type: angular spring
+JOINT joint5:
+  child: BODY seg5
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint5
+  parent: BODY seg4
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.0013
+    z: 0.0
+  passive: false
+  stiffness: 69.1523619
+  type: angular spring
+JOINT joint6:
+  child: BODY seg6
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint6
+  parent: BODY seg5
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00129
+    z: 0.0
+  passive: false
+  stiffness: 66.8379776
+  type: angular spring
+JOINT joint7:
+  child: BODY seg7
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint7
+  parent: BODY seg6
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00128
+    z: 0.0
+  passive: false
+  stiffness: 64.5235932
+  type: angular spring
+JOINT joint8:
+  child: BODY seg8
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint8
+  parent: BODY seg7
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00127
+    z: 0.0
+  passive: false
+  stiffness: 62.2092089
+  type: angular spring
+JOINT joint9:
+  child: BODY seg9
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  damping: 0.9
+  enable feedback: true
+  equilibrium point: 0.0
+  joint limits:
+    high: 0.08727
+    low: -0.08727
+  max motor impulse: 0.05000000074505806
+  name: joint9
+  parent: BODY seg8
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.00126
+    z: 0.0
+  passive: false
+  stiffness: 59.8948245
+  type: angular spring
+JOINT seg27-Burr:
+  child: BODY Burr
+  child axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  child pivot:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  controller output type: VELOCITY
+  enable feedback: false
+  joint limits:
+    high: 1.2
+    low: -1.2
+  name: seg27-Burr
+  parent: BODY seg27
+  parent axis:
+    x: 0.0
+    y: 0.0
+    z: 1.0
+  parent pivot:
+    x: 0.0
+    y: 0.004
+    z: 0.0
+  passive: false
+  type: fixed
+bodies:
+- BODY Burr
+- BODY seg1
+- BODY seg10
+- BODY seg11
+- BODY seg12
+- BODY seg13
+- BODY seg14
+- BODY seg15
+- BODY seg16
+- BODY seg17
+- BODY seg18
+- BODY seg19
+- BODY seg2
+- BODY seg20
+- BODY seg21
+- BODY seg22
+- BODY seg23
+- BODY seg24
+- BODY seg25
+- BODY seg26
+- BODY seg27
+- BODY seg3
+- BODY seg4
+- BODY seg5
+- BODY seg6
+- BODY seg7
+- BODY seg8
+- BODY seg9
+- BODY snake_stick
+high resolution path: meshes/bigss_snake_m_scale/high_res/
+ignore inter-collision: true
+joints:
+- JOINT joint1
+- JOINT joint10
+- JOINT joint11
+- JOINT joint12
+- JOINT joint13
+- JOINT joint14
+- JOINT joint15
+- JOINT joint16
+- JOINT joint17
+- JOINT joint18
+- JOINT joint19
+- JOINT joint2
+- JOINT joint20
+- JOINT joint21
+- JOINT joint22
+- JOINT joint23
+- JOINT joint24
+- JOINT joint25
+- JOINT joint26
+- JOINT joint27
+- JOINT joint3
+- JOINT joint4
+- JOINT joint5
+- JOINT joint6
+- JOINT joint7
+- JOINT joint8
+- JOINT joint9
+- JOINT seg27-Burr
+low resolution path: meshes/bigss_snake_m_scale/low_res/
+namespace: /ambf/env/

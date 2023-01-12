@@ -178,6 +178,9 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
 
     for (int i = 0; i < m_shaftToolCursorList.size(); i++)
     {
+        
+        auto shaft_force = calculate_force_from_tool_cursor_collision(m_shaftToolCursorList[0], m_contManipBaseRigidBody, dt);
+        m_contManipBaseRigidBody->applyForceAtPointOnBody(shaft_force, m_shaftToolCursorList[i]->getDeviceLocalPos());
         // m_contManipBaseRigidBody->applyForceAtPointOnBody(100000.0 * m_shaftToolCursorList[i]->getDeviceLocalForce(), m_shaftToolCursorList[i]->getDeviceLocalPos());
     }
 
@@ -1283,7 +1286,7 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
     double r2 = 0.0;
     for (size_t i = 0; i < 3; i++)
     {
-        r2 = cMax(r2, dim(i) / num_voxels(i));
+        r2 = cMax(r2, dim(i) / num_voxels(i))*4.0;
     }
 
     cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
@@ -1292,8 +1295,8 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
     bool in_collision = m_storedColor != m_zeroColor;
     if (in_collision)
     {
-        auto collision_point = contact->m_globalPos;
-        
+        // auto collision_point = contact->m_globalPos;
+
         double m1 = body->getMass();
         auto r1 = tool_cursor->m_hapticPoint->getRadiusContact();
         auto cx1 = tool_cursor->m_hapticPoint->getGlobalPosGoal();
@@ -1301,7 +1304,11 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
         x1 << cx1.x(), cx1.y(), cx1.z();
 
         Eigen::Vector3d x2;
-        x2 << collision_point.x(), collision_point.y(), collision_point.z();
+        // x2 << collision_point.x(), collision_point.y(), collision_point.z();
+        cVector3d cx2;
+        m_volumeObject->voxelIndexToLocalPos(orig, cx2);
+        cx2 = m_volumeObject->getLocalTransform() * cx2;
+        x2 << cx2.x(), cx2.y(), cx2.z();
 
         Eigen::Matrix<double, 12, 1> V;
         V.setZero();
@@ -1321,6 +1328,8 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
         F_ext(4) = body->m_bulletRigidBody->getTotalTorque().y();
         F_ext(5) = body->m_bulletRigidBody->getTotalTorque().z();
         
+        // std::cout << body->getMass() << std::endl;
+
         Eigen::Matrix<double, 12, 1> P;
         P.setZero();
 
@@ -1329,11 +1338,11 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
         {
             auto F = P / dt;
             force_out = cVector3d(F(0), F(1), F(2));
-            std::cout << "force_out: " << force_out << std::endl;
+            // std::cout << "force_out: " << force_out << std::endl;
         }
         else
         {
-            std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
+            // std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
         }
 
 

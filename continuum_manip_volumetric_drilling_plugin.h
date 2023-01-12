@@ -212,7 +212,7 @@ private:
 
     std::vector<cVector3d> e_int;
     std::vector<cVector3d> e_prev;
-    double m_P = 200.0;
+    double m_P = 1.0;
     double m_I = 0.0;
     double m_D = 0.0;
     int f_i = 0;
