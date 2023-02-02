@@ -1,7 +1,7 @@
 //==============================================================================
 /*
     Software License Agreement (BSD License)
-    Copyright (c) 2019-2021, AMBF
+    Copyright (c) 2019-2023, AMBF
     (https://github.com/WPI-AIM/ambf)
 
     All rights reserved.
@@ -55,13 +55,9 @@
 #include <boost/program_options.hpp>
 #include <fstream>
 
-using namespace std;
+//==============================================================================
 
-//------------------------------------------------------------------------------
-// DECLARED FUNCTIONS
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
+/// @brief called at each graphics iteration of simulator loop
 void afVolmetricDrillingPlugin::graphicsUpdate()
 {
     UpdateCablePullText();
@@ -78,24 +74,26 @@ void afVolmetricDrillingPlugin::graphicsUpdate()
     }
 }
 
+/// @brief called at each physics iteration of simulator loop
+/// @param dt time step (in seconds) since last call
 void afVolmetricDrillingPlugin::physicsUpdate(double dt)
 {
     checkForSettingsUpdate();
 
     m_worldPtr->getChaiWorld()->computeGlobalPositions(true);
 
-    if (m_CM_moved_by_other) // i.e. if the CM is not being moved by keyboard / device, but driven by a ROS node
+    if (m_CM_moved_by_other) // i.e. if the CM is not being moved by keyboard / device, but is attached to another AMBF body
     {
         T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform(); // let's find out where it is now
     }
     else
     {                                                                                          // i.e. if the CM is being moved 'manually' using this plugin e.g. by keyboard / device
-        if (!cTransformEqual(m_contManipBaseRigidBody->getLocalTransform(), T_contmanip_base)) // update CM for commanded movements
+        if (!cTransformAlmostEqual(m_contManipBaseRigidBody->getLocalTransform(), T_contmanip_base)) // update CM for commanded movements
         {
             cTransform T_newContManipBase;
             T_newContManipBase.setLocalPos(T_contmanip_base.getLocalPos());
             T_newContManipBase.setLocalRot(T_contmanip_base.getLocalRot());
-            T_newContManipBase = T_newContManipBase * btTransformTocTransform(m_contManipBaseRigidBody->getInertialOffsetTransform()); // handle offset due to fact that origin is not at center of body
+            T_newContManipBase = T_newContManipBase * to_cTransform(m_contManipBaseRigidBody->getInertialOffsetTransform()); // handle offset due to fact that origin is not at center of body
             m_contManipBaseRigidBody->setLocalTransform(T_newContManipBase);
         }
     }
@@ -106,32 +104,29 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
     {
         cToolCursor *burr_cursor = m_burrToolCursorList.back();
 
-        if (m_burrOn && burr_cursor->isInContact(m_voxelObj)) //&& m_targetToolCursorIdx == 0 /*&& (userSwitches == 2)*/)
+        // Drilling Behavior
+        if (m_burrOn && burr_cursor->isInContact(m_voxelObj))
         {
+            // find the color of the voxel that is in contact with the burr
             cCollisionEvent *contact = burr_cursor->m_hapticPoint->getCollisionEvent(0);
-            cVector3d orig(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
+            cVector3d voxel_idx(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
+            m_voxelObj->m_texture->m_image->getVoxelColor(uint(voxel_idx.x()), uint(voxel_idx.y()), uint(voxel_idx.z()), m_storedColor);
 
-            m_voxelObj->m_texture->m_image->getVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_storedColor);
-
-            bool remove_voxel = m_storedColor != m_zeroColor;
-
-            if (remove_voxel)
+            if (m_storedColor != m_zeroColor) // i.e. if the voxel is not empty
             {
+                // removalCount specifies the max number of contacted voxels that can be removed in a single iteration
+                // [TODO]: make this parameter more easily accessible
                 int removalCount = cMin(m_removalCount, (int)contact->m_events.size());
-                // std::cout << "Contact: " << (int)contact->m_events.size() << " voxels" << std::endl;
                 m_mutexVoxel.acquire();
                 for (int cIdx = 0; cIdx < removalCount; cIdx++)
                 {
-
                     cVector3d ct(contact->m_events[cIdx].m_voxelIndexX, contact->m_events[cIdx].m_voxelIndexY, contact->m_events[cIdx].m_voxelIndexZ);
-
                     if (m_hardness_behavior)
                     {
-                        m_force_to_drill_voxel[uint(ct.x())][uint(ct.y())][uint(ct.z())] -= 1.0 / float(m_removalCount);
-                        // std::cout << "Voxel at " << ct << " m_force_to_drill: = " <<m_force_to_drill_voxel[uint(ct.x())][uint(ct.y())][uint(ct.z())] <<std::endl;
-                        if (m_force_to_drill_voxel[uint(ct.x())][uint(ct.y())][uint(ct.z())] > 0.0)
+                        m_voxel_hardnesses[uint(ct.x())][uint(ct.y())][uint(ct.z())] -= m_hardness_removal_rate;
+                        if (m_voxel_hardnesses[uint(ct.x())][uint(ct.y())][uint(ct.z())] > 0.0)
                         {
-                            continue;
+                            continue; // skips removal
                         }
                     }
                     removeVoxel(ct);
@@ -140,7 +135,8 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
                 m_flagMarkVolumeForUpdate = true;
             }
         }
-        // compute interaction forces
+
+        // Compute and Apply CM-to-volume interactions
         for (auto &cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList})
         {
             for (auto &cursor : cursor_list)
@@ -148,27 +144,30 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
                 cursor->computeInteractionForces();
             }
         }
+        // Burr
+        auto burr_impulse = calculate_impulse_from_tool_cursor_collision(m_burrToolCursorList[0], m_burrBody, dt);
+        m_burrBody->m_bulletRigidBody->applyCentralImpulse(burr_impulse);
+        // Segments
         for (int i = 0; i < m_segmentToolCursorList.size(); i++)
         {
             auto seg_impulse = calculate_impulse_from_tool_cursor_collision(m_segmentToolCursorList[i], m_segmentBodyList[i], dt);
             m_segmentBodyList[i]->m_bulletRigidBody->applyCentralImpulse(seg_impulse);
         }
-        // apply force from burr
-        auto burr_impulse = calculate_impulse_from_tool_cursor_collision(m_burrToolCursorList[0], m_burrBody, dt);
-        m_burrBody->m_bulletRigidBody->applyCentralImpulse(burr_impulse);
+        // Shaft
+        for (int i = 0; i < m_shaftToolCursorList.size(); i++)
+        {
+            auto shaft_impulse = calculate_impulse_from_tool_cursor_collision(m_shaftToolCursorList[0], m_contManipBaseRigidBody, dt);
+            m_contManipBaseRigidBody->m_bulletRigidBody->applyImpulse(shaft_impulse, to_btVector(m_shaftToolCursorList[i]->getDeviceLocalPos()));
+        }
     }
 
-    for (int i = 0; i < m_shaftToolCursorList.size(); i++)
-    {
-        auto shaft_impulse = calculate_impulse_from_tool_cursor_collision(m_shaftToolCursorList[0], m_contManipBaseRigidBody, dt);
-        m_contManipBaseRigidBody->m_bulletRigidBody->applyImpulse(shaft_impulse, to_btVector(m_shaftToolCursorList[i]->getDeviceLocalPos()));
-    }
-
+    // Compute and Apply CM cable forces
     applyCablePull(dt);
 }
 
 /// @brief Remove a voxel from the volume
 /// @param pos The position of the voxel to remove (in voxel coordinates)
+/// @note This function is to be called from within a mutex lock
 void afVolmetricDrillingPlugin::removeVoxel(cVector3d &pos)
 {
     cColorb colorb;
@@ -189,10 +188,18 @@ void afVolmetricDrillingPlugin::removeVoxel(cVector3d &pos)
     m_drillingPub->voxelsRemoved(voxel_array, color_array, sim_time);
 }
 
+/// @brief initialize the plugin
+/// @param argc number of arguments
+/// @param argv array of arguments
+/// @param a_afWorld pointer to the ambf World
+/// @return 0 if successful, -1 otherwise
+/// @note This function is called by the afPluginManager
+/// @note Commandline arguments are specified and parsed here
 int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_afWorld)
 {
     ros::init(argc, argv, "drilling_simulator"); // primarily to strip out ros args
-    // Parse command line options
+
+    // Specify command line options
     namespace p_opt = boost::program_options;
     p_opt::options_description cmd_opts("drilling_simulator Command Line Options");
     cmd_opts.add_options()("info", "Show Info");
@@ -201,22 +208,17 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     cmd_opts.add_options()("tool_body_name", p_opt::value<std::string>()->default_value("Burr"), "Name of body given in yaml. Default Burr");
     cmd_opts.add_options()("hardness_behavior", p_opt::value<std::string>()->default_value("0"), ". Turn on volume material hardness features. Default false");
     cmd_opts.add_options()("hardness_spec_file", p_opt::value<std::string>()->default_value(""), ". Path to csv file with hardness specifications per voxel. Default empty. If hardness features set, but this not set, all hardness will be set to 1.0");
-    // add command option for predrill_traj_files that is a vector of strings and uses multitoken
     cmd_opts.add_options()("predrill_traj_file", p_opt::value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing(), ". Path to csv file(s) with trajectory that will be predrilled. Default empty");
 
+    // Parse command line options
     p_opt::variables_map var_map;
     p_opt::store(p_opt::command_line_parser(argc, argv).options(cmd_opts).allow_unregistered().run(), var_map);
     p_opt::notify(var_map);
-
     if (var_map.count("info"))
     {
         std::cout << cmd_opts << std::endl;
         return -1;
     }
-
-    string file_path = __FILE__;
-    string cur_path = file_path.substr(0, file_path.rfind("/"));
-
     std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
     std::string base_body_name = var_map["base_body_name"].as<std::string>();
     std::string tool_body_name = var_map["tool_body_name"].as<std::string>();
@@ -235,10 +237,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_worldPtr->m_bulletWorld->getSolverInfo().m_erp2 = 1.0; // improve out of plane error of joints
     m_worldPtr->m_bulletWorld->setGravity(btVector3(0.0, 0.0, 0.0));
 
-    // Various scalars needed for other calculation
+    // Various scalars needed for other calculation [TODO: some items might not need to be hardcoded here]
     m_to_ambf_unit = 10.0;
     mm_to_ambf_unit = m_to_ambf_unit / 1000.0;
-    double burr_r = mm_to_ambf_unit * 6.5 / 2;
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
     m_boneColor = cColorb(255, 249, 219, 255);
     m_storedColor = cColorb(0x00, 0x00, 0x00, 0x00);
@@ -250,7 +251,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         cerr << "ERROR! FAILED TO FIND RIGID BODY NAMED " << base_body_name << endl;
         return -1;
     }
-
     // Import anatomy volume
     m_volumeObject = m_worldPtr->getVolume(anatomy_volume_name);
     if (!m_volumeObject)
@@ -258,7 +258,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         cerr << "ERROR! FAILED TO FIND VOLUME NAMED " << anatomy_volume_name << endl;
         return -1;
     }
-
     // Initialize the volume
     int res = volumeInit(a_afWorld);
     if (res != 0)
@@ -331,11 +330,15 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     return 1;
 }
 
+/// @brief Initialize the text overlays on the camera
+/// @param a_afWorld ambf world pointer
+/// @return 0 if successful, -1 otherwise
 int afVolmetricDrillingPlugin::visualInit(const afWorldPtr a_afWorld)
 {
     // Get first camera
     m_mainCamera = m_worldPtr->getCameras()[0];
-    // create a font
+
+    // Create a label to display the cable pull magnitude
     cFontPtr font = NEW_CFONTCALIBRI40();
     m_cablePullMagText = new cLabel(font);
     m_cablePullMagText->setLocalPos(20, 70);
@@ -344,6 +347,7 @@ int afVolmetricDrillingPlugin::visualInit(const afWorldPtr a_afWorld)
     UpdateCablePullText();
     m_mainCamera->getFrontLayer()->addChild(m_cablePullMagText);
 
+    // Create a label to display drill and cable control modes
     m_drillControlModeText = new cLabel(font);
     m_drillControlModeText->setLocalPos(20, 30);
     m_drillControlModeText->m_fontColor.setGreen();
@@ -360,15 +364,18 @@ int afVolmetricDrillingPlugin::visualInit(const afWorldPtr a_afWorld)
     return 0;
 }
 
+/// @brief Initialize the volume model and its properties
+/// @param a_afWorld ambf world pointer
+/// @return 0 if successful, -1 otherwise
 int afVolmetricDrillingPlugin::volumeInit(const afWorldPtr a_afWorld)
 {
     m_voxelObj = m_volumeObject->getInternalVolume();
 
+    // Get the volume dimensions and scale
     m_maxVolCorner = m_voxelObj->m_maxCorner;
     m_minVolCorner = m_voxelObj->m_minCorner;
     m_maxTexCoord = m_voxelObj->m_maxTextureCoord;
     m_minTexCoord = m_voxelObj->m_minTextureCoord;
-
     m_textureCoordScale(0) = (m_maxTexCoord.x() - m_minTexCoord.x()) / (m_maxVolCorner.x() - m_minVolCorner.x());
     m_textureCoordScale(1) = (m_maxTexCoord.y() - m_minTexCoord.y()) / (m_maxVolCorner.y() - m_minVolCorner.y());
     m_textureCoordScale(2) = (m_maxTexCoord.z() - m_minTexCoord.z()) / (m_maxVolCorner.z() - m_minVolCorner.z());
@@ -383,16 +390,19 @@ int afVolmetricDrillingPlugin::volumeInit(const afWorldPtr a_afWorld)
 }
 
 ///
-/// \brief This method initializes the tool cursors.
+/// \brief This method creates a tool cursor for each segment of the CM, for the burr, and along the shaft. The tool cursor is used to produce iteraction forces with volume
 /// \param a_afWorld    A world that contains all objects of the virtual environment
-/// \return
+/// \return 0 if successful, -1 otherwise
 ///
 int afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
 {
     cWorld *chai_world = a_afWorld->getChaiWorld();
+    // [TODO]: Someday, this could be generalized to more CM models
     int num_segs = 27;
     int num_shaft_cursor = 6;
     int num_burr_cursor = 1;
+    double burr_r = mm_to_ambf_unit * 6.5 / 2;
+    double cm_r = mm_to_ambf_unit * 6.0 / 2;
 
     for (int i = 1; i <= num_segs; i++)
     {
@@ -418,7 +428,7 @@ int afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
         shaft_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
         shaft_cursor->m_hapticPoint->m_sphereProxy->m_material->setRedCrimson();
         shaft_cursor->m_hapticPoint->m_sphereGoal->m_material->setBlueAquamarine();
-        shaft_cursor->setRadius(mm_to_ambf_unit * 6 / 2);
+        shaft_cursor->setRadius(cm_r);
     }
 
     for (auto &burr_cursor : m_burrToolCursorList)
@@ -426,7 +436,7 @@ int afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
         burr_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
         burr_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
         burr_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
-        burr_cursor->setRadius(mm_to_ambf_unit * 6.5 / 2);
+        burr_cursor->setRadius(burr_r);
     }
 
     for (auto &seg_cursor : m_segmentToolCursorList)
@@ -434,7 +444,7 @@ int afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
         seg_cursor->setShowContactPoints(m_showGoalProxySpheres, m_showGoalProxySpheres);
         seg_cursor->m_hapticPoint->m_sphereProxy->m_material->setGreenChartreuse();
         seg_cursor->m_hapticPoint->m_sphereGoal->m_material->setOrangeCoral();
-        seg_cursor->setRadius(mm_to_ambf_unit * 6 / 2);
+        seg_cursor->setRadius(cm_r);
     }
     // Initialize the start pose of the tool cursors
     toolCursorsPosUpdate(m_contManipBaseRigidBody->getLocalTransform());
@@ -450,17 +460,17 @@ int afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
 }
 
 ///
-/// \brief incrementDevicePos
-/// \param a_vel
+/// \brief Applies small change to the position of the CM base (prmiarily for use with the keyboard commands)
+/// \param a_delta Change in position
 ///
-void afVolmetricDrillingPlugin::incrementDevicePos(cVector3d a_vel)
+void afVolmetricDrillingPlugin::incrementDevicePos(cVector3d a_delta)
 {
-    T_contmanip_base.setLocalPos(T_contmanip_base.getLocalPos() + a_vel);
+    T_contmanip_base.setLocalPos(T_contmanip_base.getLocalPos() + a_delta);
 }
 
 ///
-/// \brief incrementDeviceRot
-/// \param a_rot
+/// \brief Applies small change to the orientation of the CM base (prmiarily for use with the keyboard commands)
+/// \param a_rot Change in orientation (Euler angles XYZ)
 ///
 void afVolmetricDrillingPlugin::incrementDeviceRot(cVector3d a_rot)
 {
@@ -471,17 +481,17 @@ void afVolmetricDrillingPlugin::incrementDeviceRot(cVector3d a_rot)
 }
 
 ///
-/// \brief This method updates the position of the shaft tool cursors
-/// which eventually updates the position of the whole tool.
+/// \brief Update the position of the tool cursors 'goal' spheres, to match the location of bodies in the simulation after last physics step
+/// \param a_targetPose The pose of the CM base
 ///
-void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose)
+void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_basePose)
 {
+    double shaft_length = mm_to_ambf_unit * 35.0; // [TODO]: This could be made parameter to work with more general CM
     for (int i = 0; i < m_shaftToolCursorList.size(); i++)
     {
-        // static cast i to double
-        double offset = static_cast<double>(i) / (m_shaftToolCursorList.size() - 1) * 35.0 * mm_to_ambf_unit;
+        double offset = static_cast<double>(i) / (m_shaftToolCursorList.size() - 1) * shaft_length;
         auto T_offset = cTransform(cVector3d(0, offset, 0), cMatrix3d(1, 0, 0, 0, 1, 0, 0, 0, 1));
-        m_shaftToolCursorList[i]->setDeviceLocalTransform(a_targetPose * T_offset);
+        m_shaftToolCursorList[i]->setDeviceLocalTransform(a_basePose * T_offset);
     }
 
     for (auto &burr_cursor : m_burrToolCursorList)
@@ -496,73 +506,47 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_targetPose)
 }
 
 ///
-/// \brief This method updates the position of the drill mesh.
-/// After obtaining g_targetToolCursor, the drill mesh adjust it's position and rotation
-/// such that it follows the proxy position of the g_targetToolCursor.
+/// \brief Use keyboard commands to perform a variety of tasks
+/// \note This function is called by the plugin manager
 ///
-void afVolmetricDrillingPlugin::drillPoseUpdateFromCursors()
-{
-    cMatrix3d newContManipBaseRot;
-    newContManipBaseRot = m_shaftToolCursorList[0]->getDeviceLocalRot();
-    cTransform T_newContManipBase;
-    T_newContManipBase.setLocalPos(m_shaftToolCursorList[0]->m_hapticPoint->getLocalPosProxy());
-    T_newContManipBase.setLocalRot(newContManipBaseRot);
-    T_newContManipBase = T_newContManipBase * btTransformTocTransform(m_contManipBaseRigidBody->getInertialOffsetTransform()); // handle offset due to fact that origin is not at center of body
-    m_contManipBaseRigidBody->setLocalTransform(T_newContManipBase);
-}
-
 void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, int a_scancode, int a_action, int a_mods)
 {
-    if (a_mods == GLFW_MOD_CONTROL)
+    if (a_mods == GLFW_MOD_CONTROL) // (CTRL + key)
     {
 
-        // controls linear motion of tool
+        // These commands are used to move the CM base position
         if (a_key == GLFW_KEY_W)
         {
             cVector3d dir = m_contManipBaseRigidBody->getLocalRot().getCol2() * m_drillRate; // z-direction
             incrementDevicePos(dir);
         }
-
         else if (a_key == GLFW_KEY_D)
         {
             cVector3d dir = m_contManipBaseRigidBody->getLocalRot().getCol0() * m_drillRate; // x-direction
             incrementDevicePos(dir);
         }
-
         else if (a_key == GLFW_KEY_S)
         {
             cVector3d dir = m_contManipBaseRigidBody->getLocalRot().getCol2() * m_drillRate; // z-direction
             incrementDevicePos(-dir);
         }
-
         else if (a_key == GLFW_KEY_A)
         {
             cVector3d dir = m_contManipBaseRigidBody->getLocalRot().getCol0() * m_drillRate; // x-direction
             incrementDevicePos(-dir);
         }
-
         else if (a_key == GLFW_KEY_K)
         {
             cVector3d dir = m_contManipBaseRigidBody->getLocalRot().getCol1() * m_drillRate; // y-direction
             incrementDevicePos(-dir);
         }
-
         else if (a_key == GLFW_KEY_I)
         {
             cVector3d dir = m_contManipBaseRigidBody->getLocalRot().getCol1() * m_drillRate; // y-direction
             incrementDevicePos(dir);
         }
 
-        else if (a_key == GLFW_KEY_O)
-        {
-            setDrillControlMode(!m_CM_moved_by_other);
-        }
-
-        else if (a_key == GLFW_KEY_C)
-        {
-            setShowToolCursors(!m_showGoalProxySpheres);
-        }
-
+        // Cable controls
         else if (a_key == GLFW_KEY_SEMICOLON)
         {
             if (m_cableKeyboardControl)
@@ -577,51 +561,48 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
                 m_cable_pull_mag_goal -= 0.001;
             }
         }
+
+        // Toggle control modes
+        else if (a_key == GLFW_KEY_O)
+        {
+            setDrillControlMode(!m_CM_moved_by_other);
+        }
+        else if (a_key == GLFW_KEY_SLASH)
+        {
+            setCableControlMode(!m_cableKeyboardControl);
+        }
         else if (a_key == GLFW_KEY_LEFT_BRACKET)
         {
             setVolumeCollisionsEnabled(!m_volume_collisions_enabled);
         }
         else if (a_key == GLFW_KEY_RIGHT_BRACKET)
         {
-            // toolCursorInit(m_worldPtr);
+            // toolCursorInit(m_worldPtr); //[TODO]: No longer needed, but keeping comment for now in case I want to add back in
         }
         else if (a_key == GLFW_KEY_EQUAL)
         {
             m_burrOn = !m_burrOn;
             std::cout << "Burr On State: " << m_burrOn << std::endl;
         }
-
-        else if (a_key == GLFW_KEY_SLASH)
-        {
-            setCableControlMode(!m_cableKeyboardControl);
-        }
-
         else if (a_key == GLFW_KEY_E)
         {
             setPhysicsPaused(!m_worldPtr->isPhysicsPaused());
         }
 
-        // option - polygonize model and save to file
-        else if (a_key == GLFW_KEY_F9)
+        // Visual controls
+        else if (a_key == GLFW_KEY_C)
         {
-            cMultiMesh *surface = new cMultiMesh;
-            m_voxelObj->polygonize(surface, 0.01, 0.01, 0.01);
-            double SCALE = 0.1;
-            double METERS_TO_MILLIMETERS = 1000.0;
-            surface->scale(SCALE * METERS_TO_MILLIMETERS);
-            surface->setUseVertexColors(true);
-            surface->saveToFile("volume.obj");
-            cout << "> Volume has been polygonized and saved to disk                            \r";
-            delete surface;
+            setShowToolCursors(!m_showGoalProxySpheres);
         }
 
         else if (a_key == GLFW_KEY_N)
         {
             cout << "INFO! RESETTING THE VOLUME" << endl;
-            // m_volumeObject->reset(); //TODO REENABLE
+            m_volumeObject->reset();
         }
     }
-    else if (a_mods == GLFW_MOD_ALT)
+
+    else if (a_mods == GLFW_MOD_ALT) // (ALT + key)
     {
         if (a_key == GLFW_KEY_UP)
         {
@@ -797,7 +778,7 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
                  << "                            \n";
         }
 
-        // controls rotational motion of tool
+        // controls rotational motion of CM base
         else if (a_key == GLFW_KEY_KP_5)
         {
             cVector3d rotDir(0, 1, 0);
@@ -829,30 +810,17 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
             m_debug_print = !m_debug_print;
             std::cout << "m_debug_print: " << m_debug_print << std::endl;
         }
-        else if (a_key == GLFW_KEY_X)
-        {
 
-            if (m_suddenJump)
-            {
-                m_suddenJump = false;
-            }
-
-            else
-            {
-                m_suddenJump = true;
-            }
-        }
-
-        // toggles the visibility of drill mesh in the scene
+        // toggles the visibility of CM mesh (segments, shaft, and burr)
         else if (a_key == GLFW_KEY_B)
         {
-            m_showDrill = !m_showDrill;
-            m_contManipBaseRigidBody->m_visualMesh->setShowEnabled(m_showDrill);
+            m_showCM = !m_showCM;
+            m_contManipBaseRigidBody->m_visualMesh->setShowEnabled(m_showCM);
             for (auto &seg : m_segmentBodyList)
             {
-                seg->m_visualMesh->setShowEnabled(m_showDrill);
+                seg->m_visualMesh->setShowEnabled(m_showCM);
             }
-            m_burrBody->m_visualMesh->setShowEnabled(m_showDrill);
+            m_burrBody->m_visualMesh->setShowEnabled(m_showCM);
         }
     }
 }
@@ -883,6 +851,8 @@ bool afVolmetricDrillingPlugin::close()
     return true;
 }
 
+/// @brief  Apply cable pull to the CM distal segment
+/// @param dt time step (seconds)
 void afVolmetricDrillingPlugin::applyCablePull(double dt)
 {
     // Set position goal if applicable
@@ -922,43 +892,10 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
     m_cable_pull_mag += cable_pull_mag_change;
     double cable_pull_force_val = m_cable_pull_mag;
 
-    // Add 'noise' to cable pull commands (simulates cable friction, etc.)
-    bool m_cable_pull_noise = false;
-    if (m_cable_pull_noise)
-    {
-        double cable_err_mult_min = 0.0;
-        double cable_err_mult_max = 1000.0;
-
-        double cable_err_denom_min = 0.0;
-        double cable_err_denom_max = 1000.0;
-
-        cable_err_denom += ((cable_err_mult_min + unif_dist(rand_eng) * (cable_err_mult_max - cable_err_mult_min)) * cable_pull_mag_change);
-
-        cable_err_denom = std::min(cable_err_denom, cable_err_denom_max);
-        cable_err_denom = std::max(cable_err_denom, cable_err_denom_min);
-
-        cable_pull_force_val = m_cable_pull_mag / (1.0 + cable_err_denom * m_cable_pull_mag * m_cable_pull_mag);
-    }
-
     m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
-    // last_seg_ptr->applyTorque(10.0 * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2());
     auto torque_imp = 10.0 * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2() * dt;
     last_seg_ptr->m_bulletRigidBody->applyTorqueImpulse(btVector3(torque_imp.x(), torque_imp.y(), torque_imp.z()));
-    // last_seg_ptr->applyForce(cVector3d(-10.0*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol1()), last_seg_ptr->getLocalRot()*cVector3d( 2 *mm_to_ambf_unit,0.0,0.0) );
-}
-
-cTransform afVolmetricDrillingPlugin::btTransformTocTransform(const btTransform &in)
-{
-    const auto &in_pos = in.getOrigin();
-    const auto &in_rot = in.getRotation();
-
-    cVector3d pos(in_pos.x(), in_pos.y(), in_pos.z());
-    const auto &axis = in_rot.getAxis();
-    cVector3d c_axis(axis.getX(), axis.getY(), axis.getZ());
-    cMatrix3d rot(c_axis, in_rot.getAngle());
-    cTransform out(pos, rot);
-    return out;
 }
 
 void afVolmetricDrillingPlugin::UpdateCablePullText()
@@ -1068,43 +1005,21 @@ void afVolmetricDrillingPlugin::setVolumeCollisionsEnabled(bool bool_set)
     m_volume_collisions_enabled = bool_set;
 }
 
-bool afVolmetricDrillingPlugin::fillGoalPointsFromCSV(const std::string &filename, std::vector<cVector3d> &trace_points)
+/// @brief  Parse a CSV file containing a trajectory for the predrill tool and burr size
+/// @param filename  CSV file containing: first line: burr size: double;; subsequent lines: trajectory (x,y,z) points: double,double,double (no header
+/// @param traj_points outparam for trajectory points x,y,z
+/// @param burr_size outparam for burr size (m)
+/// @return 
+bool parsePredrillTrajFromCSV(const std::string &filename, std::vector<cVector3d> &traj_points, double &burr_size)
 {
-    std::ifstream file(filename);
-    if (!file)
-    {
-        std::cout << "Error reading: " << filename << std::endl;
-        return false;
-    }
-    while (file)
-    {
-        std::string s;
-        if (!std::getline(file, s))
-            break;
-        std::istringstream ss(s);
-        std::vector<std::string> record;
-        while (ss)
-        {
-            std::string s;
-            if (!getline(ss, s, ','))
-                break;
-            record.push_back(s);
-        }
-        trace_points.push_back(cVector3d(std::stod(record[0]), std::stod(record[1]), std::stod(record[2])));
-    }
-    return true;
-}
-
-bool parsePredrillTrajFromCSV(const std::string &filename, std::vector<cVector3d> &trace_points, double &burr_size)
-{
-    // first line: burr size (double)
-    // subsequent lines: x,y,z (double)
     std::ifstream file(filename);
     if (!file)
     {
         std::cout << "[parsePredrillTrajFromCSV] No such file: " << filename << std::endl;
         return false;
     }
+    
+    // Read the burr size (first line)
     std::string s;
     if (!std::getline(file, s))
     {
@@ -1121,6 +1036,8 @@ bool parsePredrillTrajFromCSV(const std::string &filename, std::vector<cVector3d
         record.push_back(s);
     }
     burr_size = std::stod(record[0]);
+    
+    // Read the trajectory points (subsequent lines)
     while (file)
     {
         std::string s;
@@ -1135,11 +1052,13 @@ bool parsePredrillTrajFromCSV(const std::string &filename, std::vector<cVector3d
                 break;
             record.push_back(s);
         }
-        trace_points.push_back(cVector3d(std::stod(record[0]), std::stod(record[1]), std::stod(record[2])));
+        traj_points.push_back(cVector3d(std::stod(record[0]), std::stod(record[1]), std::stod(record[2])));
     }
     return true;
 }
 
+/// @brief  Checks for changes to the settings exposed to rostopics
+/// @TODO:  This implementation could be improved, it is not very scalable
 void afVolmetricDrillingPlugin::checkForSettingsUpdate(void)
 {
     if (m_settingsPub->setCableControlMode_changed)
@@ -1174,7 +1093,7 @@ void afVolmetricDrillingPlugin::checkForSettingsUpdate(void)
     }
     if (m_settingsPub->resetVoxels_changed)
     {
-        // m_volumeObject->reset();// TODO: reenable this
+        m_volumeObject->reset();
         m_settingsPub->resetVoxels_changed = false;
     }
     if (m_settingsPub->setBurrOn_changed)
@@ -1184,6 +1103,9 @@ void afVolmetricDrillingPlugin::checkForSettingsUpdate(void)
     }
 }
 
+/// @brief  Initialize behavior for voxel hardnesses
+/// @param hardness_spec_file  CSV file containing hardness values for each voxel
+/// @return 0 if successful, -1 if not
 int afVolmetricDrillingPlugin::hardnessBehaviorInit(const std::string &hardness_spec_file)
 {
     if (m_hardness_behavior)
@@ -1193,7 +1115,7 @@ int afVolmetricDrillingPlugin::hardnessBehaviorInit(const std::string &hardness_
         if (hardness_spec_file == "")
         {
             std::cout << "[hardnessBehaviorInit]: No hardness spec file given, using default of 1.0" << std::endl;
-            m_force_to_drill_voxel = forces;
+            m_voxel_hardnesses = forces;
             return 0;
         }
 
@@ -1250,11 +1172,12 @@ int afVolmetricDrillingPlugin::hardnessBehaviorInit(const std::string &hardness_
             }
         }
         file.close();
-        m_force_to_drill_voxel = forces;
+        m_voxel_hardnesses = forces;
     }
     return 0;
 }
 
+/// @brief Remove voxels in the cylinder around specified trajectory(ies) as if they were pre-drilled
 int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &predrill_traj_files)
 {
     // TODO there is likely a much more direct way of doing this - remove all voxels in the cylinder / "pill" around the trajectory
@@ -1300,7 +1223,8 @@ int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &
     return 0;
 }
 
-bool afVolmetricDrillingPlugin::cTransformEqual(const cTransform &a, const cTransform &b)
+/// @brief Determine if two transforms are approx equal
+bool afVolmetricDrillingPlugin::cTransformAlmostEqual(const cTransform &a, const cTransform &b)
 {
     for (int i = 0; i < 4; i++)
     {
@@ -1315,6 +1239,7 @@ bool afVolmetricDrillingPlugin::cTransformEqual(const cTransform &a, const cTran
     return true;
 }
 
+/// @brief Uses seqential impulse contact method to calculate the impulse from a tool cursor collision with the volume object
 btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt)
 {
     // ouput impulse from collision (default zero)
@@ -1332,8 +1257,8 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
     }
 
     cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
-    cVector3d orig(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
-    m_voxelObj->m_texture->m_image->getVoxelColor(uint(orig.x()), uint(orig.y()), uint(orig.z()), m_storedColor);
+    cVector3d voxel_idx(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
+    m_voxelObj->m_texture->m_image->getVoxelColor(uint(voxel_idx.x()), uint(voxel_idx.y()), uint(voxel_idx.z()), m_storedColor);
     bool in_collision = m_storedColor != m_zeroColor;
     if (in_collision)
     {
@@ -1345,7 +1270,7 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
 
         Eigen::Vector3d x2;
         cVector3d cx2;
-        m_volumeObject->voxelIndexToLocalPos(orig, cx2);
+        m_volumeObject->voxelIndexToLocalPos(voxel_idx, cx2);
         cx2 = m_volumeObject->getLocalTransform() * cx2;
         x2 << cx2.x(), cx2.y(), cx2.z();
 
@@ -1381,7 +1306,6 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
             // std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
         }
     }
-
 
     return imp_out;
 }

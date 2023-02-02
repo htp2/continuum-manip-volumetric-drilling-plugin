@@ -47,9 +47,6 @@ protected:
     // check for shaft collision
     void checkShaftCollision(void);
 
-    // update position of drill mesh
-    void drillPoseUpdateFromCursors(void);
-
     // toggles size of the drill burr
     void changeDrillSize(void);
 
@@ -57,9 +54,7 @@ protected:
 
     void UpdateCablePullText();
 
-    cTransform btTransformTocTransform(const btTransform &in);
-
-    bool cTransformEqual(const cTransform &a, const cTransform &b);
+    bool cTransformAlmostEqual(const cTransform &a, const cTransform &b);
 
     void sliceVolume(int axisIdx, double delta);
 
@@ -150,7 +145,7 @@ private:
     // camera to render the world
     afCameraPtr m_mainCamera;
 
-    bool m_showDrill = true;
+    bool m_showCM = true;
     bool m_cableKeyboardControl = true;
     bool m_showGoalProxySpheres = true;
     bool m_burrOn = true;
@@ -189,10 +184,6 @@ private:
     // for storing index of follow sphere
     int m_targetToolCursorIdx = 0;
 
-    // toggles whether the drill mesh should move slowly towards the followSphere
-    // or make a sudden jump
-    bool m_suddenJump = true;
-
     // index of current drill size
     int m_drillSizeIdx = 0;
 
@@ -220,17 +211,16 @@ private:
     // cVector3d m_summed_burr_force;
 
     int m_col_count = 0;
-    std::vector<std::vector<std::vector<double>>> m_force_to_drill_voxel;
+    std::vector<std::vector<std::vector<double>>> m_voxel_hardnesses;
     double m_debug_value = 0.0;
     bool m_debug_print = false;
     bool m_hardness_behavior = false;
     double cable_err_denom = 0.0;
     double m_collision_force_scale = 1.0;
+    double m_hardness_removal_rate = 1.0/150.0;
 
     std::mt19937 rand_eng;
     std::uniform_real_distribution<> unif_dist;
-
-    bool fillGoalPointsFromCSV(const std::string &filename, std::vector<cVector3d> &trace_points);
 
     void checkForSettingsUpdate(void);
 
