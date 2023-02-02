@@ -62,8 +62,12 @@ That might seem a bit over-engineered, but this feature was included because you
 ```
 
 ## Running with the continuum manipulator
-``` roslaunch continuum_manip_volumetric_drilling_plugin run_cm_vol_drill_simul.launch ambf_args:="-l 2,5 --anatomy_volume_name RFemur"```
+``` roslaunch continuum_manip_volumetric_drilling_plugin simul_simple_setup.launch```
 You can drive the CM using the keyboard. See below for controls and any other info you might need.
+
+You can bring up the CM attached to a UR5 robot using 
+``` roslaunch continuum_manup_volumetric_drilling_plugin simul_fullsys_setup.launch```
+
 ## Drilling into a different volume
 Run the simulator with the added ```--anatomy_volume_name arg``` where arg matches the name given to a volume you are including using the ```-l arg``` command. For example, if there is a volume called ```spine_seg``` that is listed as #15 in the launch.yaml file, and the CM is listed as #25, you could use the following command:
 e.g.,
