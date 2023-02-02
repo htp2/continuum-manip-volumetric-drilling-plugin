@@ -137,6 +137,7 @@ def main():
     parser.add_argument('-v', action='store', dest='volume_name', help='Specify the name for volume')
     parser.add_argument('-y', action='store', dest='yaml_save_location', help='Specify path for new yaml file')
     parser.add_argument('-i', action='store', dest='png_img_save_location', help='Specify path for png file directory')
+    parser.add_argument('-s', action='store', dest='scale', help='Specify scale for volume', default=1.0)
 
     parsed_args = parser.parse_args()
     print('Specified Arguments')
@@ -159,7 +160,7 @@ def main():
         print("creating :" + png_img_dir)
         mkdir(png_img_dir)	
 
-    scale = 10.0
+    scale = float(parsed_args.scale)
 
     data, header = nrrd.read(parsed_args.nrrd_file)
     print(np.min(data))
