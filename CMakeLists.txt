@@ -33,7 +33,7 @@
 #  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-#  $Author: Adnan Munawar $
+#  $Author: Henry Phalen, Adnan Munawar $
 #  $Date:  $
 #  $Rev:  $
 
@@ -46,7 +46,7 @@ find_package(AMBF)
 find_package(Boost COMPONENTS program_options filesystem)
 
 # add_subdirectory(vdrilling_msgs)
-find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs ambf_client)
+find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs ambf_client rospy)
 
 include_directories(${AMBF_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
@@ -56,9 +56,8 @@ link_directories(${AMBF_LIBRARY_DIRS})
 
 add_definitions(${AMBF_DEFINITIONS})
 
-
-message("---> LIBS " ${catkin_INCLUDE_DIRS})
-message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
+# message("---> LIBS " ${catkin_INCLUDE_DIRS})
+# message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
 
 add_library(continuum_manip_volumetric_drilling_plugin SHARED 
     continuum_manip_volumetric_drilling_plugin.cpp 
@@ -69,22 +68,18 @@ add_library(continuum_manip_volumetric_drilling_plugin SHARED
     cable_pull_subscriber.cpp 
     cmvd_settings_rossub.h
     cmvd_settings_rossub.cpp
-    # cm_vdrilling_plugin_updatecbs.cpp
+    sequential_impulse_solver.h
+    sequential_impulse_solver.cpp
 )
 
 add_dependencies(continuum_manip_volumetric_drilling_plugin ${catkin_EXPORTED_TARGETS})
 target_link_libraries (continuum_manip_volumetric_drilling_plugin ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
 set_property(TARGET continuum_manip_volumetric_drilling_plugin PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
-# add_library(continuum_manip_simple_plugin SHARED continuum_manip_simple_plugin.cpp continuum_manip_simple_plugin.h cable_pull_subscriber.h cable_pull_subscriber.cpp psocpp.h obstacle_est_subpub.cpp obstacle_est_subpub.h)
-# add_dependencies(continuum_manip_simple_plugin ${catkin_EXPORTED_TARGETS})
-# target_link_libraries (continuum_manip_simple_plugin ${Boost_LIBRARIES} ${AMBF_LIBRARIES} ${catkin_LIBRARIES})
-# set_property(TARGET continuum_manip_simple_plugin PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+catkin_python_setup()
 
 catkin_package(
  INCLUDE_DIRS .
  LIBRARIES continuum_manip_volumetric_drilling_plugin 
-#  LIBRARIES continuum_manip_volumetric_drilling_plugin continuum_manip_simple_plugin
  CATKIN_DEPENDS vdrilling_msgs ambf_msgs ambf_client
-#  DEPENDS system_lib
 )

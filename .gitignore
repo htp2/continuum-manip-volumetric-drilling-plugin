@@ -4,8 +4,8 @@
 build/
 .idea/
 *.vscode/**
+**_hardness.csv
 
-*/volumes/**
 **/output/**
 
 *.pyc

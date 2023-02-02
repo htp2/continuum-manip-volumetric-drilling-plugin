@@ -11,7 +11,7 @@ VOLUME cube:
   name: cube
   location:
     # position: {x: 0.0, y: 1.15, z: 0.0}
-    position: {x: 6.21793144270694, y: 3.5, z: 3.521347303392883}
+    position: {x: 0.0, y: 2.0, z: 0.0}
     orientation: {r: 0.0, p: 0.0, y: 0.0}
   scale: 1.0
   dimensions: {x: 1.5218000173568783, y: 1.8370300209522317, z: 0.576439400513969}

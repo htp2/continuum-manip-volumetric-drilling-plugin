@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
-    <node pkg="continuum_manip_volumetric_drilling_plugin" name="xreg_imager" type="start_xreg_imager_from_roslaunch.sh"
-        args="/home/$(env USER)/snake_registration/simulation/JustinSnakeModel_huatt/ /home/$(env USER)/snake_registration/simulation/output/ /home/$(env USER)/snake_registration/simulation/anatomy/"
-        output="screen"/>
-
-</launch>

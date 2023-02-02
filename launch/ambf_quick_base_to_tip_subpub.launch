@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
-    <node pkg="continuum_manip_volumetric_drilling_plugin" name="output_base_to_tip_ambf" type="ambf_quick_base_to_tip_subpub.py"
-        output="screen"/>
-    
-
-</launch>
