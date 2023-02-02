@@ -59,17 +59,19 @@ add_definitions(${AMBF_DEFINITIONS})
 # message("---> LIBS " ${catkin_INCLUDE_DIRS})
 # message("---> FOUND ? " ${catkin_vdrilling_msgs_FOUND})
 
+set(CMVD_PLUGIN_PATH plugin/cm_vol_drill)
+
 add_library(continuum_manip_volumetric_drilling_plugin SHARED 
-    continuum_manip_volumetric_drilling_plugin.cpp 
-    continuum_manip_volumetric_drilling_plugin.h 
-    collision_publisher.h 
-    collision_publisher.cpp 
-    cable_pull_subscriber.h 
-    cable_pull_subscriber.cpp 
-    cmvd_settings_rossub.h
-    cmvd_settings_rossub.cpp
-    sequential_impulse_solver.h
-    sequential_impulse_solver.cpp
+    ${CMVD_PLUGIN_PATH}/continuum_manip_volumetric_drilling_plugin.cpp 
+    ${CMVD_PLUGIN_PATH}/continuum_manip_volumetric_drilling_plugin.h 
+    ${CMVD_PLUGIN_PATH}/collision_publisher.h 
+    ${CMVD_PLUGIN_PATH}/collision_publisher.cpp 
+    ${CMVD_PLUGIN_PATH}/cable_pull_subscriber.h 
+    ${CMVD_PLUGIN_PATH}/cable_pull_subscriber.cpp 
+    ${CMVD_PLUGIN_PATH}/cmvd_settings_rossub.h
+    ${CMVD_PLUGIN_PATH}/cmvd_settings_rossub.cpp
+    ${CMVD_PLUGIN_PATH}/sequential_impulse_solver.h
+    ${CMVD_PLUGIN_PATH}/sequential_impulse_solver.cpp
 )
 
 add_dependencies(continuum_manip_volumetric_drilling_plugin ${catkin_EXPORTED_TARGETS})
@@ -79,7 +81,7 @@ set_property(TARGET continuum_manip_volumetric_drilling_plugin PROPERTY POSITION
 catkin_python_setup()
 
 catkin_package(
- INCLUDE_DIRS .
+ INCLUDE_DIRS ${CMVD_PLUGIN_PATH}
  LIBRARIES continuum_manip_volumetric_drilling_plugin 
  CATKIN_DEPENDS vdrilling_msgs ambf_msgs ambf_client
 )

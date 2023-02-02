@@ -37,7 +37,7 @@ void CablePullSubscriber::cablepull_servo_jv_callback(sensor_msgs::JointState ms
 void CablePullSubscriber::publish_cablepull_measured_js(double meas_pos, double meas_vel){
     sensor_msgs::JointState msg;
     msg.header.stamp = ros::Time::now();
-    msg.header.frame_id = 'cm_base'; // TODO?
+    msg.header.frame_id = "cm_base";
     msg.name = {"bend"};
     msg.position = {meas_pos};
     msg.velocity = {meas_vel};
