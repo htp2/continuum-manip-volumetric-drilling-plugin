@@ -101,8 +101,6 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
 
     toolCursorsPosUpdate(T_contmanip_base);
 
-    f_i = 0;
-
     if (m_volume_collisions_enabled)
     {
         cToolCursor *burr_cursor = m_burrToolCursorList.back();
@@ -126,7 +124,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
 
                     cVector3d ct(contact->m_events[cIdx].m_voxelIndexX, contact->m_events[cIdx].m_voxelIndexY, contact->m_events[cIdx].m_voxelIndexZ);
 
-                    if (m_experimental_behavior)
+                    if (m_hardness_behavior)
                     {
                         m_force_to_drill_voxel[uint(ct.x())][uint(ct.y())][uint(ct.z())] -= 1.0 / float(m_removalCount);
                         // std::cout << "Voxel at " << ct << " m_force_to_drill: = " <<m_force_to_drill_voxel[uint(ct.x())][uint(ct.y())][uint(ct.z())] <<std::endl;
@@ -135,23 +133,7 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
                             continue;
                         }
                     }
-
-                    cColorb colorb;
-                    m_voxelObj->m_texture->m_image->getVoxelColor(uint(ct.x()), uint(ct.y()), uint(ct.z()), colorb);
-                    cColorf colorf = colorb.getColorf();
-
-                    double sim_time = m_contManipBaseRigidBody->getCurrentTimeStamp();
-                    double voxel_array[3] = {ct.get(0), ct.get(1), ct.get(2)};
-
-                    float color_array[4];
-                    color_array[0] = colorf.getR();
-                    color_array[1] = colorf.getG();
-                    color_array[2] = colorf.getB();
-                    color_array[3] = colorf.getA();
-                    m_voxelObj->m_texture->m_image->setVoxelColor(uint(ct.x()), uint(ct.y()), uint(ct.z()), m_zeroColor);
-
-                    m_volumeUpdate.enclose(cVector3d(uint(ct.x()), uint(ct.y()), uint(ct.z())));
-                    m_drillingPub->voxelsRemoved(voxel_array, color_array, sim_time);
+                    removeVoxel(ct);
                 }
                 m_mutexVoxel.release();
                 m_flagMarkVolumeForUpdate = true;
@@ -169,7 +151,6 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
         {
             auto seg_force = calculate_force_from_tool_cursor_collision(m_segmentToolCursorList[i], m_segmentBodyList[i], dt);
             m_segmentBodyList[i]->applyForce(seg_force);
-            // m_segmentBodyList[i]->applyForce(m_debug_value * cVector3d(F(0), F(1), F(2)));
         }
         // apply force from burr
         auto burr_force = calculate_force_from_tool_cursor_collision(m_burrToolCursorList[0], m_burrBody, dt);
@@ -178,17 +159,39 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
 
     for (int i = 0; i < m_shaftToolCursorList.size(); i++)
     {
-        
+
         auto shaft_force = calculate_force_from_tool_cursor_collision(m_shaftToolCursorList[0], m_contManipBaseRigidBody, dt);
         m_contManipBaseRigidBody->applyForceAtPointOnBody(shaft_force, m_shaftToolCursorList[i]->getDeviceLocalPos());
-        // m_contManipBaseRigidBody->applyForceAtPointOnBody(100000.0 * m_shaftToolCursorList[i]->getDeviceLocalForce(), m_shaftToolCursorList[i]->getDeviceLocalPos());
     }
 
     applyCablePull(dt);
 }
 
+/// @brief Remove a voxel from the volume
+/// @param pos The position of the voxel to remove (in voxel coordinates)
+void afVolmetricDrillingPlugin::removeVoxel(cVector3d &pos)
+{
+    cColorb colorb;
+    m_voxelObj->m_texture->m_image->getVoxelColor(uint(pos.x()), uint(pos.y()), uint(pos.z()), colorb);
+    cColorf colorf = colorb.getColorf();
+
+    double sim_time = m_worldPtr->getSimulationTime();
+    double voxel_array[3] = {pos.get(0), pos.get(1), pos.get(2)};
+
+    float color_array[4];
+    color_array[0] = colorf.getR();
+    color_array[1] = colorf.getG();
+    color_array[2] = colorf.getB();
+    color_array[3] = colorf.getA();
+    m_voxelObj->m_texture->m_image->setVoxelColor(uint(pos.x()), uint(pos.y()), uint(pos.z()), m_zeroColor);
+
+    m_volumeUpdate.enclose(cVector3d(uint(pos.x()), uint(pos.y()), uint(pos.z())));
+    m_drillingPub->voxelsRemoved(voxel_array, color_array, sim_time);
+}
+
 int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_afWorld)
 {
+    ros::init(argc, argv, "drilling_simulator"); // primarily to strip out ros args
     // Parse command line options
     namespace p_opt = boost::program_options;
     p_opt::options_description cmd_opts("drilling_simulator Command Line Options");
@@ -196,8 +199,10 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     cmd_opts.add_options()("anatomy_volume_name", p_opt::value<std::string>()->default_value("cube"), "Name of volume given in yaml. Default spine_test_volume");
     cmd_opts.add_options()("base_body_name", p_opt::value<std::string>()->default_value("snake_stick"), "Name of body given in yaml. Default snake_stick");
     cmd_opts.add_options()("tool_body_name", p_opt::value<std::string>()->default_value("Burr"), "Name of body given in yaml. Default Burr");
-    cmd_opts.add_options()("experimental_behavior", p_opt::value<std::string>()->default_value("0"), ". Turn on [experimental] features Default false");
-    cmd_opts.add_options()("debug_traj_file", p_opt::value<std::string>()->default_value(""), ". Input needed for [experimental] features Default empty");
+    cmd_opts.add_options()("hardness_behavior", p_opt::value<std::string>()->default_value("0"), ". Turn on volume material hardness features. Default false");
+    cmd_opts.add_options()("hardness_spec_file", p_opt::value<std::string>()->default_value(""), ". Path to csv file with hardness specifications per voxel. Default empty. If hardness features set, but this not set, all hardness will be set to 1.0");
+    // add command option for predrill_traj_files that is a vector of strings and uses multitoken
+    cmd_opts.add_options()("predrill_traj_file", p_opt::value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing(), ". Path to csv file(s) with trajectory that will be predrilled. Default empty");
 
     p_opt::variables_map var_map;
     p_opt::store(p_opt::command_line_parser(argc, argv).options(cmd_opts).allow_unregistered().run(), var_map);
@@ -215,9 +220,14 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     std::string anatomy_volume_name = var_map["anatomy_volume_name"].as<std::string>();
     std::string base_body_name = var_map["base_body_name"].as<std::string>();
     std::string tool_body_name = var_map["tool_body_name"].as<std::string>();
-    std::string experimental_behavior = var_map["experimental_behavior"].as<std::string>();
-    m_experimental_behavior = boost::lexical_cast<bool>(experimental_behavior);
-    std::string debug_traj_file = var_map["debug_traj_file"].as<std::string>();
+    std::string hardness_behavior = var_map["hardness_behavior"].as<std::string>();
+    m_hardness_behavior = boost::lexical_cast<bool>(hardness_behavior);
+    std::string hardness_spec_file = var_map["hardness_spec_file"].as<std::string>();
+    std::vector<std::string> predrill_traj_files;
+    if (var_map.count("predrill_traj_file"))
+    {
+        predrill_traj_files = var_map["predrill_traj_file"].as<std::vector<std::string>>();
+    }
 
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
     m_worldPtr = a_afWorld;
@@ -250,11 +260,26 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     }
 
     // Initialize the volume
-    volumeInit(a_afWorld);
+    int res = volumeInit(a_afWorld);
+    if (res != 0)
+    {
+        cerr << "ERROR! FAILED TO INITIALIZE VOLUME" << endl;
+        return -1;
+    }
     // Initializing tool cursors (for CM to interact with the volume)
-    toolCursorInit(a_afWorld);
+    res = toolCursorInit(a_afWorld);
+    if (res != 0)
+    {
+        cerr << "ERROR! FAILED TO INITIALIZE TOOL CURSORS" << endl;
+        return -1;
+    }
     // Initialize visualizations on camera
-    visualInit(a_afWorld);
+    res = visualInit(a_afWorld);
+    if (res != 0)
+    {
+        cerr << "ERROR! FAILED TO INITIALIZE VISUALS" << endl;
+        return -1;
+    }
 
     // Get CM base initial pose
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
@@ -277,8 +302,23 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     voxelCount[2] = m_volumeObject->getVoxelCount().get(2);
     m_drillingPub->volumeProp(dim, voxelCount);
 
-    if (m_experimental_behavior)
-        experimentalBehaviorInit(debug_traj_file);
+    if (m_hardness_behavior)
+    {
+        res = hardnessBehaviorInit(hardness_spec_file);
+        if (res != 0)
+        {
+            cerr << "ERROR! FAILED TO INITIALIZE HARDNESS BEHAVIOR" << endl;
+            return -1;
+        }
+    }
+
+    if (!predrill_traj_files.empty())
+        res = predrillTrajInit(predrill_traj_files);
+    if (res != 0)
+    {
+        cerr << "ERROR! FAILED TO INITIALIZE PREDRILL TRAJECTORY" << endl;
+        return -1;
+    }
 
     // Set up cable pull subscriber
     m_cablePullSub = new CablePullSubscriber("ambf", "volumetric_drilling");
@@ -291,7 +331,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     return 1;
 }
 
-void afVolmetricDrillingPlugin::visualInit(const afWorldPtr a_afWorld)
+int afVolmetricDrillingPlugin::visualInit(const afWorldPtr a_afWorld)
 {
     // Get first camera
     m_mainCamera = m_worldPtr->getCameras()[0];
@@ -317,9 +357,10 @@ void afVolmetricDrillingPlugin::visualInit(const afWorldPtr a_afWorld)
     m_cableControlModeText->setFontScale(.5);
     m_cableControlModeText->setText("Cable Control Mode = Keyboard");
     m_mainCamera->getFrontLayer()->addChild(m_cableControlModeText);
+    return 0;
 }
 
-void afVolmetricDrillingPlugin::volumeInit(const afWorldPtr a_afWorld)
+int afVolmetricDrillingPlugin::volumeInit(const afWorldPtr a_afWorld)
 {
     m_voxelObj = m_volumeObject->getInternalVolume();
 
@@ -338,6 +379,7 @@ void afVolmetricDrillingPlugin::volumeInit(const afWorldPtr a_afWorld)
     m_voxelObj->m_material->setDamping(0.0);
     m_voxelObj->m_material->setDynamicFriction(0.0);
     m_voxelObj->setUseMaterial(true);
+    return 0;
 }
 
 ///
@@ -345,7 +387,7 @@ void afVolmetricDrillingPlugin::volumeInit(const afWorldPtr a_afWorld)
 /// \param a_afWorld    A world that contains all objects of the virtual environment
 /// \return
 ///
-void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
+int afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
 {
     cWorld *chai_world = a_afWorld->getChaiWorld();
     int num_segs = 27;
@@ -404,15 +446,7 @@ void afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
             m_worldPtr->addSceneObjectToWorld(cursor);
         }
     }
-
-    for (auto &cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList})
-    {
-        for (auto &cursor : cursor_list)
-        {
-            e_int.push_back(cVector3d(0.0, 0.0, 0.0));
-            e_prev.push_back(cVector3d(0.0, 0.0, 0.0));
-        }
-    }
+    return 0;
 }
 
 ///
@@ -790,50 +824,6 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
             cVector3d rotDir(0, 0, 1);
             incrementDeviceRot(rotDir);
         }
-        else if (a_key == GLFW_KEY_KP_7)
-        {
-            if (m_pid == 0)
-            {
-                m_P -= 0.1;
-                std::cout << "m_P: " << m_P << std::endl;
-            }
-            else if (m_pid == 1)
-            {
-                m_I -= 0.1;
-                std::cout << "m_I: " << m_I << std::endl;
-            }
-            else if (m_pid == 2)
-            {
-                m_D -= 0.1;
-                std::cout << "m_D: " << m_D << std::endl;
-            }
-        }
-        else if (a_key == GLFW_KEY_KP_9)
-        {
-            if (m_pid == 0)
-            {
-                m_P += 0.1;
-                std::cout << "m_P: " << m_P << std::endl;
-            }
-            else if (m_pid == 1)
-            {
-                m_I += 0.001;
-                std::cout << "m_I: " << m_I << std::endl;
-            }
-            else if (m_pid == 2)
-            {
-                m_D += 0.1;
-                std::cout << "m_D: " << m_D << std::endl;
-            }
-        }
-        else if (a_key == GLFW_KEY_KP_0)
-        {
-            m_pid = m_pid + 1;
-            if (m_pid > 2)
-            {
-                m_pid = 0;
-            }
-        }
         else if (a_key == GLFW_KEY_KP_DECIMAL)
         {
             m_debug_print = !m_debug_print;
@@ -1103,6 +1093,51 @@ bool afVolmetricDrillingPlugin::fillGoalPointsFromCSV(const std::string &filenam
     return true;
 }
 
+bool parsePredrillTrajFromCSV(const std::string &filename, std::vector<cVector3d> &trace_points, double &burr_size)
+{
+    // first line: burr size (double)
+    // subsequent lines: x,y,z (double)
+    std::ifstream file(filename);
+    if (!file)
+    {
+        std::cout << "[parsePredrillTrajFromCSV] No such file: " << filename << std::endl;
+        return false;
+    }
+    std::string s;
+    if (!std::getline(file, s))
+    {
+        std::cout << "[parsePredrillTrajFromCSV] Empty file: " << filename << std::endl;
+        return false;
+    }
+    std::istringstream ss(s);
+    std::vector<std::string> record;
+    while (ss)
+    {
+        std::string s;
+        if (!getline(ss, s))
+            break;
+        record.push_back(s);
+    }
+    burr_size = std::stod(record[0]);
+    while (file)
+    {
+        std::string s;
+        if (!std::getline(file, s))
+            break;
+        std::istringstream ss(s);
+        std::vector<std::string> record;
+        while (ss)
+        {
+            std::string s;
+            if (!getline(ss, s, ','))
+                break;
+            record.push_back(s);
+        }
+        trace_points.push_back(cVector3d(std::stod(record[0]), std::stod(record[1]), std::stod(record[2])));
+    }
+    return true;
+}
+
 void afVolmetricDrillingPlugin::checkForSettingsUpdate(void)
 {
     if (m_settingsPub->setCableControlMode_changed)
@@ -1147,30 +1182,33 @@ void afVolmetricDrillingPlugin::checkForSettingsUpdate(void)
     }
 }
 
-void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debug_traj_file)
+int afVolmetricDrillingPlugin::hardnessBehaviorInit(const std::string &hardness_spec_file)
 {
-    // Start experimental behavior
-    // std::vector<std::vector<std::vector<double>>> forces(voxelCount[0], std::vector<std::vector<double>>(voxelCount[1], std::vector<double>(voxelCount[2], 1.0)));
-    // m_force_to_drill_voxel = forces;
-    // m_experimental_behavior = true;
-    if (m_experimental_behavior)
+    if (m_hardness_behavior)
     {
-        std::cout << "Starting experimental behavior" << std::endl;
         std::vector<std::vector<std::vector<double>>> forces(m_volumeObject->getVoxelCount().get(0), std::vector<std::vector<double>>(m_volumeObject->getVoxelCount().get(1), std::vector<double>(m_volumeObject->getVoxelCount().get(2), 1.0)));
-        // load forces from file /home/henry/snake_registration/simulation/anatomy/CT_HU_masked.csv
 
-        std::string debug_vol_file = "/home/henry/snake_registration/simulation/anatomy/CT_HU_masked.csv";
-        std::ifstream file(debug_vol_file);
+        if (hardness_spec_file == "")
+        {
+            std::cout << "[hardnessBehaviorInit]: No hardness spec file given, using default of 1.0" << std::endl;
+            m_force_to_drill_voxel = forces;
+            return 0;
+        }
+
+        std::ifstream file(hardness_spec_file);
         if (!file)
         {
-            std::cout << "Error reading: " << debug_vol_file << std::endl;
-            return;
+            std::cout << "[hardnessBehaviorInit]: No such file: " << hardness_spec_file << std::endl;
+            return -1;
         }
 
         // read first line
         std::string s;
         if (!std::getline(file, s))
-            return;
+        {
+            std::cout << "[hardnessBehaviorInit]: File appears to be empty: " << hardness_spec_file << std::endl;
+            return -1;
+        }
         std::istringstream ss(s);
         std::vector<std::string> record;
         while (ss)
@@ -1183,16 +1221,17 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
         // see if first line is m_volumeObject->getVoxelCount().get(0), m_volumeObject->getVoxelCount().get(1), m_volumeObject->getVoxelCount().get(2)
         if (record.size() != 3)
         {
-            std::cout << "Error reading: " << debug_vol_file << std::endl;
-            return;
+            std::cout << "[hardnessBehaviorInit]: expected hardness spec dimensionality of 3 in " << hardness_spec_file << std::endl;
+            return -1;
         }
         if (std::stoi(record[0]) != m_volumeObject->getVoxelCount().get(0) || std::stoi(record[1]) != m_volumeObject->getVoxelCount().get(1) || std::stoi(record[2]) != m_volumeObject->getVoxelCount().get(2))
         {
-            std::cout << "Error reading: " << debug_vol_file << std::endl;
-            return;
+            std::cout << "[hardnessBehaviorInit]: expected hardness spec size of " << m_volumeObject->getVoxelCount().get(0) << ", " << m_volumeObject->getVoxelCount().get(1) << ", " << m_volumeObject->getVoxelCount().get(2) << " in " << hardness_spec_file << std::endl;
+            std::cout << "[hardnessBehaviorInit]: got " << record[0] << ", " << record[1] << ", " << record[2] << std::endl;
+            return -1;
         }
 
-        // rest of the file is one number per line which is the force, loop through each dimension of forces
+        // rest of the file is one number per line which is the hardness, loop through each dimension of harndesses
         for (size_t i = 0; i < m_volumeObject->getVoxelCount().get(0); i++)
         {
             for (size_t j = 0; j < m_volumeObject->getVoxelCount().get(1); j++)
@@ -1200,37 +1239,37 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
                 for (size_t k = 0; k < m_volumeObject->getVoxelCount().get(2); k++)
                 {
                     if (!std::getline(file, s))
-                        return;
+                    {
+                        std::cout << "[hardnessBehaviorInit]: No data at i,j,k = " << i << "," << j << "," << k << ": " << hardness_spec_file << std::endl;
+                        return -1;
+                    }
                     forces[i][j][k] = std::stod(s) + 0.5;
                 }
             }
         }
-
         file.close();
-
         m_force_to_drill_voxel = forces;
+    }
+    return 0;
+}
 
-        // remove from ball around entry point
-        double entry_burr_size = 9.0 * mm_to_ambf_unit;
-        double entry_depth = 5.0 * mm_to_ambf_unit;
-        size_t entry_cut_points_size = 60;
-
-        std::vector<cVector3d> trace_points;
-        fillGoalPointsFromCSV(debug_traj_file, trace_points);
-        std::vector<cVector3d> entry_cut_points;
-        // assume we start with straight path which is parallel to trace_points[1] - trace_points[0]
-        auto entry_direction = cNormalize(trace_points[1] - trace_points[0]);
-        // make entry_cut_points go from -entry_depth mm to entry_depth mm in entry_direction relative to trace_points[0] and it will have length of 60 points
-        for (size_t i = 0; i < entry_cut_points_size; i++)
+int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &predrill_traj_files)
+{
+    // TODO there is likely a much more direct way of doing this - remove all voxels in the cylinder / "pill" around the trajectory
+    int resol = 20;
+    m_mutexVoxel.acquire();
+    for (auto &predrill_traj_file : predrill_traj_files)
+    {
+        double burr_size;
+        std::vector<cVector3d> traj_points;
+        if (!parsePredrillTrajFromCSV(predrill_traj_file, traj_points, burr_size))
         {
-            entry_cut_points.push_back(trace_points[0] + entry_direction * entry_depth * (2 * (static_cast<double>(i) / static_cast<double>(entry_cut_points_size)) - 1));
+            std::cout << "[predrillTrajInit]: Error reading: " << predrill_traj_file << std::endl;
+            return -1;
         }
+        burr_size *= mm_to_ambf_unit;
 
-        auto T_inv = m_volumeObject->getLocalTransform();
-        T_inv.identity();
-        int resol = 20;
-        m_mutexVoxel.acquire();
-        for (auto &pt : entry_cut_points)
+        for (auto &pt : traj_points)
         {
             for (size_t i = 0; i <= resol; i++)
             {
@@ -1239,25 +1278,26 @@ void afVolmetricDrillingPlugin::experimentalBehaviorInit(const std::string &debu
                     for (size_t k = 0; k <= resol; k++)
                     {
                         auto denom = static_cast<double>(resol);
-                        double r = i / denom * entry_burr_size / 2.0;
+                        double r = i / denom * burr_size / 2.0;
                         double th = j / denom * 2 * PI;
                         double phi = k / denom * PI;
                         cVector3d offset(r * sin(phi) * cos(th), r * sin(phi) * sin(th), r * cos(phi));
 
                         cVector3d idx;
-                        auto new_pt = T_inv * pt + offset;
+                        auto new_pt = pt + offset;
                         // std::cout << "actual point " << new_pt << std::endl;
                         m_volumeObject->localPosToVoxelIndex(new_pt, idx);
-                        m_voxelObj->m_texture->m_image->setVoxelColor(uint(idx.x()), uint(idx.y()), uint(idx.z()), m_zeroColor);
-                        m_volumeUpdate.enclose(cVector3d(uint(idx.x()), uint(idx.y()), uint(idx.z())));
+                        removeVoxel(idx);
                     }
                 }
             }
         }
-        m_mutexVoxel.release();
-        graphicsUpdate();
     }
+    m_mutexVoxel.release();
+    graphicsUpdate();
+    return 0;
 }
+
 bool afVolmetricDrillingPlugin::cTransformEqual(const cTransform &a, const cTransform &b)
 {
     for (int i = 0; i < 4; i++)
@@ -1277,7 +1317,7 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
 {
     // ouput force from collision (default zero)
     cVector3d force_out(0.0, 0.0, 0.0);
-    
+
     // voxel collision properties
     double m2 = 0.;
     auto dim = m_volumeObject->getDimensions();
@@ -1286,7 +1326,7 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
     double r2 = 0.0;
     for (size_t i = 0; i < 3; i++)
     {
-        r2 = cMax(r2, dim(i) / num_voxels(i))*4.0;
+        r2 = cMax(r2, dim(i) / num_voxels(i)) * 4.0;
     }
 
     cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
@@ -1295,8 +1335,6 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
     bool in_collision = m_storedColor != m_zeroColor;
     if (in_collision)
     {
-        // auto collision_point = contact->m_globalPos;
-
         double m1 = body->getMass();
         auto r1 = tool_cursor->m_hapticPoint->getRadiusContact();
         auto cx1 = tool_cursor->m_hapticPoint->getGlobalPosGoal();
@@ -1304,7 +1342,6 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
         x1 << cx1.x(), cx1.y(), cx1.z();
 
         Eigen::Vector3d x2;
-        // x2 << collision_point.x(), collision_point.y(), collision_point.z();
         cVector3d cx2;
         m_volumeObject->voxelIndexToLocalPos(orig, cx2);
         cx2 = m_volumeObject->getLocalTransform() * cx2;
@@ -1327,8 +1364,6 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
         F_ext(3) = body->m_bulletRigidBody->getTotalTorque().x();
         F_ext(4) = body->m_bulletRigidBody->getTotalTorque().y();
         F_ext(5) = body->m_bulletRigidBody->getTotalTorque().z();
-        
-        // std::cout << body->getMass() << std::endl;
 
         Eigen::Matrix<double, 12, 1> P;
         P.setZero();
@@ -1344,23 +1379,9 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
         {
             // std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
         }
-
-
-        // if(false)
-        // {auto e = tool_cursor->m_hapticPoint->getGlobalPosProxy() - tool_cursor->m_hapticPoint->getGlobalPosGoal();
-        // e_int[f_i] = e_int[f_i] + e;
-        // auto de = e_prev[f_i] - e;
-
-        // force_out = m_P * e + m_I * e_int[f_i] + m_D * de;
-        // e_prev[f_i] = e;
-        // f_i++;
-        // }
-    }
-    else{
-        // e_int[f_i].zero();
     }
 
-    force_out = force_out * m_P;
+    force_out = force_out * m_collision_force_scale;
 
     return force_out;
 }

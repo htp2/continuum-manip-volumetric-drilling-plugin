@@ -1,0 +1,25 @@
+# AMBF Version: (0.1)
+bodies: []
+joints: []
+volumes: [VOLUME RFemur]
+high resolution path: ./meshes/high_res/
+low resolution path: ./meshes/low_res/
+ignore inter-collision: true
+namespace: /ambf/env/
+
+VOLUME RFemur:
+  name: RFemur
+  location:
+    position: {x: 4.5, y: 4.5, z: 3.35} 
+    orientation: {r: 0.0, p: -1.57, y: 0.0}
+  scale: 10.0
+  dimensions: {x: 0.199, y: 0.381, z: 0.433}
+  images:
+    path: ../resources/volumes/RFemur/
+    prefix: plane00
+    format: png
+    count: 433
+  shaders:
+    path: ./shaders/volume/
+    vertex: shader.vs
+    fragment: shader.fs

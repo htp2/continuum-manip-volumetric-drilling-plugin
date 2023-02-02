@@ -2,7 +2,7 @@ This repo was developed by Henry Phalen as part of his work as a graduate studen
 
 Adapted from the work of Adnan Munawar et al. See their work at https://github.com/LCSR-SICKKIDS/volumetric_drilling
 
-This plugin is an 'unofficial fork' of that repository. Both have undergone significant development since the split so there is some divergence. The plan is to converge at least the volumetric drilling (i.e. what happens at the burr) at some point.
+This plugin is an 'unofficial fork' of that repository. Both have undergone significant development since the split so there is some divergence. The plan is to converge at least the volumetric drilling (i.e. what happens at the burr) at some point. In fact, this plugin may be split into several plugins in the future, but for now, it is all in one.
 
 This pairs well with another plugin I wrote (https://github.com/htp2/ambf_trace_plugin), you might find reference to it in the launch file!
 
@@ -14,7 +14,7 @@ Build and source AMBF as per the instructions on AMBFs wiki: https://github.com/
 ## Clone and Build Simulator
 
 ### [Recommended] Build with catkin (ROS1)
-Since using this with ROS is part of the current intended use case, in these instructions, I assume you will build this in a catkin workspace. It is likely possible to build this repo without catkin (without ROS). Further development of all ROS-related items have been compartmentalized to allow for easier updating to ROS2, etc. once that time comes.
+Since using this with ROS is part of the current intended use case, in these instructions, I assume you will build this in a catkin workspace. It is likely possible to build this repo without catkin (without ROS) with some work. Further development of all ROS-related items have been compartmentalized to allow for easier updating to ROS2, etc. once that time comes.
 
 These are instructions to build in an existing catkin workspace. If you do not have one yet, take a look at: http://wiki.ros.org/catkin/Tutorials/create_a_workspace
 
@@ -24,7 +24,7 @@ echo 'export CATKIN_WS=/home/$USER/bigss/catkin_ws' >> ~/.bashrc
 ```
 
 # Running the Plugin with ambf_simulator:
-The volumetric drilling simulator is a plugin that is launched on top of the AMBF simulator along with other AMBF bodies, described by AMBF Description Format files (ADFs), as will be demonstrated below. The `libcontinuum_manip_volumetric_drilling_plugin.so` plugin is initialized in the `launch.yaml` file and can be commented out for the purpose of debugging the ADF files.   
+The plugin is launched on top of the AMBF simulator along with other AMBF bodies, described by AMBF Description Format files (ADFs), as will be demonstrated below. The `libcontinuum_manip_volumetric_drilling_plugin.so` plugin is initialized in the `launch.yaml` file and can be commented out for the purpose of debugging the ADF files.   
 
 Below are instructions as to how to load different volume and camera options. The -l tag used below allows user to run indexed multibodies that can also be found in the `launch.yaml` under the `multibody configs:` data block. More info on launching the simulator can be found in the AMBF Wiki:  
 
@@ -49,21 +49,21 @@ cd ambf/bin/lin-x86_64/
 ```run_cm_vol_drill_simul.launch```. This launch file has an argument ```ambf_args``` which will be placed in the call to the simulator.
 
 You can use this launch file to replicate the command above directly in the commandline e.g.
-``` roslaunch continuum_manip_volumetric_drilling_plugin run_cm_vol_drill_simul.launch ambf_args:="-l 24,25 --anatomy_volume_name cube"```
+``` roslaunch continuum_manip_volumetric_drilling_plugin run_cm_vol_drill_simul.launch ambf_args:="-l 2,5 --anatomy_volume_name RFemur"```
 
 ### 3. Roslaunch include
 That might seem a bit over-engineered, but this feature was included because you can include it in another launch file as in:
 ```xml
 <include file="$(find continuum_manip_volumetric_drilling_plugin)/launch/run_cm_vol_drill_simul.launch">
     <arg name="ambf_args" value=" \
-        -l 24,25 \
-        --anatomy_volume_name cube"/>
+        -l 2,5 \
+        --anatomy_volume_name RFemur"/>
 </include>
 ```
 
 ## Running with the continuum manipulator
-[TODO]: Put a simple example here
-
+``` roslaunch continuum_manip_volumetric_drilling_plugin run_cm_vol_drill_simul.launch ambf_args:="-l 2,5 --anatomy_volume_name RFemur"```
+You can drive the CM using the keyboard. See below for controls and any other info you might need.
 ## Drilling into a different volume
 Run the simulator with the added ```--anatomy_volume_name arg``` where arg matches the name given to a volume you are including using the ```-l arg``` command. For example, if there is a volume called ```spine_seg``` that is listed as #15 in the launch.yaml file, and the CM is listed as #25, you could use the following command:
 e.g.,
@@ -71,11 +71,40 @@ e.g.,
 ./ambf_simulator --launch_file $CATKIN_WS/src/continuum-manip-volumetric-drilling-plugin/launch.yaml -l 15,25 --anatomy_volume_name spine_seg
 ```
 The volumes are an array of images (JPG or PNG) that are rendered via texture-based volume rendering. With images and an ADF for the volume, user specified anatomy can easily be used in the simulator. We provide utility scripts (located in the `scripts` folder) that can convert both segmented and non-segmented data from the NRRD format to an array of images.
+
+### Preparing a segmented volume for use in the simulator
+Make your segmentation using 3D slicer (website: https://www.slicer.org/). Save the segmentation as a NRRD file. Then, use the `scripts/setup_files_for_nrrd_volume.py'. In the commandline, run:
+```bash
+python3 setup_files_for_nrrd_volume.py -n <path_to_nrrd_file> -v <volume_name> -y <yaml_save_location> -i <png_img_save_location>
+```
+You can also use ```-p <image_prefix>```  but the default of 'plane0' should work fine
+
+I generally place the yaml_save_location as <plugin-path>/ADF/ and the png_img_save_location as <plugin-path>/resources/volumes/
+
+Upon running, you will need to add the yaml file to your launch.yaml if you want to load that file in using the -l arg.
+
+## Hardness behavior
+You can optionally turn on hardness behavior for the volume. This will allow the drill to be affected by the hardness of the material. This is done by using the --hardness_behavior arg and the --hardness_spec_file arg. The --hardness_spec_file arg should be set to the path to the file generated by the `scripts/generate_hardness_file_from_nrrd.py` script. The --hardness_behavior arg should be set to 1 to turn on hardness behavior. Essentially, when the burr is on, contact with a voxel will reduce the harness value, the voxel is removed when the hardness value reaches 0.
+### Preparing a file to achieve hardness behavior
+Use the `scripts/generate_hardness_file_from_nrrd.py` script to generate a file that will be used to determine the hardness of the volume. In the commandline, run:
+```bash 
+python3 generate_hardness_file_from_nrrd.py -n <path_to_nrrd_file> -o <output_directory>
+```
+
+I generally place the output_directory as <plugin-path>/resources/volumes/[volume_name]/ which will be the same directory as the images generated by the previous script.
+
+This will generate a file called [nrrd_filename]_hardness.csv. This file can be used with the --hardness_spec_file arg and with  --hardness_behavior arg set to 1 to have the simulation use the hardness values in the drilling simulation.
+
+There are plans to improve AMBF readings volume files, so both of these scripts may be deprecated in the future in favor of a more robust built-in solution. 
+
 # Controls
 You can interact with the simulator directly with keyboard/mouse commands, or via code (e.g. with ROS sub/pubs). Functionally, control will often be done via ROS, but the keyboard commands are useful for debugging
 
 ## Ideosyncracies
 1. For now (fix coming): At the start you will need to press: ( Ctrl+] ) and ( Ctrl+[ ) to start the volumetric collisions and have the tool cursors track the mesh positions (this is a workaround to prevent all the tool cursors from starting at 0,0,0 before the first frame and then flying into position, getting stuck and/or causing a bunch of vibrations in the CM).
+2. If you are only using keyboard controls, you may need to cycle through switching between the keyboard and topic control modes. This is done by pressing ( Ctrl+/ ) and ( Ctrl+o ) twice. 
+3. To use the keyboard controls, the CM needs to be unattached to another AMBF body and needs to be passive (i.e. the base segment should have its mass set to zero). I achieve this by having a [CM_name].ADF and CM_name]_massless.ADF
+4. If you attach the CM to another AMBF body, the CM may exhibit strange behavior until topic control is switched on (Ctrl+o) and (Ctrl+/). 
 
 ## Keyboard Navigation
 1. Control the base of the CM by holding Ctrl and pressing any of the W, A, S, D, I, or K keys for translation. Specifics, and rotation can be found in the table below.
@@ -106,7 +135,6 @@ You can interact with the simulator directly with keyboard/mouse commands, or vi
 | 1 | [Ctrl+O (letter o)]      | Toggle the drill's control mode between Haptic Device / Keyboard to ROS Comm       |
 | 2 | [Ctrl+N]      | Resets the shape of the volume                                                     |
 | 3 | [Alt+R]       | Resets the whole world and this plugin                                             |
-| 3 | [B]           | Toggles the visibility of drill mesh in the scene                                  |
 | 4 | [Ctrl+C] | Toggles the visbility of collision spheres |
 | 7 | [Ctrl+[ ] | Toggles tip volume collision |
 | 8 | [Ctrl+] ] | Resets collision spheres with mesh locations |
