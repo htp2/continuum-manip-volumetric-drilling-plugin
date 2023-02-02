@@ -50,6 +50,7 @@
 #include "continuum_manip_volumetric_drilling_plugin.h"
 #include "cmvd_settings_rossub.h"
 #include "sequential_impulse_solver.h"
+#include "afConversions.h"
 
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -149,19 +150,18 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
         }
         for (int i = 0; i < m_segmentToolCursorList.size(); i++)
         {
-            auto seg_force = calculate_force_from_tool_cursor_collision(m_segmentToolCursorList[i], m_segmentBodyList[i], dt);
-            m_segmentBodyList[i]->applyForce(seg_force);
+            auto seg_impulse = calculate_impulse_from_tool_cursor_collision(m_segmentToolCursorList[i], m_segmentBodyList[i], dt);
+            m_segmentBodyList[i]->m_bulletRigidBody->applyCentralImpulse(seg_impulse);
         }
         // apply force from burr
-        auto burr_force = calculate_force_from_tool_cursor_collision(m_burrToolCursorList[0], m_burrBody, dt);
-        m_burrBody->applyForce(burr_force);
+        auto burr_impulse = calculate_impulse_from_tool_cursor_collision(m_burrToolCursorList[0], m_burrBody, dt);
+        m_burrBody->m_bulletRigidBody->applyCentralImpulse(burr_impulse);
     }
 
     for (int i = 0; i < m_shaftToolCursorList.size(); i++)
     {
-
-        auto shaft_force = calculate_force_from_tool_cursor_collision(m_shaftToolCursorList[0], m_contManipBaseRigidBody, dt);
-        m_contManipBaseRigidBody->applyForceAtPointOnBody(shaft_force, m_shaftToolCursorList[i]->getDeviceLocalPos());
+        auto shaft_impulse = calculate_impulse_from_tool_cursor_collision(m_shaftToolCursorList[0], m_contManipBaseRigidBody, dt);
+        m_contManipBaseRigidBody->m_bulletRigidBody->applyImpulse(shaft_impulse, to_btVector(m_shaftToolCursorList[i]->getDeviceLocalPos()));
     }
 
     applyCablePull(dt);
@@ -942,7 +942,9 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
 
     m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
-    last_seg_ptr->applyTorque(10.0 * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2());
+    // last_seg_ptr->applyTorque(10.0 * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2());
+    auto torque_imp = 10.0 * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2() * dt;
+    last_seg_ptr->m_bulletRigidBody->applyTorqueImpulse(btVector3(torque_imp.x(), torque_imp.y(), torque_imp.z()));
     // last_seg_ptr->applyForce(cVector3d(-10.0*m_cable_pull_mag*last_seg_ptr->getLocalRot().getCol1()), last_seg_ptr->getLocalRot()*cVector3d( 2 *mm_to_ambf_unit,0.0,0.0) );
 }
 
@@ -1313,10 +1315,10 @@ bool afVolmetricDrillingPlugin::cTransformEqual(const cTransform &a, const cTran
     return true;
 }
 
-cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt)
+btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt)
 {
-    // ouput force from collision (default zero)
-    cVector3d force_out(0.0, 0.0, 0.0);
+    // ouput impulse from collision (default zero)
+    btVector3 imp_out(0.0, 0.0, 0.0);
 
     // voxel collision properties
     double m2 = 0.;
@@ -1371,8 +1373,7 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
         bool in_contact = compute_impulse_two_sphere_collision(P, x1, x2, r1, r2, m1, m2, dt, V, F_ext, 0.4);
         if (in_contact)
         {
-            auto F = P / dt;
-            force_out = cVector3d(F(0), F(1), F(2));
+            imp_out = btVector3(P(0), P(1), P(2));
             // std::cout << "force_out: " << force_out << std::endl;
         }
         else
@@ -1381,7 +1382,6 @@ cVector3d afVolmetricDrillingPlugin::calculate_force_from_tool_cursor_collision(
         }
     }
 
-    force_out = force_out * m_collision_force_scale;
 
-    return force_out;
+    return imp_out;
 }

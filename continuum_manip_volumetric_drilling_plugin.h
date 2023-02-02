@@ -75,7 +75,7 @@ protected:
 
     int volumeInit(const afWorldPtr a_afWorld);
 
-    cVector3d calculate_force_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt);
+    btVector3 calculate_impulse_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt);
 
 private:
     cTransform T_contmanip_base; // Drills target pose
