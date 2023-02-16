@@ -47,7 +47,6 @@
 
 # */
 # //==============================================================================
-from numpy import imag
 import nrrd
 import PIL.Image
 import numpy as np

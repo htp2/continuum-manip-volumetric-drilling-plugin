@@ -241,7 +241,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_to_ambf_unit = 10.0;
     mm_to_ambf_unit = m_to_ambf_unit / 1000.0;
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
-    m_boneColor = cColorb(255, 249, 219, 255);
     m_storedColor = cColorb(0x00, 0x00, 0x00, 0x00);
 
     // Importing continuum manipulator model
@@ -327,6 +326,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     rand_eng = std::mt19937(rd());
     unif_dist = std::uniform_real_distribution<>(0, 1);
 
+    // Turn on volume collision
+    m_volume_collisions_enabled = true;
+
     return 1;
 }
 
@@ -407,7 +409,6 @@ int afVolmetricDrillingPlugin::toolCursorInit(const afWorldPtr a_afWorld)
     for (int i = 1; i <= num_segs; i++)
     {
         m_segmentBodyList.push_back(m_worldPtr->getRigidBody("/ambf/env/BODY seg" + to_string(i)));
-        m_segmentJointList.push_back(m_worldPtr->getJoint("/ambf/env/JOINT joint" + to_string(i)));
         auto seg_cursor = new cToolCursor(chai_world);
         m_segmentToolCursorList.push_back(seg_cursor);
     }
@@ -841,13 +842,13 @@ void afVolmetricDrillingPlugin::reset()
 
 bool afVolmetricDrillingPlugin::close()
 {
-    for (auto tool : m_toolCursorList)
+    for (auto &cursor_list : {m_shaftToolCursorList, m_segmentToolCursorList, m_burrToolCursorList})
     {
-        tool->stop();
+        for (auto &cursor : cursor_list)
+        {
+            cursor->stop();
+        }
     }
-
-    delete m_deviceHandler;
-
     return true;
 }
 

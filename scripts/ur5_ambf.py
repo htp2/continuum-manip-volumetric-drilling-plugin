@@ -3,6 +3,7 @@
 import numpy as np
 from ambf_client import Client
 import rospy
+from argparse import ArgumentParser
 
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped
@@ -269,6 +270,15 @@ class UR5_AMBF:
 
 if __name__ == "__main__":
     # Create a instance of the client
+    parser = ArgumentParser()
+    # add an argument for initial joint positions of the robot (optional) - default is [0.0,-1.0,-1.0,0.0,-np.pi/8, np.pi/8]
+    parser.add_argument('--init_jp', nargs=6, type=float, default=[
+                        0.0, -1.0, 1.0, 0.0, -np.pi/8, np.pi/8])   
+    #parse known and unknown arguments
+    args, unknown = parser.parse_known_args()
+    init_jp = args.init_jp
+    print("Initial joint positions: ", init_jp)
+
     while (not rospy.is_shutdown()):
         _client = Client("ur5_ambf")
         _client.connect()
@@ -290,7 +300,7 @@ if __name__ == "__main__":
             time.sleep(0.5)
         print("UR5_AMBF loaded")
         # set init pose
-        ur5.servo_jp([0.0, -1.0, 1.0, 0.0, -np.pi/8, np.pi])
+        ur5.servo_jp(init_jp)
         time.sleep(2.0)  # let the move command finish
         ur5.run()
         _client.clean_up()
