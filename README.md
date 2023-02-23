@@ -83,6 +83,10 @@ e.g.,
 The volumes are an array of images (JPG or PNG) that are rendered via texture-based volume rendering. With images and an ADF for the volume, user specified anatomy can easily be used in the simulator. We provide utility scripts (located in the `scripts` folder) that can convert both segmented and non-segmented data from the NRRD format to an array of images.
 
 ### Preparing a segmented volume for use in the simulator
+#### The new easy way
+Use this 3D slicer plugin! https://github.com/htp2/ambf_util_slicer_plugin
+
+#### The old hard way
 Make your segmentation using 3D slicer (website: https://www.slicer.org/). Save the segmentation as a NRRD file. Then, use the `scripts/setup_files_for_nrrd_volume.py'. In the commandline, run:
 ```bash
 python3 setup_files_for_nrrd_volume.py -n <path_to_nrrd_file> -v <volume_name> -y <yaml_save_location> -i <png_img_save_location>
