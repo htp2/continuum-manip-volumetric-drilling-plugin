@@ -47,7 +47,7 @@ There are a few different ways to run ambf, each have their own purposes. Choose
 The original way to run the ambf simulator is to directly call the executable as in, and passing in certain commandline args directly 
 ```bash
 cd ambf/bin/lin-x86_64/
-./ambf_simulator --launch_file <continuum-manip-volumetric-drilling-plugin-path>/launch.yaml -l 24,25 --anatomy_volume_name cube
+./ambf_simulator --launch_file <continuum-manip-volumetric-drilling-plugin-path>/launch.yaml -l 2,5 --anatomy_volume_name RFemur
 ```
 
 ### 2. Roslaunch commandline
