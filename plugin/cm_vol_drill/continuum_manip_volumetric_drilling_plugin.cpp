@@ -209,6 +209,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     cmd_opts.add_options()("hardness_behavior", p_opt::value<std::string>()->default_value("0"), ". Turn on volume material hardness features. Default false");
     cmd_opts.add_options()("hardness_spec_file", p_opt::value<std::string>()->default_value(""), ". Path to csv file with hardness specifications per voxel. Default empty. If hardness features set, but this not set, all hardness will be set to 1.0");
     cmd_opts.add_options()("predrill_traj_file", p_opt::value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing(), ". Path to csv file(s) with trajectory that will be predrilled. Default empty");
+    cmd_opts.add_options()("predrill_ref_overwrite", p_opt::value<std::string>()->default_value(""), "By default drill traj is relative to [anatomy_volume_name]_anatomical origin. Here you can override to another object");
 
     // Parse command line options
     p_opt::variables_map var_map;
@@ -229,6 +230,12 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     if (var_map.count("predrill_traj_file"))
     {
         predrill_traj_files = var_map["predrill_traj_file"].as<std::vector<std::string>>();
+    }
+    std::string predrill_ref_overwrite = var_map["predrill_ref_overwrite"].as<std::string>();
+    std::string predrill_ref_name = anatomy_volume_name + "_anatomical_origin";
+    if (predrill_ref_overwrite != "")
+    {
+        predrill_ref_name = predrill_ref_overwrite;
     }
 
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
@@ -278,7 +285,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
         cerr << "ERROR! FAILED TO INITIALIZE VISUALS" << endl;
         return -1;
     }
-
     // Get CM base initial pose
     T_contmanip_base = m_contManipBaseRigidBody->getLocalTransform();
 
@@ -311,7 +317,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     }
 
     if (!predrill_traj_files.empty())
-        res = predrillTrajInit(predrill_traj_files);
+        res = predrillTrajInit(predrill_traj_files, predrill_ref_name);
     if (res != 0)
     {
         cerr << "ERROR! FAILED TO INITIALIZE PREDRILL TRAJECTORY" << endl;
@@ -1179,8 +1185,17 @@ int afVolmetricDrillingPlugin::hardnessBehaviorInit(const std::string &hardness_
 }
 
 /// @brief Remove voxels in the cylinder around specified trajectory(ies) as if they were pre-drilled
-int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &predrill_traj_files)
+int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &predrill_traj_files, const std::string &predrill_reference_object_name)
 {
+    m_predrill_reference_object = m_worldPtr->getBaseObject(predrill_reference_object_name, false);
+    if (!m_predrill_reference_object)
+    {
+        cerr << "ERROR! FAILED TO FIND PREDRILL REFERENCE OBJECT " << predrill_reference_object_name << endl;
+        return -1;
+    }
+    auto predrill_offset = m_predrill_reference_object->getLocalTransform();
+    auto volume_origin_offset = m_volumeObject->getLocalTransform();
+    volume_origin_offset.invert();
     // TODO there is likely a much more direct way of doing this - remove all voxels in the cylinder / "pill" around the trajectory
     int resol = 20;
     m_mutexVoxel.acquire();
@@ -1197,6 +1212,7 @@ int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &
 
         for (auto &pt : traj_points)
         {
+            pt = volume_origin_offset * predrill_offset * pt;
             for (size_t i = 0; i <= resol; i++)
             {
                 for (size_t j = 0; j <= resol; j++)

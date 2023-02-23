@@ -110,6 +110,7 @@ private:
     vector<cToolCursor *> m_burrToolCursorList;
     vector<afRigidBodyPtr> m_segmentBodyList;
     afRigidBodyPtr m_burrBody;
+    afBaseObjectPtr m_predrill_reference_object;
 
     cLabel *m_cablePullMagText;
     cLabel *m_drillControlModeText;
@@ -142,7 +143,7 @@ private:
 
     int hardnessBehaviorInit(const std::string &hardness_spec_file);
 
-    int predrillTrajInit(const std::vector<std::string> &predrill_traj_files);
+    int predrillTrajInit(const std::vector<std::string> &predrill_traj_files, const std::string& predrill_reference_object_name);
 
     void removeVoxel(cVector3d &pos);
 
