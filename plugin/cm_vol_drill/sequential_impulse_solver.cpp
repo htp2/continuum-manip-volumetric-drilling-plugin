@@ -200,7 +200,48 @@ bool compute_impulse_two_sphere_collision(Eigen::Matrix<double, 12, 1> &P, const
     return in_contact;
 }
 
+bool compute_impulse_plane_sphere_collision(Eigen::Matrix<double, 12, 1> &P, const Eigen::Vector3d &x1, const Eigen::Vector3d &x2, const double r1, const Eigen::Vector3d &n_plane, const double m1, const double m2, const double dt,
+                                          const Eigen::Matrix<double, 12, 1> V, const Eigen::Matrix<double, 12, 1> F_ext, const double b, const double a)
+{
+    bool in_contact;
+    Eigen::Vector3d rb1, rb2, normal;
+    in_contact = compute_contact_sphere_plane(x1, x2, r1, n_plane, rb1, rb2, normal);
+    if (in_contact)
+    {
+        double C;
+        Eigen::Matrix<double, 1, 12> J;
+        compute_constraint_and_jacobian(x1, x2, rb1, rb2, normal, C, J);
+        double bias = compute_bias(C, V, normal, dt, b, a);
+        double inv_m1 = m1 > 0. ? 1. / m1 : 0.;
+        double inv_m2 = m2 > 0. ? 1. / m2 : 0.;
+        double ix1 = 1.0, iy1 = ix1, iz1 = ix1;
+        double ix2 = 10.0, iy2 = ix2, iz2 = ix2;
+        Eigen::Matrix<double, 12, 12> M_inv = Eigen::Matrix<double, 12, 12>::Identity();
+        M_inv.block(0, 0, 3, 3) = inv_m1 * Eigen::Matrix<double, 3, 3>::Identity();
+        M_inv.block(3, 3, 3, 3) = Eigen::DiagonalMatrix<double, 3>(Eigen::Vector3d(1. / ix1, 1. / iy1, 1. / iz1));
+        M_inv.block(6, 6, 3, 3) = inv_m2 * Eigen::Matrix<double, 3, 3>::Identity();
+        M_inv.block(9, 9, 3, 3) = Eigen::DiagonalMatrix<double, 3>(Eigen::Vector3d(1. / ix2, 1. / iy2, 1. / iz2));
+        compute_impulse(J, V, F_ext, bias, dt, P, M_inv);
 
+        // std::cout << "x1: " << x1 << std::endl;
+        // std::cout << "x2: " << x2 << std::endl;
+        // std::cout << "M_inv: " << M_inv << std::endl;
+        // std::cout << "J: " << J << std::endl;
+        // std::cout << "V: " << V << std::endl;
+        // std::cout << "F_ext: " << F_ext << std::endl;
+        // std::cout << "b: " << b << std::endl;
+        // std::cout << "a: " << a << std::endl;
+        // std::cout << "r1: " << r1 << std::endl;
+        // std::cout << "r2: " << r2 << std::endl;
+        // std::cout << "n: " << normal << std::endl;
+        // std::cout << "rb1: " << rb1 << std::endl;
+        // std::cout << "rb2: " << rb2 << std::endl;
+        // std::cout << "C: " << C << std::endl;
+        // std::cout << "bias: " << bias << std::endl;
+        
+    }
+    return in_contact;
+}
 // main function
 int main()
 {
@@ -253,6 +294,7 @@ int main()
         Eigen::Vector3d rb2 = Eigen::Vector3d(0, 0, 0);
         Eigen::Vector3d n = Eigen::Vector3d(0, 0, 0);
         // bool contact = compute_contact_sphere_plane(x1, x2, r1, plane_normal, rb1, rb2, n);
+
         bool contact = compute_contact_sphere_sphere(x1, x2, r1, r2, rb1, rb2, n);
 
         // std::cout << "contact:" << contact << std::endl;

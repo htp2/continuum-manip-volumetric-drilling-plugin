@@ -133,7 +133,8 @@ private:
     bool m_debug_print = false;
     bool m_hardness_behavior = false;
     double m_hardness_removal_rate = 1.0/150.0;
-
+    std::string m_hardness_spec_file;
+    
     std::mt19937 rand_eng;
     std::uniform_real_distribution<> unif_dist;
 

@@ -226,6 +226,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     std::string hardness_behavior = var_map["hardness_behavior"].as<std::string>();
     m_hardness_behavior = boost::lexical_cast<bool>(hardness_behavior);
     std::string hardness_spec_file = var_map["hardness_spec_file"].as<std::string>();
+    m_hardness_spec_file = hardness_spec_file;
     std::vector<std::string> predrill_traj_files;
     if (var_map.count("predrill_traj_file"))
     {
@@ -308,7 +309,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
 
     if (m_hardness_behavior)
     {
-        res = hardnessBehaviorInit(hardness_spec_file);
+        res = hardnessBehaviorInit(m_hardness_spec_file);
         if (res != 0)
         {
             cerr << "ERROR! FAILED TO INITIALIZE HARDNESS BEHAVIOR" << endl;
@@ -606,6 +607,11 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         {
             cout << "INFO! RESETTING THE VOLUME" << endl;
             m_volumeObject->reset();
+            if(m_hardness_behavior)
+            {
+                hardnessBehaviorInit(m_hardness_spec_file);
+            }
+            
         }
     }
 
@@ -1270,7 +1276,7 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
     double r2 = 0.0;
     for (size_t i = 0; i < 3; i++)
     {
-        r2 = cMax(r2, dim(i) / num_voxels(i)) * 4.0;
+        r2 = cMax(r2, dim(i) / num_voxels(i));
     }
 
     cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
@@ -1298,7 +1304,7 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
         V(2) = body->m_bulletRigidBody->getLinearVelocity().z();
         V(3) = body->m_bulletRigidBody->getAngularVelocity().x();
         V(4) = body->m_bulletRigidBody->getAngularVelocity().y();
-        V(5) = body->m_bulletRigidBody->getAngularVelocity().z();
+        V(5) = body->m_bulletRigidBody->getAngularVelocity().z();        
 
         Eigen::Matrix<double, 12, 1> F_ext;
         F_ext.setZero();
@@ -1312,10 +1318,17 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
         Eigen::Matrix<double, 12, 1> P;
         P.setZero();
 
-        bool in_contact = compute_impulse_two_sphere_collision(P, x1, x2, r1, r2, m1, m2, dt, V, F_ext, 0.4);
+        Eigen::Vector3d n_plane;
+        n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
+
+        // bool in_contact = compute_impulse_two_sphere_collision(P, x1, x2, r1, r2, m1, m2, dt, V, F_ext, 0.4);
+
+        bool in_contact = compute_impulse_plane_sphere_collision(P, x1, x2, r1, n_plane, m1, m2, dt, V, F_ext, 1.0);
+
         if (in_contact)
         {
             imp_out = btVector3(P(0), P(1), P(2));
+            // std::cout << "P: " << P << std::endl;
             // std::cout << "force_out: " << force_out << std::endl;
         }
         else
@@ -1323,6 +1336,5 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
             // std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
         }
     }
-
     return imp_out;
 }

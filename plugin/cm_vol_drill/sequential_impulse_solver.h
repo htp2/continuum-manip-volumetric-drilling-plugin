@@ -62,4 +62,7 @@ void compute_impulse(const Eigen::Matrix<double, 1, 12> &J, const Eigen::Matrix<
 bool compute_impulse_two_sphere_collision(Eigen::Matrix<double, 12, 1> &P, const Eigen::Vector3d &x1, const Eigen::Vector3d &x2, const double r1, const double r2, const double m1, const double m2, const double dt,
                                           const Eigen::Matrix<double, 12, 1> V = Eigen::Matrix<double, 12, 1>::Zero(), const Eigen::Matrix<double, 12, 1> F_ext = Eigen::Matrix<double, 12, 1>::Zero(), const double b=0.4, const double a=1.0);
 
+bool compute_impulse_plane_sphere_collision(Eigen::Matrix<double, 12, 1> &P, const Eigen::Vector3d &x1, const Eigen::Vector3d &x2, const double r1, const Eigen::Vector3d &n_plane, const double m1, const double m2, const double dt,
+                                          const Eigen::Matrix<double, 12, 1> V, const Eigen::Matrix<double, 12, 1> F_ext, const double b=0.4, const double a=1.0);
+
 #endif // SEQUENTIAL_IMPULSE_SOLVER_H
