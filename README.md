@@ -1,4 +1,7 @@
+**This work will be formally introduced as a Long Abstract at IPCAI in June 2023**
+
 # Description
+
 A program to simulate a continuum manipulator that is able to interact with and remove parts of a volumetric model. The initial application is to simulate the control of a dexterous surgical tool for curved drilling for autonomous surgical procedures in orthopaedics (e.g., femur and spine). This is implemented as a plugin for AMBF https://github.com/WPI-AIM/ambf/.
 The primary use-case of this simulation tool is to more-rapidly develop and test control strategies and allow for visualization of feasability, etc. of certain plans. When paired with the XREG library, simulated Xray images can be taken of the scene and can be used to train, test, etc. image-based navigation.
 
