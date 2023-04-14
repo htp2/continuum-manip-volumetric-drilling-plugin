@@ -11,6 +11,9 @@ https://user-images.githubusercontent.com/17507145/216717871-ee82b41d-9e78-4d6e-
 
 https://user-images.githubusercontent.com/17507145/216717892-d7fd4dc4-dcd4-4406-8a1b-ea22bb869bd1.mp4
 
+
+https://user-images.githubusercontent.com/17507145/232047575-106d8e54-e95c-400b-a68e-ca77c69933a6.mp4
+
 This plugin is an 'unofficial fork' of Adnan Munawar et al. See their work at https://github.com/LCSR-SICKKIDS/volumetric_drilling. Both have undergone significant development since the split so there is some divergence. The plan is to converge at least the volumetric drilling (i.e. what happens at the burr) at some point. In fact, this plugin may be split into several plugins in the future, but for now, it is all in one.
 
 This pairs well with another plugin I wrote (https://github.com/htp2/ambf_trace_plugin), you might find reference to it in the launch file!
