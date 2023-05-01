@@ -29,7 +29,7 @@ Build and source AMBF as per the instructions on AMBFs wiki: https://github.com/
 
 ### [Recommended] Build with catkin (ROS1)
 
-> You will likely need to include this message repository https://github.com/htp2/vdrilling_msgs in your catkin_ws. This dependency should go away at some point to align with the volumetric_drilling repo
+> You will likely need to include this message repository https://github.com/htp2/vdrilling_msgs in your catkin_ws. This dependency should go away at some point to align with the volumetric_drilling repo. We have found that sometimes, catkin gets a bit confused if you do this "after-the-fact" and as such you will need to run ``` catkin build --force-cmake ```
 
 Since using this with ROS is part of the current intended use case, in these instructions, I assume you will build this in a catkin workspace. Development of all ROS-related items have been compartmentalized to allow for easier updating to ROS2, etc. once that time comes.
 
