@@ -25,6 +25,8 @@ Build and source AMBF as per the instructions on AMBFs wiki: https://github.com/
 
 ## Clone and Build Simulator
 
+> At the moment, there is a (theoretically unneeded) dependency in the sequential impulse code for the following graphing tool: gnuplot. I will work to remove the dependency, but for now you can compile by running ```sudo apt-get install gnuplot libgnuplot-iostream-dev``` (by the way it's a pretty handy C++ plotting tool :) )
+
 ### [Recommended] Build with catkin (ROS1)
 
 > You will likely need to include this message repository https://github.com/htp2/vdrilling_msgs in your catkin_ws. This dependency should go away at some point to align with the volumetric_drilling repo
