@@ -1,4 +1,9 @@
-**This work will be formally introduced as a Long Abstract at IPCAI in June 2023**
+# Published in IJCARS: Citation & Link
+```
+Phalen, H., Munawar, A., Jain, A., Taylor, R. H., Armand, M. Platform for investigating continuum manipulator behavior in orthopedics. Int J CARS (2023). https://doi.org/10.1007/s11548-023-02945-8
+```
+
+Link: https://link.springer.com/article/10.1007/s11548-023-02945-8
 
 # Description
 
