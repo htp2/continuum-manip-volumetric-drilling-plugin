@@ -31,7 +31,7 @@ BODY base_link:
     iy: 0.0
     iz: 0.0
   collision margin: 0.001
-  scale: 10.0
+  scale: 1.0
   location:
     position:
       x: 0.0
@@ -51,9 +51,9 @@ BODY base_link:
       p: 0
       y: 0
   passive: false
-  publish children names: false
-  publish joint names: false
-  publish joint positions: false
+  publish children names: true
+  publish joint names: true
+  publish joint positions: true
   friction:
     rolling: 0.0
     static: 0.5
@@ -70,7 +70,7 @@ BODY forearm_link:
   collision mesh type: CONCAVE_MESH
   mass: 200.275
   collision margin: 0.001
-  scale: 10.0
+  scale: 1.0
   location:
     position:
       x: 0.425
@@ -109,7 +109,7 @@ BODY shoulder_link:
   collision mesh type: CONCAVE_MESH
   mass: 300.7
   collision margin: 0.001
-  scale: 10.0
+  scale: 1.0
   location:
     position:
       x: 0.0
@@ -148,7 +148,7 @@ BODY upper_arm_link:
   collision mesh type: CONCAVE_MESH
   mass: 800.393
   collision margin: 0.001
-  scale: 10.0
+  scale: 1.0
   location:
     position:
       x: 0.0
@@ -187,7 +187,7 @@ BODY wrist_1_link:
   collision mesh type: CONCAVE_MESH
   mass: 100.219
   collision margin: 0.001
-  scale: 10.0
+  scale: 1.0
   location:
     position:
       x: 0.81725
@@ -226,7 +226,7 @@ BODY wrist_2_link:
   collision mesh type: CONCAVE_MESH
   mass: 100.219
   collision margin: 0.001
-  scale: 10.0
+  scale: 1.0
   location:
     position:
       x: 0.81725
@@ -265,7 +265,7 @@ BODY wrist_3_link:
   collision mesh type: CONCAVE_MESH
   mass: 10.879
   collision margin: 0.001
-  scale: 10.0
+  scale: 1.0
   location:
     position:
       x: 0.81725

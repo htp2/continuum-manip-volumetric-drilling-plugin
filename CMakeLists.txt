@@ -43,7 +43,7 @@ project (continuum_manip_volumetric_drilling_plugin)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package(AMBF)
-find_package(Boost COMPONENTS program_options filesystem)
+find_package(Boost COMPONENTS program_options filesystem iostreams)
 
 # add_subdirectory(vdrilling_msgs)
 find_package(catkin COMPONENTS vdrilling_msgs ambf_msgs ambf_client rospy)
