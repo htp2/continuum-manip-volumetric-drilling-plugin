@@ -2,8 +2,9 @@
 <launch>
 
     <arg name="ambf_args" default=""/>
+    <arg name="launch_file" default="$(find continuum_manip_volumetric_drilling_plugin)/launch.yaml " />
 
     <node pkg="continuum_manip_volumetric_drilling_plugin" name="ambf_with_CM_plugin" type="start_ambf_simul_for_roslaunch.sh" 
-        args="--launch_file $(find continuum_manip_volumetric_drilling_plugin)/launch.yaml $(arg ambf_args)" output="screen"/>
+        args="--launch_file $(arg launch_file) $(arg ambf_args)" output="screen"/>
 
 </launch>

@@ -4,7 +4,7 @@
 build/
 .idea/
 *.vscode/**
-
+**_hardness.csv
 
 **/output/**
 
