@@ -1664,7 +1664,7 @@ BODY snake_stick:
 BODY Burr:
   name: Burr
   mesh: Burr.STL
-  mass: 0.01
+  mass: 0.05
   inertia:
     ix: 0.00734
     iy: 0.00734

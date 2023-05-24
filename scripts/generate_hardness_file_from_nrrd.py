@@ -44,11 +44,14 @@ def main():
     origin_m = 0.001 * origin_mm
     print(header)
     
-    print("help")
+    # set data to be a float
+    data = data.astype(float)
 
     min_hu = np.min(data[data > -1000])
     max_hu = np.max(data)
-    
+    print(f"Min HU: {min_hu}")
+    print(f"Max HU: {max_hu}")
+    print(f"Values HU: {np.unique(data)}")
     # set data[data > -1000] to be scaled between 0 and 1
     if min_hu == max_hu:
         if min_hu == -1000:
@@ -62,10 +65,15 @@ def main():
         # set data[data <= -1000] to be 0
         data[data <= -1000] = 0
 
+    # temporarily set multiply data by 100
+    print(np.max(data))
+    data[(data>0)*(data < 0.2)] = 0.01
+    data[(data>0.9)*(data < 1.1)] = 100.0
+
     # data is (x by y by z) but we want (y by x by z)
-    data = np.swapaxes(data, 0, 1)
+    # data = np.swapaxes(data, 0, 1)
     # we want to flip the y' axis if axes are (x' by y' by z')
-    data = np.flip(data, 1)
+    # data = np.flip(data, 1)
     data_size = data.shape
     # now let's save to csv where first line is the dimensions of the data (x by y by z) and then nested for loop through x,y,z each line is data[x,y,z]
     with open(output_filename, 'w') as f:

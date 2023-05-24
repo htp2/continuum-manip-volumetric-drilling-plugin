@@ -1320,16 +1320,12 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
 
         Eigen::Vector3d n_plane;
         n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
-
         // bool in_contact = compute_impulse_two_sphere_collision(P, x1, x2, r1, r2, m1, m2, dt, V, F_ext, 0.4);
-
         bool in_contact = compute_impulse_plane_sphere_collision(P, x1, x2, r1, n_plane, m1, m2, dt, V, F_ext, 1.0);
 
         if (in_contact)
         {
             imp_out = btVector3(P(0), P(1), P(2));
-            // std::cout << "P: " << P << std::endl;
-            // std::cout << "force_out: " << force_out << std::endl;
         }
         else
         {
