@@ -1,4 +1,12 @@
+# Published in IJCARS: Citation & Link
+```
+Phalen, H., Munawar, A., Jain, A., Taylor, R. H., Armand, M. Platform for investigating continuum manipulator behavior in orthopedics. Int J CARS (2023). https://doi.org/10.1007/s11548-023-02945-8
+```
+
+Link: https://link.springer.com/article/10.1007/s11548-023-02945-8
+
 # Description
+
 A program to simulate a continuum manipulator that is able to interact with and remove parts of a volumetric model. The initial application is to simulate the control of a dexterous surgical tool for curved drilling for autonomous surgical procedures in orthopaedics (e.g., femur and spine). This is implemented as a plugin for AMBF https://github.com/WPI-AIM/ambf/.
 The primary use-case of this simulation tool is to more-rapidly develop and test control strategies and allow for visualization of feasability, etc. of certain plans. When paired with the XREG library, simulated Xray images can be taken of the scene and can be used to train, test, etc. image-based navigation.
 
@@ -7,6 +15,9 @@ https://user-images.githubusercontent.com/17507145/216717871-ee82b41d-9e78-4d6e-
 
 
 https://user-images.githubusercontent.com/17507145/216717892-d7fd4dc4-dcd4-4406-8a1b-ea22bb869bd1.mp4
+
+
+https://user-images.githubusercontent.com/17507145/232047575-106d8e54-e95c-400b-a68e-ca77c69933a6.mp4
 
 This plugin is an 'unofficial fork' of Adnan Munawar et al. See their work at https://github.com/LCSR-SICKKIDS/volumetric_drilling. Both have undergone significant development since the split so there is some divergence. The plan is to converge at least the volumetric drilling (i.e. what happens at the burr) at some point. In fact, this plugin may be split into several plugins in the future, but for now, it is all in one.
 
@@ -19,7 +30,12 @@ Build and source AMBF as per the instructions on AMBFs wiki: https://github.com/
 
 ## Clone and Build Simulator
 
+> At the moment, there is a (theoretically unneeded) dependency in the sequential impulse code for the following graphing tool: gnuplot. I will work to remove the dependency, but for now you can compile by running ```sudo apt-get install gnuplot libgnuplot-iostream-dev``` (by the way it's a pretty handy C++ plotting tool :) )
+
 ### [Recommended] Build with catkin (ROS1)
+
+> You will likely need to include this message repository https://github.com/htp2/vdrilling_msgs in your catkin_ws. This dependency should go away at some point to align with the volumetric_drilling repo. We have found that sometimes, catkin gets a bit confused if you do this "after-the-fact" and as such you will need to run ``` catkin build --force-cmake ```
+
 Since using this with ROS is part of the current intended use case, in these instructions, I assume you will build this in a catkin workspace. Development of all ROS-related items have been compartmentalized to allow for easier updating to ROS2, etc. once that time comes.
 
 These are instructions to build in an existing catkin workspace. If you do not have one yet, take a look at: http://wiki.ros.org/catkin/Tutorials/create_a_workspace
