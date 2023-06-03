@@ -221,7 +221,6 @@ class UR5_AMBF:
         return T_d @ Rzt @ T_a @ Rxa
 
     def FK(self, th):
-        th[0] -= np.pi  # This accounts for an offset in the definitions
         FK_T = np.eye(4)  # Starting the transformations
         Origins_T = []         # Storing the transformations from base to each joint
 

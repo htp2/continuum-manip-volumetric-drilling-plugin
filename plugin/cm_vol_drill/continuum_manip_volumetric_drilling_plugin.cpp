@@ -246,7 +246,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_worldPtr->m_bulletWorld->setGravity(btVector3(0.0, 0.0, 0.0));
 
     // Various scalars needed for other calculation [TODO: some items might not need to be hardcoded here]
-    m_to_ambf_unit = 10.0;
+    m_to_ambf_unit = 1.0;
     mm_to_ambf_unit = m_to_ambf_unit / 1000.0;
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
     m_storedColor = cColorb(0x00, 0x00, 0x00, 0x00);
