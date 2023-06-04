@@ -823,6 +823,16 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
             m_debug_print = !m_debug_print;
             std::cout << "m_debug_print: " << m_debug_print << std::endl;
         }
+        else if (a_key == GLFW_KEY_KP_ADD)
+        {
+            m_debug_scalar += 0.1;
+            std::cout << "m_debug_scalar: " << m_debug_scalar << std::endl;
+        }
+        else if (a_key == GLFW_KEY_KP_SUBTRACT)
+        {
+            m_debug_scalar -= 0.1;
+            std::cout << "m_debug_scalar: " << m_debug_scalar << std::endl;
+        }        
 
         // toggles the visibility of CM mesh (segments, shaft, and burr)
         else if (a_key == GLFW_KEY_B)
@@ -1265,72 +1275,171 @@ bool afVolmetricDrillingPlugin::cTransformAlmostEqual(const cTransform &a, const
 /// @brief Uses seqential impulse contact method to calculate the impulse from a tool cursor collision with the volume object
 btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt)
 {
-    // ouput impulse from collision (default zero)
-    btVector3 imp_out(0.0, 0.0, 0.0);
-
-    // voxel collision properties
-    double m2 = 0.;
-    auto dim = m_volumeObject->getDimensions();
-    auto num_voxels = m_volumeObject->getVoxelCount();
-    // get max of dim[i]/num_voxels[i] for i = 0,1,2
-    double r2 = 0.0;
-    for (size_t i = 0; i < 3; i++)
+    bool use_legacy_method = false;
+    
+    if (use_legacy_method)
     {
-        r2 = cMax(r2, dim(i) / num_voxels(i));
+        // ouput impulse from collision (default zero)
+        btVector3 imp_out(0.0, 0.0, 0.0);
+
+        // voxel collision properties
+        double m2 = 0.;
+        auto dim = m_volumeObject->getDimensions();
+        auto num_voxels = m_volumeObject->getVoxelCount();
+        // get max of dim[i]/num_voxels[i] for i = 0,1,2
+        double r2 = 0.0;
+        for (size_t i = 0; i < 3; i++)
+        {
+            r2 = cMax(r2, dim(i) / num_voxels(i));
+        }
+
+        cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
+        cVector3d voxel_idx(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
+        m_voxelObj->m_texture->m_image->getVoxelColor(uint(voxel_idx.x()), uint(voxel_idx.y()), uint(voxel_idx.z()), m_storedColor);
+        bool in_collision = m_storedColor != m_zeroColor;
+        if (in_collision)
+        {
+            double m1 = body->getMass();
+            auto r1 = tool_cursor->m_hapticPoint->getRadiusContact();
+            auto cx1 = tool_cursor->m_hapticPoint->getGlobalPosGoal();
+            Eigen::Vector3d x1;
+            x1 << cx1.x(), cx1.y(), cx1.z();
+
+            auto cx2 = tool_cursor->m_hapticPoint->getGlobalPosProxy();
+            Eigen::Vector3d x2;
+            x2 << cx2.x(), cx2.y(), cx2.z();
+
+            Eigen::Vector3d n_plane;
+            n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
+            // n_plane *= -1.0; // switch normal direction to point from contact point towards proxy point (i.e. outward)
+            
+            x2 = x2+(x1-x2).normalized() * r1;
+
+            // cVector3d cx2;
+            // m_volumeObject->voxelIndexToLocalPos(voxel_idx, cx2);
+            // cx2 = m_volumeObject->getLocalTransform() * cx2;
+            // x2 << cx2.x(), cx2.y(), cx2.z();
+
+            Eigen::Matrix<double, 12, 1> V;
+            V.setZero();
+            V(0) = body->m_bulletRigidBody->getLinearVelocity().x();
+            V(1) = body->m_bulletRigidBody->getLinearVelocity().y();
+            V(2) = body->m_bulletRigidBody->getLinearVelocity().z();
+            V(3) = body->m_bulletRigidBody->getAngularVelocity().x();
+            V(4) = body->m_bulletRigidBody->getAngularVelocity().y();
+            V(5) = body->m_bulletRigidBody->getAngularVelocity().z();        
+
+            Eigen::Matrix<double, 12, 1> F_ext;
+            F_ext.setZero();
+            F_ext(0) = body->m_bulletRigidBody->getTotalForce().x();
+            F_ext(1) = body->m_bulletRigidBody->getTotalForce().y();
+            F_ext(2) = body->m_bulletRigidBody->getTotalForce().z();
+            F_ext(3) = body->m_bulletRigidBody->getTotalTorque().x();
+            F_ext(4) = body->m_bulletRigidBody->getTotalTorque().y();
+            F_ext(5) = body->m_bulletRigidBody->getTotalTorque().z();
+
+            Eigen::Matrix<double, 12, 1> P;
+            P.setZero();
+
+            // Eigen::Vector3d n_plane;
+            // n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
+            // bool in_contact = compute_impulse_two_sphere_collision(P, x1, x2, r1, r2, m1, m2, dt, V, F_ext, 0.4);
+            
+            // x2 = x2 + r2*n_plane;
+
+
+            bool in_contact = compute_impulse_plane_sphere_collision(P, x1, x2, r1, n_plane, m1, m2, dt, V, F_ext, 0.4);
+
+            if (in_contact)
+            {
+                imp_out = btVector3(P(0), P(1), P(2));
+                
+                imp_out *= m_debug_scalar;
+                // std::cout << "impulse: " << imp_out.x() << imp_out.y() << imp_out.z() << std::endl;
+            }
+            else
+            {
+                // std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
+            }
+        }
+
+        return imp_out;
     }
 
-    cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
-    cVector3d voxel_idx(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
-    m_voxelObj->m_texture->m_image->getVoxelColor(uint(voxel_idx.x()), uint(voxel_idx.y()), uint(voxel_idx.z()), m_storedColor);
-    bool in_collision = m_storedColor != m_zeroColor;
-    if (in_collision)
+    else
     {
-        double m1 = body->getMass();
-        auto r1 = tool_cursor->m_hapticPoint->getRadiusContact();
-        auto cx1 = tool_cursor->m_hapticPoint->getGlobalPosGoal();
-        Eigen::Vector3d x1;
-        x1 << cx1.x(), cx1.y(), cx1.z();
+        btVector3 imp_out(0.0, 0.0, 0.0);
 
-        Eigen::Vector3d x2;
-        cVector3d cx2;
-        m_volumeObject->voxelIndexToLocalPos(voxel_idx, cx2);
-        cx2 = m_volumeObject->getLocalTransform() * cx2;
-        x2 << cx2.x(), cx2.y(), cx2.z();
+        double m2 = 0.; // fixed body
+        double b = 0.4;
+        double a = 1.0;
 
-        Eigen::Matrix<double, 12, 1> V;
-        V.setZero();
-        V(0) = body->m_bulletRigidBody->getLinearVelocity().x();
-        V(1) = body->m_bulletRigidBody->getLinearVelocity().y();
-        V(2) = body->m_bulletRigidBody->getLinearVelocity().z();
-        V(3) = body->m_bulletRigidBody->getAngularVelocity().x();
-        V(4) = body->m_bulletRigidBody->getAngularVelocity().y();
-        V(5) = body->m_bulletRigidBody->getAngularVelocity().z();        
-
-        Eigen::Matrix<double, 12, 1> F_ext;
-        F_ext.setZero();
-        F_ext(0) = body->m_bulletRigidBody->getTotalForce().x();
-        F_ext(1) = body->m_bulletRigidBody->getTotalForce().y();
-        F_ext(2) = body->m_bulletRigidBody->getTotalForce().z();
-        F_ext(3) = body->m_bulletRigidBody->getTotalTorque().x();
-        F_ext(4) = body->m_bulletRigidBody->getTotalTorque().y();
-        F_ext(5) = body->m_bulletRigidBody->getTotalTorque().z();
-
-        Eigen::Matrix<double, 12, 1> P;
-        P.setZero();
-
-        Eigen::Vector3d n_plane;
-        n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
-        // bool in_contact = compute_impulse_two_sphere_collision(P, x1, x2, r1, r2, m1, m2, dt, V, F_ext, 0.4);
-        bool in_contact = compute_impulse_plane_sphere_collision(P, x1, x2, r1, n_plane, m1, m2, dt, V, F_ext, 1.0);
-
-        if (in_contact)
+        cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
+        cVector3d voxel_idx(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
+        m_voxelObj->m_texture->m_image->getVoxelColor(uint(voxel_idx.x()), uint(voxel_idx.y()), uint(voxel_idx.z()), m_storedColor);
+        bool in_collision = m_storedColor != m_zeroColor;
+        if (in_collision)
         {
+            double m1 = body->getMass();
+            auto r1 = tool_cursor->m_hapticPoint->getRadiusContact();
+            auto c_surface_point = tool_cursor->m_hapticPoint->getGlobalPosGoal();
+            Eigen::Vector3d surface_point;
+            surface_point << c_surface_point.x(), c_surface_point.y(), c_surface_point.z();
+
+
+
+            auto c_inner_point = tool_cursor->m_hapticPoint->getGlobalPosProxy();
+            Eigen::Vector3d inner_point;
+            inner_point << c_inner_point.x(), c_inner_point.y(), c_inner_point.z();
+
+            Eigen::Vector3d error_vector = surface_point - inner_point;
+
+            Eigen::Vector3d n_plane;
+            n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
+            Eigen::Vector3d n = -n_plane;
+
+            double C = error_vector.dot(n);
+
+            // only consider the translational component
+            Eigen::Matrix<double, 1, 3> J_trans;
+            J_trans << -n.transpose();
+
+            Eigen::Matrix<double, 3, 1> V;
+            V.setZero();
+            V(0) = body->m_bulletRigidBody->getLinearVelocity().x();
+            V(1) = body->m_bulletRigidBody->getLinearVelocity().y();
+            V(2) = body->m_bulletRigidBody->getLinearVelocity().z();
+
+            Eigen::Matrix<double, 3, 1> F_ext;
+            F_ext.setZero();
+            F_ext(0) = body->m_bulletRigidBody->getTotalForce().x();
+            F_ext(1) = body->m_bulletRigidBody->getTotalForce().y();
+            F_ext(2) = body->m_bulletRigidBody->getTotalForce().z();
+
+            // double bias = compute_bias(C, V, n_plane, dt, b, a);
+            double b_slop = 0.00001;
+            double a_slop = 0.1;
+            double pen_bias = (-b / dt) * std::max(std::abs(C) - b_slop, 0.);
+            // pen_bias = (-b / dt) * C
+            double Vc = - V.dot(n);
+            double restitution_bias = a * Vc;
+            double bias = pen_bias + restitution_bias;
+            double inv_m1 = m1 > 0. ? 1. / m1 : 0.;
+            Eigen::Matrix<double, 3, 3> M_inv = inv_m1 * Eigen::Matrix<double, 3, 3>::Identity();
+
+            Eigen::Matrix<double, 1, 1> K = J_trans * M_inv * J_trans.transpose();
+            double inv_K = 1. / K(0, 0);
+            Eigen::Matrix<double, 3, 1> Vi = V + M_inv * F_ext * dt;
+            double lam = -inv_K * (J_trans * Vi + bias);
+            auto P = J_trans.transpose() * lam * dt;
+
             imp_out = btVector3(P(0), P(1), P(2));
+            imp_out *= m_debug_scalar;
+            std::cout << "C: " << C << std::endl;
+            std::cout << "impulse: " << imp_out.x() << ", " << imp_out.y() << ", " << imp_out.z() << std::endl;
         }
-        else
-        {
-            // std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
-        }
+        return imp_out;
     }
-    return imp_out;
+
+
 }

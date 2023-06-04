@@ -110,15 +110,16 @@ bool compute_contact_sphere_sphere(const Eigen::Vector3d &x1, const Eigen::Vecto
 bool compute_contact_sphere_plane(const Eigen::Vector3d &x1, const Eigen::Vector3d &x2, double r, const Eigen::Vector3d &plane_normal,
                                   Eigen::Vector3d &rb1, Eigen::Vector3d &rb2, Eigen::Vector3d &normal)
 {
+    // assume plane_normal points "outward", i.e. towards the direction in which the sphere is outside the plane
     bool in_contact;
     Eigen::Vector3d e = x2 - x1;
     double proj = -e.dot(plane_normal);
     if (proj <= r)
     {
         in_contact = true;
+        rb1 = -r * plane_normal;
+        rb2 = e - e.dot(plane_normal) * plane_normal;
         normal = -plane_normal;
-        rb1 = normal * r;
-        rb2 = x1 + normal * proj;
     }
     else
     {
@@ -171,7 +172,7 @@ bool compute_impulse_two_sphere_collision(Eigen::Matrix<double, 12, 1> &P, const
         double bias = compute_bias(C, V, normal, dt, b, a);
         double inv_m1 = m1 > 0. ? 1. / m1 : 0.;
         double inv_m2 = m2 > 0. ? 1. / m2 : 0.;
-        double ix1 = 1.0, iy1 = ix1, iz1 = ix1;
+        double ix1 = (2.0*m1*r1*r1)/5.0, iy1 = ix1, iz1 = ix1; // moment of inertia of sphere is (2/5)*m*r^2
         double ix2 = 10.0, iy2 = ix2, iz2 = ix2;
         Eigen::Matrix<double, 12, 12> M_inv = Eigen::Matrix<double, 12, 12>::Identity();
         M_inv.block(0, 0, 3, 3) = inv_m1 * Eigen::Matrix<double, 3, 3>::Identity();
@@ -180,8 +181,8 @@ bool compute_impulse_two_sphere_collision(Eigen::Matrix<double, 12, 1> &P, const
         M_inv.block(9, 9, 3, 3) = Eigen::DiagonalMatrix<double, 3>(Eigen::Vector3d(1. / ix2, 1. / iy2, 1. / iz2));
         compute_impulse(J, V, F_ext, bias, dt, P, M_inv);
 
-        // std::cout << "x1: " << x1 << std::endl;
-        // std::cout << "x2: " << x2 << std::endl;
+        std::cout << "x1: " << x1 << std::endl;
+        std::cout << "x2: " << x2 << std::endl;
         // std::cout << "M_inv: " << M_inv << std::endl;
         // std::cout << "J: " << J << std::endl;
         // std::cout << "V: " << V << std::endl;
@@ -214,8 +215,8 @@ bool compute_impulse_plane_sphere_collision(Eigen::Matrix<double, 12, 1> &P, con
         double bias = compute_bias(C, V, normal, dt, b, a);
         double inv_m1 = m1 > 0. ? 1. / m1 : 0.;
         double inv_m2 = m2 > 0. ? 1. / m2 : 0.;
-        double ix1 = 1.0, iy1 = ix1, iz1 = ix1;
-        double ix2 = 10.0, iy2 = ix2, iz2 = ix2;
+        double ix1 = (2.0*m1*r1*r1)/5.0, iy1 = ix1, iz1 = ix1; // moment of inertia of sphere is (2/5)*m*r^2
+        double ix2 = 1.0, iy2 = ix2, iz2 = ix2;
         Eigen::Matrix<double, 12, 12> M_inv = Eigen::Matrix<double, 12, 12>::Identity();
         M_inv.block(0, 0, 3, 3) = inv_m1 * Eigen::Matrix<double, 3, 3>::Identity();
         M_inv.block(3, 3, 3, 3) = Eigen::DiagonalMatrix<double, 3>(Eigen::Vector3d(1. / ix1, 1. / iy1, 1. / iz1));
@@ -223,21 +224,23 @@ bool compute_impulse_plane_sphere_collision(Eigen::Matrix<double, 12, 1> &P, con
         M_inv.block(9, 9, 3, 3) = Eigen::DiagonalMatrix<double, 3>(Eigen::Vector3d(1. / ix2, 1. / iy2, 1. / iz2));
         compute_impulse(J, V, F_ext, bias, dt, P, M_inv);
 
-        // std::cout << "x1: " << x1 << std::endl;
-        // std::cout << "x2: " << x2 << std::endl;
-        // std::cout << "M_inv: " << M_inv << std::endl;
-        // std::cout << "J: " << J << std::endl;
-        // std::cout << "V: " << V << std::endl;
-        // std::cout << "F_ext: " << F_ext << std::endl;
-        // std::cout << "b: " << b << std::endl;
-        // std::cout << "a: " << a << std::endl;
-        // std::cout << "r1: " << r1 << std::endl;
+        std::cout << "x1: " << x1 << std::endl;
+        std::cout << "x2: " << x2 << std::endl;
+        std::cout << "M_inv: " << M_inv << std::endl;
+        std::cout << "J: " << J << std::endl;
+        std::cout << "V: " << V << std::endl;
+        std::cout << "F_ext: " << F_ext << std::endl;
+        std::cout << "b: " << b << std::endl;
+        std::cout << "a: " << a << std::endl;
+        std::cout << "r1: " << r1 << std::endl;
         // std::cout << "r2: " << r2 << std::endl;
-        // std::cout << "n: " << normal << std::endl;
-        // std::cout << "rb1: " << rb1 << std::endl;
-        // std::cout << "rb2: " << rb2 << std::endl;
-        // std::cout << "C: " << C << std::endl;
-        // std::cout << "bias: " << bias << std::endl;
+        std::cout << "n: " << normal << std::endl;
+        std::cout << "rb1: " << rb1 << std::endl;
+        std::cout << "rb2: " << rb2 << std::endl;
+        std::cout << "C: " << C << std::endl;
+        std::cout << "bias: " << bias << std::endl;
+        std::cout << "P: " << P << std::endl;
+
         
     }
     return in_contact;

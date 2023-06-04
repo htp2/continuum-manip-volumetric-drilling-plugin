@@ -138,6 +138,8 @@ private:
     std::mt19937 rand_eng;
     std::uniform_real_distribution<> unif_dist;
 
+    double m_debug_scalar = 1.0;
+
     void checkForSettingsUpdate(void);
 
     int visualInit(const afWorldPtr a_afWorld);
