@@ -139,6 +139,7 @@ private:
     std::uniform_real_distribution<> unif_dist;
 
     double m_debug_scalar = 1.0;
+    double m_voxel_contact_impulse_weight = 50.0; // parameter used to scale how "strong" the sequential-impulse-based collision with voxel is
 
     void checkForSettingsUpdate(void);
 
