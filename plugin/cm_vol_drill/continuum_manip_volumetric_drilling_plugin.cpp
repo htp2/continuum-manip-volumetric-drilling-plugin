@@ -146,17 +146,23 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
         }
         // Burr
         auto burr_impulse = calculate_impulse_from_tool_cursor_collision(m_burrToolCursorList[0], m_burrBody, dt);
-        m_burrBody->m_bulletRigidBody->applyCentralImpulse(burr_impulse);
+        // m_burrBody->m_bulletRigidBody->applyCentralImpulse(burr_impulse);
+        m_burrBody->m_bulletRigidBody->applyCentralImpulse(m_debug_scalar*burr_impulse);
+    
         // Segments
         for (int i = 0; i < m_segmentToolCursorList.size(); i++)
         {
             auto seg_impulse = calculate_impulse_from_tool_cursor_collision(m_segmentToolCursorList[i], m_segmentBodyList[i], dt);
-            m_segmentBodyList[i]->m_bulletRigidBody->applyCentralImpulse(seg_impulse);
+            m_segmentBodyList[i]->m_bulletRigidBody->applyCentralImpulse(m_debug_scalar*seg_impulse);
+            // m_segmentBodyList[i]->m_bulletRigidBody->applyImpulse(seg_impulse, m_segmentBodyList[i]->getInertialOffsetTransform().getOrigin());
+            // m_segmentBodyList[i]->m_bulletRigidBody->applyImpulse(seg_impulse, to_btVector(m_segmentToolCursorList[i]->getDeviceLocalPos()));
+            // auto temp = m_segmentBodyList[i]->getInertialOffsetTransform().getOrigin();
+            // auto temp2 =  to_btVector(m_segmentBodyList[i]->getLocalPos()) - to_btVector(m_segmentToolCursorList[i]->getDeviceLocalPos());
         }
         // Shaft
         for (int i = 0; i < m_shaftToolCursorList.size(); i++)
         {
-            auto shaft_impulse = calculate_impulse_from_tool_cursor_collision(m_shaftToolCursorList[0], m_contManipBaseRigidBody, dt);
+            auto shaft_impulse = calculate_impulse_from_tool_cursor_collision(m_shaftToolCursorList[i], m_contManipBaseRigidBody, dt);
             m_contManipBaseRigidBody->m_bulletRigidBody->applyImpulse(shaft_impulse, to_btVector(m_shaftToolCursorList[i]->getDeviceLocalPos()));
         }
     }
@@ -1354,7 +1360,7 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
             {
                 imp_out = btVector3(P(0), P(1), P(2));
                 
-                imp_out *= m_debug_scalar;
+                // imp_out *= m_debug_scalar;
                 // std::cout << "impulse: " << imp_out.x() << imp_out.y() << imp_out.z() << std::endl;
             }
             else
@@ -1397,7 +1403,7 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
             Eigen::Vector3d n_plane;
             n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
             Eigen::Vector3d n = -n_plane;
-
+            
             double C = error_vector.dot(n);
 
             // only consider the translational component
@@ -1415,6 +1421,11 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
             F_ext(0) = body->m_bulletRigidBody->getTotalForce().x();
             F_ext(1) = body->m_bulletRigidBody->getTotalForce().y();
             F_ext(2) = body->m_bulletRigidBody->getTotalForce().z();
+            // F_ext(0) = body->m_estimatedForce.x();
+            // F_ext(1) = body->m_estimatedForce.y();
+            // F_ext(2) = body->m_estimatedForce.z();
+
+            // std::cout << body->m_estimatedForce.x() << " " << body->m_estimatedForce.y() << " " << body->m_estimatedForce.z() << std::endl;
 
             // double bias = compute_bias(C, V, n_plane, dt, b, a);
             double b_slop = 0.00001;
@@ -1434,7 +1445,7 @@ btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collisio
             auto P = J_trans.transpose() * lam * dt;
 
             imp_out = btVector3(P(0), P(1), P(2));
-            imp_out *= m_debug_scalar;
+            // imp_out *= m_debug_scalar;
             std::cout << "C: " << C << std::endl;
             std::cout << "impulse: " << imp_out.x() << ", " << imp_out.y() << ", " << imp_out.z() << std::endl;
         }
