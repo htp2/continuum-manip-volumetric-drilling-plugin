@@ -163,7 +163,8 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
         for (int i = 0; i < m_shaftToolCursorList.size(); i++)
         {
             auto shaft_impulse = calculate_impulse_from_tool_cursor_collision(m_shaftToolCursorList[i], m_contManipBaseRigidBody, dt);
-            m_contManipBaseRigidBody->m_bulletRigidBody->applyImpulse(shaft_impulse, to_btVector(m_shaftToolCursorList[i]->getDeviceLocalPos()));
+            auto offset_cursor_to_body = m_shaftToolCursorList[i]->getDeviceLocalPos() - m_contManipBaseRigidBody->getLocalPos();
+            m_contManipBaseRigidBody->m_bulletRigidBody->applyImpulse(m_debug_scalar*shaft_impulse, to_btVector(offset_cursor_to_body));
         }
     }
 
