@@ -11,9 +11,9 @@ bodies:
 - BODY wrist_2_link
 - BODY wrist_3_link
 joints:
-- JOINT elbow_joint
-- JOINT shoulder_lift_joint
 - JOINT shoulder_pan_joint
+- JOINT shoulder_lift_joint
+- JOINT elbow_joint
 - JOINT wrist_1_joint
 - JOINT wrist_2_joint
 - JOINT wrist_3_joint
