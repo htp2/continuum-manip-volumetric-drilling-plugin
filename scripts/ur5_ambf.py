@@ -185,22 +185,16 @@ class UR5_AMBF:
     # Would be best to just do this straight from AMBF or defn files using pykdl or others. However, I beleive jacobian defns are different
 
     def set_dh(self, robot_type):
+        # https://www.universal-robots.com/articles/ur/application-installation/dh-parameters-for-calculations-of-kinematics-and-dynamics/
         if robot_type == 'UR5':
-            # HTP - changes to DH here go to end effector, instead of to the origin of wrist_3_link
             self.d = np.array([0.089159, 0, 0, 0.10915, 0.09465, 0.0823])
-            # self.d = np.array([0.089159, 0, 0, 0.10915, 0.09465, 0.0823+0.0750998])
             self.a = np.array([0, -0.425, -0.39225, 0, 0, 0])
-            # self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])
-            self.alph = np.array(
-                [np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, np.pi/2])
+            self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])
 
         if robot_type == 'UR10':
-            self.d = np.array(
-                [0.1273, 0, 0, 0.163941, 0.1157, 0.0922])              # UR10
-            self.a = np.array([0, -0.612, -0.5723, 0, 0, 0]
-                              )                         # UR10
-            self.alph = np.array(
-                [np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])                 # UR10
+            self.d = np.array([0.1273, 0, 0, 0.163941, 0.1157, 0.0922])            
+            self.a = np.array([0, -0.612, -0.5723, 0, 0, 0])                         
+            self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])              
 
     def AH(self, n, th):
         T_a = np.identity(4)
