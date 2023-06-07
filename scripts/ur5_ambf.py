@@ -190,9 +190,9 @@ class UR5_AMBF:
             self.d = np.array([0.089159, 0, 0, 0.10915, 0.09465, 0.0823])
             # self.d = np.array([0.089159, 0, 0, 0.10915, 0.09465, 0.0823+0.0750998])
             self.a = np.array([0, -0.425, -0.39225, 0, 0, 0])
-            # self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])
-            self.alph = np.array(
-                [np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, np.pi/2])
+            self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])
+            # self.alph = np.array(
+            #     [np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, np.pi/2])
 
         if robot_type == 'UR10':
             self.d = np.array(
