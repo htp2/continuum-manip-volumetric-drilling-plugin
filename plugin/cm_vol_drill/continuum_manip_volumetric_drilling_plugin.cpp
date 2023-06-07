@@ -49,8 +49,11 @@
 
 #include "continuum_manip_volumetric_drilling_plugin.h"
 #include "cmvd_settings_rossub.h"
-#include "sequential_impulse_solver.h"
 #include "afConversions.h"
+
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
+#include <eigen3/Eigen/Core>
 
 #include <boost/program_options.hpp>
 #include <fstream>
@@ -146,18 +149,25 @@ void afVolmetricDrillingPlugin::physicsUpdate(double dt)
         }
         // Burr
         auto burr_impulse = calculate_impulse_from_tool_cursor_collision(m_burrToolCursorList[0], m_burrBody, dt);
-        m_burrBody->m_bulletRigidBody->applyCentralImpulse(burr_impulse);
+        // m_burrBody->m_bulletRigidBody->applyCentralImpulse(burr_impulse);
+        m_burrBody->m_bulletRigidBody->applyCentralImpulse(m_debug_scalar*burr_impulse);
+    
         // Segments
         for (int i = 0; i < m_segmentToolCursorList.size(); i++)
         {
             auto seg_impulse = calculate_impulse_from_tool_cursor_collision(m_segmentToolCursorList[i], m_segmentBodyList[i], dt);
-            m_segmentBodyList[i]->m_bulletRigidBody->applyCentralImpulse(seg_impulse);
+            m_segmentBodyList[i]->m_bulletRigidBody->applyCentralImpulse(m_debug_scalar*seg_impulse);
+            // m_segmentBodyList[i]->m_bulletRigidBody->applyImpulse(seg_impulse, m_segmentBodyList[i]->getInertialOffsetTransform().getOrigin());
+            // m_segmentBodyList[i]->m_bulletRigidBody->applyImpulse(seg_impulse, to_btVector(m_segmentToolCursorList[i]->getDeviceLocalPos()));
+            // auto temp = m_segmentBodyList[i]->getInertialOffsetTransform().getOrigin();
+            // auto temp2 =  to_btVector(m_segmentBodyList[i]->getLocalPos()) - to_btVector(m_segmentToolCursorList[i]->getDeviceLocalPos());
         }
         // Shaft
         for (int i = 0; i < m_shaftToolCursorList.size(); i++)
         {
-            auto shaft_impulse = calculate_impulse_from_tool_cursor_collision(m_shaftToolCursorList[0], m_contManipBaseRigidBody, dt);
-            m_contManipBaseRigidBody->m_bulletRigidBody->applyImpulse(shaft_impulse, to_btVector(m_shaftToolCursorList[i]->getDeviceLocalPos()));
+            auto shaft_impulse = calculate_impulse_from_tool_cursor_collision(m_shaftToolCursorList[i], m_contManipBaseRigidBody, dt);
+            auto offset_cursor_to_body = m_shaftToolCursorList[i]->getDeviceLocalPos() - m_contManipBaseRigidBody->getLocalPos();
+            m_contManipBaseRigidBody->m_bulletRigidBody->applyImpulse(m_debug_scalar*shaft_impulse, to_btVector(offset_cursor_to_body));
         }
     }
 
@@ -210,6 +220,9 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     cmd_opts.add_options()("hardness_spec_file", p_opt::value<std::string>()->default_value(""), ". Path to csv file with hardness specifications per voxel. Default empty. If hardness features set, but this not set, all hardness will be set to 1.0");
     cmd_opts.add_options()("predrill_traj_file", p_opt::value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing(), ". Path to csv file(s) with trajectory that will be predrilled. Default empty");
     cmd_opts.add_options()("predrill_ref_overwrite", p_opt::value<std::string>()->default_value(""), "By default drill traj is relative to [anatomy_volume_name]_anatomical origin. Here you can override to another object");
+    cmd_opts.add_options()("voxel_contact_impulse_weight", p_opt::value<std::string>()->default_value("50.0"), "Multiplier for the voxel contact impulse. Default 50.0");
+
+
 
     // Parse command line options
     p_opt::variables_map var_map;
@@ -238,6 +251,8 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     {
         predrill_ref_name = predrill_ref_overwrite;
     }
+    std::string voxel_contact_impulse_weight = var_map["voxel_contact_impulse_weight"].as<std::string>();
+    m_voxel_contact_impulse_weight = boost::lexical_cast<double>(voxel_contact_impulse_weight);
 
     // Bring in ambf world, make adjustments as needed to improve simulation accuracy
     m_worldPtr = a_afWorld;
@@ -246,7 +261,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     m_worldPtr->m_bulletWorld->setGravity(btVector3(0.0, 0.0, 0.0));
 
     // Various scalars needed for other calculation [TODO: some items might not need to be hardcoded here]
-    m_to_ambf_unit = 10.0;
+    m_to_ambf_unit = 1.0;
     mm_to_ambf_unit = m_to_ambf_unit / 1000.0;
     m_zeroColor = cColorb(0x00, 0x00, 0x00, 0x00);
     m_storedColor = cColorb(0x00, 0x00, 0x00, 0x00);
@@ -823,6 +838,16 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
             m_debug_print = !m_debug_print;
             std::cout << "m_debug_print: " << m_debug_print << std::endl;
         }
+        else if (a_key == GLFW_KEY_KP_ADD)
+        {
+            m_debug_scalar += 0.1;
+            std::cout << "m_debug_scalar: " << m_debug_scalar << std::endl;
+        }
+        else if (a_key == GLFW_KEY_KP_SUBTRACT)
+        {
+            m_debug_scalar -= 0.1;
+            std::cout << "m_debug_scalar: " << m_debug_scalar << std::endl;
+        }        
 
         // toggles the visibility of CM mesh (segments, shaft, and burr)
         else if (a_key == GLFW_KEY_B)
@@ -871,6 +896,7 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
     // Set position goal if applicable
     double cable_pull_mag_change;
     double max_mag_change = 0.001;
+    double cable_channel_rad = 0.0025; // m
 
     if (m_cableKeyboardControl || m_cablePullSub->command_type == cable_pull_command_type::POSITION)
     {
@@ -907,7 +933,7 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
 
     m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
-    auto torque_imp = 10.0 * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2() * dt;
+    auto torque_imp = cable_channel_rad * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2() * dt;
     last_seg_ptr->m_bulletRigidBody->applyTorqueImpulse(btVector3(torque_imp.x(), torque_imp.y(), torque_imp.z()));
 }
 
@@ -1263,74 +1289,83 @@ bool afVolmetricDrillingPlugin::cTransformAlmostEqual(const cTransform &a, const
 }
 
 /// @brief Uses seqential impulse contact method to calculate the impulse from a tool cursor collision with the volume object
+/// @note For more details see: 
+///       https://github.com/htp2/sequential_impulse_contact
+///       https://github.com/adnanmunawar/sequential_impulse_contact; 
+///       https://allenchou.net/2013/12/game-physics-resolution-contact-constraints/
+///       https://box2d.org/files/ErinCatto_SequentialImpulses_GDC2006.pdf
+///       http://www.mft-spirit.nl/files/articles/ImpulseSolverBrief.pdf
+///       https://danielchappuis.ch/download/ConstraintsDerivationRigidBody3D.pdf
+///       https://allenchou.net/2013/12/game-physics-constraints-sequential-impulse/
 btVector3 afVolmetricDrillingPlugin::calculate_impulse_from_tool_cursor_collision(cToolCursor *tool_cursor, afRigidBodyPtr &body, double dt)
 {
-    // ouput impulse from collision (default zero)
-    btVector3 imp_out(0.0, 0.0, 0.0);
+        // Parameter Specification: 
+        double a = 1.0; // restitution coefficient ( how much energy is maintained in the collision)
+        double b = 0.4; // bias factor (0 to 1); Baumgarte Stabilization "beta" term
+        double b_slop = 0.00001; // bias "slop" aka. some softness to the bias term --> some penetration is allowed
 
-    // voxel collision properties
-    double m2 = 0.;
-    auto dim = m_volumeObject->getDimensions();
-    auto num_voxels = m_volumeObject->getVoxelCount();
-    // get max of dim[i]/num_voxels[i] for i = 0,1,2
-    double r2 = 0.0;
-    for (size_t i = 0; i < 3; i++)
-    {
-        r2 = cMax(r2, dim(i) / num_voxels(i));
-    }
+        // Implementation
+        btVector3 imp_out(0.0, 0.0, 0.0);
+        double m2 = 0.; // simulating collision with fixed object
 
-    cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
-    cVector3d voxel_idx(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
-    m_voxelObj->m_texture->m_image->getVoxelColor(uint(voxel_idx.x()), uint(voxel_idx.y()), uint(voxel_idx.z()), m_storedColor);
-    bool in_collision = m_storedColor != m_zeroColor;
-    if (in_collision)
-    {
-        double m1 = body->getMass();
-        auto r1 = tool_cursor->m_hapticPoint->getRadiusContact();
-        auto cx1 = tool_cursor->m_hapticPoint->getGlobalPosGoal();
-        Eigen::Vector3d x1;
-        x1 << cx1.x(), cx1.y(), cx1.z();
-
-        Eigen::Vector3d x2;
-        cVector3d cx2;
-        m_volumeObject->voxelIndexToLocalPos(voxel_idx, cx2);
-        cx2 = m_volumeObject->getLocalTransform() * cx2;
-        x2 << cx2.x(), cx2.y(), cx2.z();
-
-        Eigen::Matrix<double, 12, 1> V;
-        V.setZero();
-        V(0) = body->m_bulletRigidBody->getLinearVelocity().x();
-        V(1) = body->m_bulletRigidBody->getLinearVelocity().y();
-        V(2) = body->m_bulletRigidBody->getLinearVelocity().z();
-        V(3) = body->m_bulletRigidBody->getAngularVelocity().x();
-        V(4) = body->m_bulletRigidBody->getAngularVelocity().y();
-        V(5) = body->m_bulletRigidBody->getAngularVelocity().z();        
-
-        Eigen::Matrix<double, 12, 1> F_ext;
-        F_ext.setZero();
-        F_ext(0) = body->m_bulletRigidBody->getTotalForce().x();
-        F_ext(1) = body->m_bulletRigidBody->getTotalForce().y();
-        F_ext(2) = body->m_bulletRigidBody->getTotalForce().z();
-        F_ext(3) = body->m_bulletRigidBody->getTotalTorque().x();
-        F_ext(4) = body->m_bulletRigidBody->getTotalTorque().y();
-        F_ext(5) = body->m_bulletRigidBody->getTotalTorque().z();
-
-        Eigen::Matrix<double, 12, 1> P;
-        P.setZero();
-
-        Eigen::Vector3d n_plane;
-        n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
-        // bool in_contact = compute_impulse_two_sphere_collision(P, x1, x2, r1, r2, m1, m2, dt, V, F_ext, 0.4);
-        bool in_contact = compute_impulse_plane_sphere_collision(P, x1, x2, r1, n_plane, m1, m2, dt, V, F_ext, 1.0);
-
-        if (in_contact)
+        // Get the contact point to 1) ensure in collision and 2) get locations of tool and proxy cursors
+        cCollisionEvent *contact = tool_cursor->m_hapticPoint->getCollisionEvent(0);
+        cVector3d voxel_idx(contact->m_voxelIndexX, contact->m_voxelIndexY, contact->m_voxelIndexZ);
+        m_voxelObj->m_texture->m_image->getVoxelColor(uint(voxel_idx.x()), uint(voxel_idx.y()), uint(voxel_idx.z()), m_storedColor);
+        bool in_collision = m_storedColor != m_zeroColor;
+        if (in_collision)
         {
+            // NOTE: Using output of the "finger-proxy" algorithm as an input, simulating a sphere/plane collision (sphere is point on rigid body, plane is voxel contact surface)
+            // Many simplifying assumptions are made as 1) the voxel is considered fixed and 2) only linear motion needs to be considered
+            double m1 = body->getMass();
+            auto r1 = tool_cursor->m_hapticPoint->getRadiusContact();
+            auto c_surface_point = tool_cursor->m_hapticPoint->getGlobalPosGoal();
+            Eigen::Vector3d surface_point;
+            surface_point << c_surface_point.x(), c_surface_point.y(), c_surface_point.z();
+            auto c_inner_point = tool_cursor->m_hapticPoint->getGlobalPosProxy();
+            Eigen::Vector3d inner_point;
+            inner_point << c_inner_point.x(), c_inner_point.y(), c_inner_point.z();
+            Eigen::Vector3d error_vector = surface_point - inner_point;
+
+            Eigen::Vector3d n_plane;
+            n_plane << contact->m_globalNormal.x(), contact->m_globalNormal.y(), contact->m_globalNormal.z();
+            Eigen::Vector3d n = -n_plane; // definitional difference between normal directions ( for following equations must point inwards)
+            
+            double C = error_vector.dot(n);
+
+            // only consider the translational component
+            Eigen::Matrix<double, 1, 3> J;
+            J << -n.transpose();
+
+            Eigen::Matrix<double, 3, 1> V;
+            V.setZero();
+            V(0) = body->m_bulletRigidBody->getLinearVelocity().x();
+            V(1) = body->m_bulletRigidBody->getLinearVelocity().y();
+            V(2) = body->m_bulletRigidBody->getLinearVelocity().z();
+
+            Eigen::Matrix<double, 3, 1> F_ext;
+            F_ext.setZero();
+            F_ext(0) = body->m_bulletRigidBody->getTotalForce().x();
+            F_ext(1) = body->m_bulletRigidBody->getTotalForce().y();
+            F_ext(2) = body->m_bulletRigidBody->getTotalForce().z();
+
+            double pen_bias = (-b / dt) * std::max(std::abs(C) - b_slop, 0.);
+            double Vc = - V.dot(n);
+            double restitution_bias = a * Vc;
+            double bias = pen_bias + restitution_bias;
+            double inv_m1 = m1 > 0. ? 1. / m1 : 0.;
+            Eigen::Matrix<double, 3, 3> M_inv = inv_m1 * Eigen::Matrix<double, 3, 3>::Identity();
+
+            Eigen::Matrix<double, 1, 1> K = J * M_inv * J.transpose();
+            double inv_K = 1. / K(0, 0);
+            Eigen::Matrix<double, 3, 1> Vi = V + M_inv * F_ext * dt;
+            double lam = -inv_K * (J * Vi + bias);
+            auto P = J.transpose() * lam * dt;
+
             imp_out = btVector3(P(0), P(1), P(2));
-        }
-        else
-        {
-            // std::cout << "SI says no contact, but tool cursor says contact" << std::endl;
-        }
+            // optionally scalable by a weight factor (scale the collision "hardness")
+            imp_out *= m_voxel_contact_impulse_weight;
     }
+    
     return imp_out;
 }

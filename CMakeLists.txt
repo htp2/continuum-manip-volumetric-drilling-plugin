@@ -70,8 +70,6 @@ add_library(continuum_manip_volumetric_drilling_plugin SHARED
     ${CMVD_PLUGIN_PATH}/cable_pull_subscriber.cpp 
     ${CMVD_PLUGIN_PATH}/cmvd_settings_rossub.h
     ${CMVD_PLUGIN_PATH}/cmvd_settings_rossub.cpp
-    ${CMVD_PLUGIN_PATH}/sequential_impulse_solver.h
-    ${CMVD_PLUGIN_PATH}/sequential_impulse_solver.cpp
 )
 
 add_dependencies(continuum_manip_volumetric_drilling_plugin ${catkin_EXPORTED_TARGETS})
