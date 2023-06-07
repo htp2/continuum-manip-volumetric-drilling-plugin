@@ -896,6 +896,7 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
     // Set position goal if applicable
     double cable_pull_mag_change;
     double max_mag_change = 0.001;
+    double cable_channel_rad = 0.0025; // m
 
     if (m_cableKeyboardControl || m_cablePullSub->command_type == cable_pull_command_type::POSITION)
     {
@@ -932,7 +933,7 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
 
     m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
-    auto torque_imp = 10.0 * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2() * dt;
+    auto torque_imp = cable_channel_rad * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2() * dt;
     last_seg_ptr->m_bulletRigidBody->applyTorqueImpulse(btVector3(torque_imp.x(), torque_imp.y(), torque_imp.z()));
 }
 

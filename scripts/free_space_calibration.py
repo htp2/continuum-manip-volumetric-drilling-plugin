@@ -27,7 +27,7 @@ class free_space_calibration:
         self.collect = False
         self.reset_sublists()
 
-        self.simulation_units_to_meter = 0.1
+        self.simulation_units_to_meter = 1.0
 
         self.ms = 0.001
         self.sec = 1.0
@@ -60,12 +60,16 @@ class free_space_calibration:
             # Automatically run data collection over range specified below
             if user_in == "A":
                 reps = 1
-                motor_max = 0.20
+                motor_max = 0.176
                 motor_min = -motor_max
-                motor_pos = np.linspace(motor_min,motor_max,101)
 
-                motor_pos_rev = np.flipud(motor_pos)
-                pos = np.append(motor_pos,motor_pos_rev)
+                # start at zero, then go to max, then got to min, then go to zero, that is one rep
+                num_pts = 100
+                pts_per = int(num_pts/4)
+                zero_to_max = np.linspace(0,motor_max,pts_per)
+                max_to_min = np.linspace(motor_max,motor_min,2*pts_per)
+                min_to_zero = np.linspace(motor_min,0,pts_per)
+                pos = np.concatenate((zero_to_max,max_to_min,min_to_zero))
                 for r in range(reps):
                     for p in pos:
                         self.bend_motor_cmd_all.append(p)
@@ -249,14 +253,14 @@ class free_space_calibration:
 
 
     def save_to_output(self):
-        np.save(self.save_dir+"base_transforms_measured_all.npy",np.array(self.base_transforms_measured_all))
-        np.save(self.save_dir+"tip_transforms_measured_all.npy",np.array(self.tip_transforms_measured_all))
+        # np.save(self.save_dir+"base_transforms_measured_all.npy",np.array(self.base_transforms_measured_all))
+        # np.save(self.save_dir+"tip_transforms_measured_all.npy",np.array(self.tip_transforms_measured_all))
         np.save(self.save_dir+"base_transforms_measured_avg.npy",np.array(self.base_transforms_measured_avg))
         np.save(self.save_dir+"tip_transforms_measured_avg.npy",np.array(self.tip_transforms_measured_avg))
         np.save(self.save_dir+"base_zero_transform.npy",np.array(self.base_zero_transform))
         np.save(self.save_dir+"tip_zero_transform.npy",np.array(self.tip_zero_transform))
-        np.save(self.save_dir+"bend_motor_pos_all.npy",np.array(self.bend_motor_pos_all))
-        np.save(self.save_dir+"bend_motor_cmd_all.npy",np.array(self.bend_motor_cmd_all))
+        # np.save(self.save_dir+"bend_motor_pos_all.npy",np.array(self.bend_motor_pos_all))
+        # np.save(self.save_dir+"bend_motor_cmd_all.npy",np.array(self.bend_motor_cmd_all))
 
     def load_from_output(self):
         # ask user for directory to load from

@@ -38,7 +38,7 @@ BODY Burr:
       x: 0.0
       y: 0.07147
       z: 0.0
-  mass: 0.01
+  mass: 0.001
   mesh: Burr.OBJ
   name: Burr
   passive: false
