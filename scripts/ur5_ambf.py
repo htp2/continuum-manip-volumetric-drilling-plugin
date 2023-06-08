@@ -190,11 +190,6 @@ class UR5_AMBF:
             self.d = np.array([0.089159, 0, 0, 0.10915, 0.09465, 0.0823])
             self.a = np.array([0, -0.425, -0.39225, 0, 0, 0])
             self.alph = np.array([np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, 0])
-<<<<<<< HEAD
-            # self.alph = np.array(
-            #     [np.pi / 2, 0, 0, np.pi / 2, -np.pi / 2, np.pi/2])
-=======
->>>>>>> 96823e8f3496df6c69b07f94b555c41003091a44
 
         if robot_type == 'UR10':
             self.d = np.array([0.1273, 0, 0, 0.163941, 0.1157, 0.0922])            

@@ -513,7 +513,7 @@ void afVolmetricDrillingPlugin::toolCursorsPosUpdate(cTransform a_basePose)
     for (int i = 0; i < m_shaftToolCursorList.size(); i++)
     {
         double offset = static_cast<double>(i) / (m_shaftToolCursorList.size() - 1) * shaft_length;
-        auto T_offset = cTransform(cVector3d(0, offset, 0), cMatrix3d(1, 0, 0, 0, 1, 0, 0, 0, 1));
+        auto T_offset = cTransform(cVector3d(0, 0, offset), cMatrix3d(1, 0, 0, 0, 1, 0, 0, 0, 1));
         m_shaftToolCursorList[i]->setDeviceLocalTransform(a_basePose * T_offset);
     }
 
@@ -933,7 +933,7 @@ void afVolmetricDrillingPlugin::applyCablePull(double dt)
 
     m_cablePullSub->publish_cablepull_measured_js(m_cable_pull_mag, m_cable_pull_velocity);
     auto last_seg_ptr = m_segmentBodyList.back();
-    auto torque_imp = cable_channel_rad * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol2() * dt;
+    auto torque_imp = cable_channel_rad * cable_pull_force_val * last_seg_ptr->getLocalRot().getCol1() * dt; // torque about y axis
     last_seg_ptr->m_bulletRigidBody->applyTorqueImpulse(btVector3(torque_imp.x(), torque_imp.y(), torque_imp.z()));
 }
 
