@@ -147,7 +147,7 @@ private:
 
     int hardnessBehaviorInit(const std::string &hardness_spec_file);
 
-    int predrillTrajInit(const std::vector<std::string> &predrill_traj_files, const std::string& predrill_reference_object_name);
+    int predrillTrajInit(const std::vector<std::string> &predrill_traj_files);
 
     void removeVoxel(cVector3d &pos);
 

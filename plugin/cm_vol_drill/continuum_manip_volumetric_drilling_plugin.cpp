@@ -219,9 +219,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     cmd_opts.add_options()("hardness_behavior", p_opt::value<std::string>()->default_value("0"), ". Turn on volume material hardness features. Default false");
     cmd_opts.add_options()("hardness_spec_file", p_opt::value<std::string>()->default_value(""), ". Path to csv file with hardness specifications per voxel. Default empty. If hardness features set, but this not set, all hardness will be set to 1.0");
     cmd_opts.add_options()("predrill_traj_file", p_opt::value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing(), ". Path to csv file(s) with trajectory that will be predrilled. Default empty");
-    cmd_opts.add_options()("predrill_ref_overwrite", p_opt::value<std::string>()->default_value(""), "By default drill traj is relative to [anatomy_volume_name]_anatomical origin. Here you can override to another object");
     cmd_opts.add_options()("voxel_contact_impulse_weight", p_opt::value<std::string>()->default_value("50.0"), "Multiplier for the voxel contact impulse. Default 50.0");
-
 
 
     // Parse command line options
@@ -244,12 +242,6 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     if (var_map.count("predrill_traj_file"))
     {
         predrill_traj_files = var_map["predrill_traj_file"].as<std::vector<std::string>>();
-    }
-    std::string predrill_ref_overwrite = var_map["predrill_ref_overwrite"].as<std::string>();
-    std::string predrill_ref_name = anatomy_volume_name + "_anatomical_origin";
-    if (predrill_ref_overwrite != "")
-    {
-        predrill_ref_name = predrill_ref_overwrite;
     }
     std::string voxel_contact_impulse_weight = var_map["voxel_contact_impulse_weight"].as<std::string>();
     m_voxel_contact_impulse_weight = boost::lexical_cast<double>(voxel_contact_impulse_weight);
@@ -333,7 +325,7 @@ int afVolmetricDrillingPlugin::init(int argc, char **argv, const afWorldPtr a_af
     }
 
     if (!predrill_traj_files.empty())
-        res = predrillTrajInit(predrill_traj_files, predrill_ref_name);
+        res = predrillTrajInit(predrill_traj_files);
     if (res != 0)
     {
         cerr << "ERROR! FAILED TO INITIALIZE PREDRILL TRAJECTORY" << endl;
@@ -1217,34 +1209,27 @@ int afVolmetricDrillingPlugin::hardnessBehaviorInit(const std::string &hardness_
 }
 
 /// @brief Remove voxels in the cylinder around specified trajectory(ies) as if they were pre-drilled
-int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &predrill_traj_files, const std::string &predrill_reference_object_name)
+int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &predrill_traj_files)
 {
-    m_predrill_reference_object = m_worldPtr->getBaseObject(predrill_reference_object_name, false);
-    if (!m_predrill_reference_object)
-    {
-        cerr << "ERROR! FAILED TO FIND PREDRILL REFERENCE OBJECT " << predrill_reference_object_name << endl;
-        return -1;
-    }
-    auto predrill_offset = m_predrill_reference_object->getLocalTransform();
     auto volume_origin_offset = m_volumeObject->getLocalTransform();
     volume_origin_offset.invert();
+    
     // TODO there is likely a much more direct way of doing this - remove all voxels in the cylinder / "pill" around the trajectory
     int resol = 20;
     m_mutexVoxel.acquire();
     for (auto &predrill_traj_file : predrill_traj_files)
     {
-        double burr_size;
+        double burr_diameter_m;
         std::vector<cVector3d> traj_points;
-        if (!parsePredrillTrajFromCSV(predrill_traj_file, traj_points, burr_size))
+        if (!parsePredrillTrajFromCSV(predrill_traj_file, traj_points, burr_diameter_m))
         {
             std::cout << "[predrillTrajInit]: Error reading: " << predrill_traj_file << std::endl;
             return -1;
         }
-        burr_size *= mm_to_ambf_unit;
 
         for (auto &pt : traj_points)
         {
-            pt = volume_origin_offset * predrill_offset * pt;
+            pt = volume_origin_offset  * pt;
             for (size_t i = 0; i <= resol; i++)
             {
                 for (size_t j = 0; j <= resol; j++)
@@ -1252,14 +1237,12 @@ int afVolmetricDrillingPlugin::predrillTrajInit(const std::vector<std::string> &
                     for (size_t k = 0; k <= resol; k++)
                     {
                         auto denom = static_cast<double>(resol);
-                        double r = i / denom * burr_size / 2.0;
+                        double r = i / denom * burr_diameter_m / 2.0;
                         double th = j / denom * 2 * PI;
                         double phi = k / denom * PI;
                         cVector3d offset(r * sin(phi) * cos(th), r * sin(phi) * sin(th), r * cos(phi));
-
                         cVector3d idx;
                         auto new_pt = pt + offset;
-                        // std::cout << "actual point " << new_pt << std::endl;
                         m_volumeObject->localPosToVoxelIndex(new_pt, idx);
                         removeVoxel(idx);
                     }
