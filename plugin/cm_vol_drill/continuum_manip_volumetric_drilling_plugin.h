@@ -98,6 +98,7 @@ private:
     afCameraPtr m_mainCamera;
 
     bool m_showCM = true;
+    bool m_showVolume = true;
     bool m_cableKeyboardControl = true;
     bool m_showGoalProxySpheres = true;
     bool m_burrOn = true;

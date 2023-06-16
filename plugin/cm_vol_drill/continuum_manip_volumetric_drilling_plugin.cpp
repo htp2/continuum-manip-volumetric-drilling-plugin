@@ -729,7 +729,7 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
         else if (a_key == GLFW_KEY_ENTER)
         {
             m_renderingMode++;
-            if (m_renderingMode > 7)
+            if (m_renderingMode > 6) // apparent bug in custom rendering mode on some machines
             {
                 m_renderingMode = 0;
             }
@@ -851,6 +851,14 @@ void afVolmetricDrillingPlugin::keyboardUpdate(GLFWwindow *a_window, int a_key, 
                 seg->m_visualMesh->setShowEnabled(m_showCM);
             }
             m_burrBody->m_visualMesh->setShowEnabled(m_showCM);
+        }
+        
+        // toggles the visibility of the volume object
+        else if (a_key == GLFW_KEY_T)
+        {
+            m_showVolume = !m_showVolume;
+            m_voxelObj->setShowEnabled(m_showVolume);
+            std::cout << "m_showVolume: " << m_showVolume << std::endl;
         }
     }
 }
