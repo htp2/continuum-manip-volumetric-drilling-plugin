@@ -1522,9 +1522,9 @@ BODY snake_stick:
       y: 0
   passive: false
   color: random
-  publish children names: false
-  publish joint names: false
-  publish joint positions: false
+  publish children names: true
+  publish joint names: true
+  publish joint positions: true
   friction:
     rolling: 0.0
     static: 0.5
